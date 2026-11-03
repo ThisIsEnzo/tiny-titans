@@ -32,6 +32,13 @@ check("clamp below zero", Growth.ClampEnergy(-10, cap) == 0)
 check("clamp NaN", Growth.ClampEnergy(0 / 0, cap) == 0)
 check("stages sorted ascending", stages[1].MinEnergy < stages[2].MinEnergy and stages[2].MinEnergy < stages[3].MinEnergy)
 check("last stage reachable before cap", stages[#stages].MinEnergy <= cap)
+check("ratio at 0", Growth.GetProgressRatio(0, cap) == 0)
+check("ratio at half", Growth.GetProgressRatio(cap / 2, cap) == 0.5)
+check("ratio at cap", Growth.GetProgressRatio(cap, cap) == 1)
+check("ratio clamps above cap", Growth.GetProgressRatio(cap * 3, cap) == 1)
+check("ratio clamps below zero", Growth.GetProgressRatio(-5, cap) == 0)
+check("ratio NaN energy", Growth.GetProgressRatio(0 / 0, cap) == 0)
+check("ratio zero cap", Growth.GetProgressRatio(10, 0) == 0)
 check("food energy positive", Config.FoodEnergy > 0)
 
 if failures > 0 then

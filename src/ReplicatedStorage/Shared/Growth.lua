@@ -32,4 +32,12 @@ function Growth.GetScale(stageIndex: number, stages: { Stage }): number
     return stages[clamped].Scale
 end
 
+-- Returns energy / cap as a 0..1 fill ratio. Invalid input yields 0.
+function Growth.GetProgressRatio(energy: number, cap: number): number
+    if energy ~= energy or cap ~= cap or cap <= 0 then
+        return 0
+    end
+    return math.clamp(energy / cap, 0, 1)
+end
+
 return table.freeze(Growth)
