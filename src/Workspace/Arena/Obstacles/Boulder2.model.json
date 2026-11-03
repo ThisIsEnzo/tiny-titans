@@ -1,0 +1,49 @@
+{
+  "className": "Part",
+  "properties": {
+    "Anchored": true,
+    "CanCollide": true,
+    "CanTouch": false,
+    "CanQuery": true,
+    "Locked": true,
+    "Material": "Rock",
+    "Color": [
+      0.42,
+      0.4,
+      0.38
+    ],
+    "Size": [
+      7,
+      5,
+      7
+    ],
+    "CFrame": {
+      "CFrame": {
+        "position": [
+          26,
+          3,
+          -12
+        ],
+        "orientation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "TopSurface": "Smooth",
+    "BottomSurface": "Smooth"
+  }
+}

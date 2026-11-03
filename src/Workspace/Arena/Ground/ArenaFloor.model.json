@@ -1,0 +1,49 @@
+{
+  "className": "Part",
+  "properties": {
+    "Anchored": true,
+    "CanCollide": true,
+    "CanTouch": false,
+    "CanQuery": true,
+    "Locked": true,
+    "Material": "Grass",
+    "Color": [
+      0.4,
+      0.55,
+      0.35
+    ],
+    "Size": [
+      120,
+      1,
+      120
+    ],
+    "CFrame": {
+      "CFrame": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "orientation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "TopSurface": "Smooth",
+    "BottomSurface": "Smooth"
+  }
+}

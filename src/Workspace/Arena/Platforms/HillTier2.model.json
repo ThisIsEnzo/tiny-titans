@@ -1,0 +1,49 @@
+{
+  "className": "Part",
+  "properties": {
+    "Anchored": true,
+    "CanCollide": true,
+    "CanTouch": false,
+    "CanQuery": true,
+    "Locked": true,
+    "Material": "Slate",
+    "Color": [
+      0.5,
+      0.48,
+      0.45
+    ],
+    "Size": [
+      12,
+      3,
+      12
+    ],
+    "CFrame": {
+      "CFrame": {
+        "position": [
+          36,
+          5,
+          -36
+        ],
+        "orientation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "TopSurface": "Smooth",
+    "BottomSurface": "Smooth"
+  }
+}
