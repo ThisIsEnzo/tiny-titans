@@ -33,7 +33,7 @@ Implications:
 
 ## Greybox arena
 
-`src/Workspace/Arena` holds the greybox arena as static Rojo `.model.json` Parts (anchored, `Locked`, simple materials, no scripts). It is declarative place data: it exists in the built place before any player joins, and nothing creates it at runtime. No gameplay systems are included (food collection, energy, evolution, abilities, UI and persistence are not implemented).
+`src/Workspace/Arena` holds the greybox arena as static Rojo `.model.json` Parts (anchored, `Locked`, simple materials, no scripts). It is declarative place data: it exists in the built place before any player joins, and nothing creates it at runtime. The arena itself contains no scripts; gameplay on top of it is described in the next section.
 
 Coordinates: arena is centered on the origin, +X is east, -Z is north. Floor top is Y = 0.5; studs.
 
@@ -67,12 +67,56 @@ rojo build default.project.json -o build.rbxlx
 
 Open `build.rbxlx` in Studio, or connect the Rojo plugin with `rojo serve`. No manual Studio setup is required. If a saved place already contains manually inserted `Baseplate`, `SpawnLocation` or an `Arena` folder, delete them first or start from a fresh build.
 
+## Food and growth loop
+
+Server-only gameplay, wired in `ServerScriptService/Bootstrap.server.lua`:
+
+| File | Responsibility |
+|---|---|
+| `ServerScriptService/Services/PlayerDataService.lua` | Per-player energy (session only). `AddEnergy` is server-only, clamps to `Config.EvolutionEnergyRequired`, mirrors `Energy` and `GrowthStage` to Player attributes, fires a server-side `ProgressChanged` signal |
+| `ServerScriptService/Services/FoodService.lua` | Creates one food ball per `FoodSpawn`-tagged part, detects pickups, awards energy, respawns food |
+| `ServerScriptService/Services/GrowthService.lua` | Applies the current stage's body scale to the player's R15 character (on stage change, spawn and appearance load) |
+| `ReplicatedStorage/Shared/Growth.lua` | Pure stage/scale/clamp helpers (no Roblox services) |
+| `ReplicatedStorage/Shared/Config.lua` | Tuning: `FoodEnergy`, `FoodRespawnDelay`, `FoodPickupRange`, `FoodHoverHeight`, `FoodCheckInterval`, `GrowthStages` |
+
+How it works:
+
+1. On server start, `FoodService` spawns a neon ball 2 studs above each `FoodSpawn` marker (8 in the arena), under `Workspace.Food`.
+2. Every 0.1 s the server checks each active food item against every player. A player qualifies if their character is alive, has a `HumanoidRootPart` within `FoodPickupRange` (5 studs) of the food, and is below the energy cap. If several players qualify at once, the closest one wins.
+3. The food is marked inactive and removed before energy is awarded, so it cannot be collected twice. It respawns after `FoodRespawnDelay` (8 s).
+4. Each food gives `FoodEnergy` (10). Energy caps at 100 (`EvolutionEnergyRequired`); a player at the cap does not consume food.
+5. Stages: 0 energy = 0.6 scale, 30 = 0.8, 60 = 1.0. Crossing a threshold rescales the character. Progress is kept across respawns in the same session and lost when the player leaves.
+
+Design notes:
+
+- There are **no RemoteEvents and no client scripts for this loop**. The client never sends a pickup request, so there is nothing to spoof. Pickup validation uses the character position as the server sees it, and the range check is a distance check only (a movement-speed or teleport check is not implemented).
+- The technical plan mentions a client pickup request; this milestone deliberately uses server proximity checks instead to avoid adding a remote.
+- Evolution at 100 energy, an energy UI, and food variety are not implemented. Read the `Energy` / `GrowthStage` attributes on the Player for debugging.
+- Growth uses R15 body scale values. The place's Avatar Type must be R15 (Game Settings > Avatar). R6 characters are not scaled and a warning is printed once.
+
+### Tests
+
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` and sanity-checks `Config`. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+
+### Manual Studio test checklist
+
+1. `rojo build default.project.json -o build.rbxlx`, open it in Studio (or use `rojo serve`) and confirm Avatar Type is R15.
+2. Play Solo. Expected: character spawns small (scale 0.6); `Workspace.Food` holds 8 green balls above the green food markers; no output errors.
+3. Walk into one ball. Expected: it disappears, and in Explorer `Players > <you>` attributes show `Energy = 10`, `GrowthStage = 1`.
+4. Collect 3 balls total. Expected: `Energy = 30`, `GrowthStage = 2`, character visibly larger. Collect 6 total: `Energy = 60`, `GrowthStage = 3`, normal size.
+5. Wait 8 s after collecting. Expected: the ball reappears.
+6. Collect until `Energy = 100`. Expected: energy stops at 100 and food is no longer consumed by you.
+7. Reset the character (or die). Expected: you respawn at your current stage's size, with energy unchanged.
+8. Test > Clients and Servers, 2 players, both stand near the same ball. Expected: only one player gains energy; the closer one if distances differ.
+9. Check the platform food: the ball on `HillTier2` is reachable by jumping, and the one on `GliderPlatform2` is not reachable yet (needs the future glide ability).
+10. Check that the smaller character fits routes, jumps normally and the camera behaves at scale 0.6.
+
 ## Validate
 
 ```powershell
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains bootstrap placeholders and the greybox arena only; gameplay systems are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. Evolution, abilities, UI and persistence are not implemented.
 
 See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.

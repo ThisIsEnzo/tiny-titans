@@ -1,6 +1,15 @@
 --!strict
 -- TINY TITANS server entry point.
--- Gameplay services will be wired here in subsequent implementation tasks.
+-- Gameplay services are wired here.
 
 local RunService = game:GetService("RunService")
 assert(RunService:IsServer(), "Bootstrap.server.lua must run on the server.")
+
+local Services = (script.Parent :: Instance):WaitForChild("Services")
+local PlayerDataService = require(Services:WaitForChild("PlayerDataService") :: ModuleScript)
+local GrowthService = require(Services:WaitForChild("GrowthService") :: ModuleScript)
+local FoodService = require(Services:WaitForChild("FoodService") :: ModuleScript)
+
+PlayerDataService.Init()
+GrowthService.Init(PlayerDataService)
+FoodService.Init(PlayerDataService)
