@@ -1,0 +1,51 @@
+{
+  "className": "SpawnLocation",
+  "properties": {
+    "Anchored": true,
+    "CanCollide": true,
+    "Locked": true,
+    "Neutral": true,
+    "Enabled": true,
+    "AllowTeamChangeOnTouch": false,
+    "Duration": 0,
+    "Material": "SmoothPlastic",
+    "Color": [
+      0.63,
+      0.63,
+      0.66
+    ],
+    "Size": [
+      12,
+      1,
+      12
+    ],
+    "CFrame": {
+      "CFrame": {
+        "position": [
+          0,
+          0.5,
+          0
+        ],
+        "orientation": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      }
+    },
+    "TopSurface": "Smooth",
+    "BottomSurface": "Smooth"
+  }
+}
