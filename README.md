@@ -91,12 +91,22 @@ Design notes:
 
 - There are **no RemoteEvents and no client scripts for this loop**. The client never sends a pickup request, so there is nothing to spoof. Pickup validation uses the character position as the server sees it, and the range check is a distance check only (a movement-speed or teleport check is not implemented).
 - The technical plan mentions a client pickup request; this milestone deliberately uses server proximity checks instead to avoid adding a remote.
-- Evolution at 100 energy, an energy UI, and food variety are not implemented. Read the `Energy` / `GrowthStage` attributes on the Player for debugging.
+- Evolution at 100 energy and food variety are not implemented. The `Energy` / `GrowthStage` Player attributes are the source for the Energy HUD below.
 - Growth uses R15 body scale values. The place's Avatar Type must be R15 (Game Settings > Avatar). R6 characters are not scaled and a warning is printed once.
+
+## Energy HUD
+
+`StarterPlayer/StarterPlayerScripts/Controllers/EnergyUIController.lua`, started from `ClientBootstrap.client.lua`, builds a small HUD in code (no Studio-authored assets) at the bottom center of the screen:
+
+- `Energy N / 100` text, `Stage N/3` text and a progress bar (the bar turns gold at 100).
+- It reads only the server-set `Energy` and `GrowthStage` Player attributes and redraws when either changes. It never writes them and uses no RemoteEvents. Missing attributes show as 0 energy, stage 1.
+- The `ScreenGui` has `ResetOnSpawn = false`, and the attributes live on the Player, so the HUD is unaffected by respawns.
+- Layout: width is 30% of the screen, clamped to 240-420 px; text is scaled between 12 and 22 px. The bar fill is `Growth.GetProgressRatio(energy, cap)` (tested in `tests/Growth.test.lua`).
+- The attribute names are string literals in `PlayerDataService.lua` and `EnergyUIController.lua`; change both together.
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` and sanity-checks `Config`. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
 
 ### Manual Studio test checklist
 
@@ -111,12 +121,23 @@ Design notes:
 9. Check the platform food: the ball on `HillTier2` is reachable by jumping, and the one on `GliderPlatform2` is not reachable yet (needs the future glide ability).
 10. Check that the smaller character fits routes, jumps normally and the camera behaves at scale 0.6.
 
+### Manual Studio test checklist: Energy HUD
+
+1. Play Solo. Expected: HUD at bottom center shows `Energy  0 / 100`, `Stage 1/3`, empty bar, no output errors.
+2. Collect one food. Expected: text becomes `Energy  10 / 100`, the bar animates to 10%.
+3. Collect to 30 and 60 energy. Expected: stage text changes to `Stage 2/3` at 30 and `Stage 3/3` at 60, in step with the character growing; the bar fill matches energy / 100 each time.
+4. Collect to 100. Expected: `Energy  100 / 100`, full gold bar, no overflow.
+5. Reset the character. Expected: the HUD stays visible and unchanged, and still updates after the next food.
+6. Test > Clients and Servers with 2 players. Expected: each client's HUD shows only its own energy; collecting on one client does not change the other's HUD.
+7. In the emulator (Test > Device) try a phone portrait, phone landscape, tablet and 1080p. Expected: the panel stays readable, centered, not clipped by the screen edge or the Roblox bottom bar, and does not cover the hotbar or touch controls.
+8. In Explorer during play, change your own Player attributes on the client side (not the server) and confirm the server value is not affected. This confirms the HUD is display-only.
+
 ## Validate
 
 ```powershell
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. Evolution, abilities, UI and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Energy HUD is implemented. Evolution, abilities, other UI and persistence are not implemented.
 
 See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.
