@@ -1,0 +1,18 @@
+# Build artifacts
+build/
+sourcemap.json
+
+# Roblox Studio files
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Temporary files
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
