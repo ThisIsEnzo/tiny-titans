@@ -62,11 +62,10 @@ end
 -- Adds energy (clamped to the cap). Returns the amount actually added.
 function PlayerDataService.AddEnergy(player: Player, amount: number): number
     local current = energyByPlayer[player]
-    if current == nil or amount ~= amount or amount <= 0 then
+    if current == nil then
         return 0
     end
-    local updated = Growth.ClampEnergy(current + amount, Config.EvolutionEnergyRequired)
-    local gained = updated - current
+    local updated, gained = Growth.AddEnergy(current, amount, Config.EvolutionEnergyRequired)
     if gained <= 0 then
         return 0
     end

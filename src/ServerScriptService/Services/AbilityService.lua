@@ -45,6 +45,7 @@ type State = {
     connections: { RBXScriptConnection },
 }
 
+local KNOWN_ABILITY_IDS: { string } = { Config.AbilityShellId, Config.AbilityGlideId }
 local SHELL_NAME = "DefensiveShell"
 local SHELL_SIZE_FACTOR = 1.3
 
@@ -292,7 +293,7 @@ local function onRequestAbility(player: Player, abilityId: any)
     lastRequestAt[player] = clock
 
     local state = states[player]
-    if state == nil or type(abilityId) ~= "string" then
+    if state == nil or not Ability.IsKnownAbilityId(abilityId, KNOWN_ABILITY_IDS) then
         return
     end
     local form = evolution.GetForm(player)

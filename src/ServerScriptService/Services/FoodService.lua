@@ -12,6 +12,7 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config") :: ModuleScript)
+local Food = require(Shared:WaitForChild("Food") :: ModuleScript)
 
 local FoodService = {}
 
@@ -24,6 +25,8 @@ type FoodItem = {
 local foods: { FoodItem } = {}
 local playerData: any = nil
 local elapsed = 0
+local candidates: { Player } = {} -- reused every scan
+local distances: { number } = {}
 
 local function createFoodItem(marker: BasePart, folder: Folder): FoodItem
     local part = Instance.new("Part")
@@ -68,8 +71,9 @@ local function respawnFood(food: FoodItem, folder: Folder)
         end
         return
     end
-    food.active = true
-    food.part.Parent = folder
+    if Food.Respawn(food) then
+        food.part.Parent = folder
+    end
 end
 
 local function step(folder: Folder)
@@ -77,24 +81,29 @@ local function step(folder: Folder)
         if not food.active then
             continue
         end
-        local winner: Player? = nil
-        local winnerDistance = Config.FoodPickupRange
+        table.clear(candidates)
+        table.clear(distances)
         for _, player in Players:GetPlayers() do
             local root = getEligibleRoot(player)
             if root ~= nil then
-                local distance = (root.Position - food.part.Position).Magnitude
-                if distance <= winnerDistance then
-                    winner = player
-                    winnerDistance = distance
-                end
+                table.insert(candidates, player)
+                table.insert(distances, (root.Position - food.part.Position).Magnitude)
             end
         end
-        if winner ~= nil then
-            -- Deactivate before awarding so the item can never be collected twice.
-            food.active = false
+        local index = Food.PickClosest(distances, Config.FoodPickupRange)
+        local winner = if index ~= nil then candidates[index] else nil
+        -- TryConsume marks the item inactive before anything else can run (this loop never
+        -- yields), so the item can be collected by one player only, once per spawn cycle.
+        if winner ~= nil and Food.TryConsume(food) then
             food.part.Parent = nil
-            playerData.AddEnergy(winner, Config.FoodEnergy)
-            task.delay(Config.FoodRespawnDelay, respawnFood, food, folder)
+            local gained = playerData.AddEnergy(winner, Config.FoodEnergy)
+            if gained > 0 then
+                task.delay(Config.FoodRespawnDelay, respawnFood, food, folder)
+            else
+                -- Nothing was awarded (the player's record vanished): put the food back.
+                Food.Respawn(food)
+                food.part.Parent = folder
+            end
         end
     end
 end

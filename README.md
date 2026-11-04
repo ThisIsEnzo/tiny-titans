@@ -212,7 +212,7 @@ Limitations:
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
 
 ### Manual Studio test checklist
 
@@ -305,6 +305,71 @@ These are **manual tests; none has been performed**. Use Play Solo (R15) and Tes
 14. Touch: on a phone emulator or real device, the button is tappable in the air and not covered by the jump button.
 15. Typing: with a TextBox focused (chat), `Q` does not start a glide.
 16. Tank regression: as TANK, repeat the shell checklist above (activation, 3 s duration, 12 s cooldown, death, respawn).
+
+## Multiplayer hardening (TT-06)
+
+Audit of the code as it exists in this repository, plus small fixes. No new gameplay, remotes or abilities.
+
+Inventory:
+
+- Client to server: only two RemoteEvents, both created by the server under `ReplicatedStorage.Remotes`: `RequestEvolution(form)` and `RequestAbility(abilityId)`. There are no RemoteFunctions and no server-to-client remotes. Food collection has no client request at all (server proximity checks).
+- Server to client: Player attributes only: `Energy`, `GrowthStage`, `EvolutionForm`, `EvolutionAvailable`, `ShellActiveUntil`, `ShellReadyAt`, `GliderActiveUntil`, `GliderReadyAt`. Instances created by the server: `Workspace.Food` (food balls), `DefensiveShell`, `GlideWing`, `GlideAttachment` and `GlideForce`.
+- Per-player server state is in tables keyed by the `Player` object (`PlayerDataService` energy, `EvolutionService` forms and rate-limit timestamps, `AbilityService` shell/glide state including its own wings table and connections, and its rate-limit timestamps). Each player's state record is created fresh in `PlayerAdded`; nothing mutable is shared between players. The only shared mutable tables are two scratch lists in `FoodService`, cleared at the start of every scan; that code never yields, so scans cannot interleave.
+- Player identity always comes from `OnServerEvent`; no remote carries a Player, UserId, energy, form, cooldown or timestamp.
+
+Bugs found and fixed:
+
+1. **Food could be lost without a reward.** `FoodService` consumed a food item first and ignored the result of `AddEnergy`. If the winner's record had vanished the item still disappeared for the respawn delay. It now restores the item when nothing was awarded.
+2. **Evolution rate-limit entry could leak.** A `RequestEvolution` arriving after `PlayerRemoving` re-created that player's timestamp entry forever. `EvolutionService` now ignores requests from players who already left (the same guard the ability limiter already had).
+3. **Infinite-yield warnings.** `GrowthService` waited for a character's `Humanoid` with no timeout; if the character was removed meanwhile the thread waited forever. The wait is now bounded (10 s).
+4. **Possible duplicate tracking on the client.** `EvolutionUIController` could connect its tag listeners twice for a player if `PlayerAdded` and the initial loop overlapped. It now tracks each player once.
+
+Small testability changes (behaviour preserved): food selection and consumption moved into the pure `Shared/Food.lua` (`PickClosest`, `TryConsume`, `Respawn`); energy accounting into `Growth.AddEnergy`; ability identifier validation into `Ability.IsKnownAbilityId`. When several players are in range of a food item at the same time, the closest wins; an exact tie now goes to the first player in `Players:GetPlayers()` order (previously the last).
+
+Verified by reading, no change needed:
+
+- Food: one winner per scan, consumed once (`TryConsume`) before awarding, never yielding in between. Respawn only re-enables an inactive item, so no duplicates. Dead, missing or root-less characters and players at the energy cap are skipped. Energy is clamped to `EvolutionEnergyRequired`.
+- Evolution: validated on the server against the player's own record (alive, not already evolved, threshold reached, exact `TANK`/`GLIDER` string), after a per-player rate limit.
+- Abilities: identifier validated, must match the player's own form, cooldowns per player, effects only on the requesting player's character, `endShell`/`endGlide` idempotent and invalidate stale timers, run on death, `CharacterRemoving`, form change and `PlayerRemoving`.
+- HUD: `ScreenGui`s use `ResetOnSpawn = false` and each controller initialises once, so respawning does not duplicate GUIs or connections.
+
+Not changed (limitations):
+
+- Every attribute above replicates to **all** clients, so other players can read your Energy, stage and ability timestamps. The overhead tag and form display rely on this for `EvolutionForm`; hiding the rest would need a redesign (per-player remotes), which is out of scope.
+- The glide trust boundary described in the Glider section is unchanged: the player's client owns character physics.
+- A food item destroyed by some other script is not recreated. Late-arriving, malformed or spammed requests are dropped silently.
+
+Automated tests: `tests/Multiplayer.test.lua` covers, with the pure rules only, independent energy, one winner per food, no double payout across repeated scans, the energy cap, independent evolution and eligibility, another form's ability, per-player cooldowns, spam against a cooldown, and malformed remote arguments. Scenarios that need Roblox objects (player cleanup, respawn duplicating effects or HUD connections) cannot be unit-tested in this setup and are covered by the manual checklist below. These tests do not prove runtime multiplayer correctness.
+
+### Manual Studio multiplayer checklist
+
+These are **manual tests; none has been performed**. Use Test > Start with 2 players (3 preferred) and watch the Output window on every client and the server.
+
+Food:
+
+1. Both players stand at the same food ball (a friend or two clients at the same spot). Expected: it disappears once and exactly one player's `Energy` rises by 10 (the closer one).
+2. Each player collects a different ball. Expected: each `Energy` rises independently; the other's value does not change.
+3. Run a player to 100 energy and keep walking into food. Expected: energy stays at 100 and food is not consumed by that player.
+4. A player leaves while standing in a food ball's range. Expected: no server error and the food is still there or respawns once (never two balls at one marker).
+
+Evolution:
+
+5. Player A reaches 100 energy, Player B does not. Expected: only A sees the choice panel. From B's command bar run `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("TANK")`. Expected: nothing changes.
+6. A selects TANK, B (after reaching 100) selects GLIDER. Expected: each sees their own form; the other player's overhead tag shows the right form; neither affects the other's energy or panel.
+7. A fires `RequestEvolution:FireServer("GLIDER")` again after evolving, and `FireServer(nil)`, `FireServer(123)`, `FireServer("tank")`. Expected: A stays TANK, no errors.
+
+Abilities:
+
+8. A (Tank) presses `Q`, B (Glider) jumps and presses `Q`. Expected: A gets the shell, B gets wings and a slower fall; each button shows the right state and both work at the same time.
+9. B spams `for i = 1, 200 do game.ReplicatedStorage.Remotes.RequestAbility:FireServer("GLIDE") end`. Expected: one glide only, cooldown not shortened. Check that A's shell and cooldown are unaffected.
+10. As Tank, fire `RequestAbility:FireServer("GLIDE")` and as Glider `FireServer("SHELL")`. Expected: nothing happens. `FireServer()`, `FireServer("FLY")` and `FireServer(123)` also do nothing.
+
+Lifecycle:
+
+11. While B is gliding or has a shell up, A dies. Expected: B's effect continues unaffected; A's effects vanish.
+12. B leaves during an active glide. Expected: no server errors; A sees no stray wings, force or attachment left on anything (check Explorer on the server).
+13. A respawns while B keeps playing. Expected: B's HUD, cooldown and effects unchanged; A has exactly one HUD, no duplicate button, no stale shell/wings, and A's cooldown and form persist.
+14. Join and leave several players quickly (Test > Start with 3, close and re-run clients). Expected: no errors, no duplicate `Workspace.Food` folder, each new player starts as BABY_BUG with 0 energy.
 
 ## Validate
 

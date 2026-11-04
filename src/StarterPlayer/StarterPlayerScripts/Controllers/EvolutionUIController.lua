@@ -162,6 +162,7 @@ end
 -- Overhead tag so other clients can see evolved forms (display only).
 local function setupFormTags()
     local labels: { [Player]: TextLabel } = {}
+    local tracked: { [Player]: boolean } = {}
 
     local function updateTag(player: Player)
         local label = labels[player]
@@ -206,6 +207,10 @@ local function setupFormTags()
     end
 
     local function track(player: Player)
+        if tracked[player] then
+            return -- PlayerAdded and the initial loop can overlap; connect once per player
+        end
+        tracked[player] = true
         player:GetAttributeChangedSignal("EvolutionForm"):Connect(function()
             updateTag(player)
         end)
@@ -220,6 +225,7 @@ local function setupFormTags()
     Players.PlayerAdded:Connect(track)
     Players.PlayerRemoving:Connect(function(player)
         labels[player] = nil
+        tracked[player] = nil
     end)
     for _, player in Players:GetPlayers() do
         track(player)
