@@ -153,7 +153,7 @@ local function buildGui(): (ScreenGui, Frame, TextLabel, TextButton, TextButton)
     local note = makeLabel("Note", UDim2.fromScale(0.05, 0.9), UDim2.fromScale(0.9, 0.08), 13, Enum.TextXAlignment.Center)
     note.Font = Enum.Font.Gotham
     note.TextTransparency = 0.3
-    note.Text = "Tank has a visual-only shell. Glider has no ability yet."
+    note.Text = "Tank: visual-only shell. Glider: short air glide."
     note.Parent = panel
 
     return gui, panel, formLabel, tank, glider

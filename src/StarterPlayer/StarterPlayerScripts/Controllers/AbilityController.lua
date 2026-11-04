@@ -1,10 +1,11 @@
 --!strict
--- Tank Defensive Shell client: input, button and status display.
--- The client only sends a bare activation request (no duration, cooldown or state).
--- The button shows the server-owned Player attributes "ShellActiveUntil" and
--- "ShellReadyAt", so a rejected request changes nothing on screen. The button is
--- visible only while the replicated EvolutionForm is the shell's form; the server
--- still validates everything. The shell itself is created by the server.
+-- Ability client (Tank SHELL, Glider GLIDE): input, button and status display.
+-- The client only sends an ability identifier (no duration, cooldown, force or state).
+-- The button shows the server-owned Player attributes of the ability matching the
+-- replicated EvolutionForm (ShellActiveUntil/ShellReadyAt or GliderActiveUntil/
+-- GliderReadyAt), so a rejected request changes nothing on screen. The button is hidden
+-- for other forms; the server still validates everything. Effects (shell, wings, glide
+-- force) are created by the server.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,6 +24,40 @@ local ACTIVE_COLOR = Color3.fromRGB(70, 130, 210)
 local COOLDOWN_COLOR = Color3.fromRGB(70, 74, 86)
 
 local initialized = false
+
+type AbilityDef = {
+    id: string, -- RequestAbility identifier
+    title: string,
+    activeText: string,
+    activeAttribute: string,
+    readyAttribute: string,
+}
+
+local SHELL: AbilityDef = {
+    id = Config.AbilityShellId,
+    title = "SHELL [" .. Config.AbilityKey .. "]",
+    activeText = "Active",
+    activeAttribute = "ShellActiveUntil",
+    readyAttribute = "ShellReadyAt",
+}
+
+local GLIDE: AbilityDef = {
+    id = Config.AbilityGlideId,
+    title = "GLIDE [" .. Config.AbilityKey .. "]",
+    activeText = "Gliding",
+    activeAttribute = "GliderActiveUntil",
+    readyAttribute = "GliderReadyAt",
+}
+
+-- The ability available to a replicated form, or nil.
+local function getAbilityFor(form: any): AbilityDef?
+    if form == Config.TankShellForm then
+        return SHELL
+    elseif form == Config.GliderForm then
+        return GLIDE
+    end
+    return nil
+end
 
 local function readNumber(player: Player, name: string): number
     local value = player:GetAttribute(name)
@@ -48,7 +83,7 @@ local function makeLabel(name: string, position: UDim2, size: UDim2, maxTextSize
     return label
 end
 
-local function buildGui(): (ScreenGui, TextButton, TextLabel)
+local function buildGui(): (ScreenGui, TextButton, TextLabel, TextLabel)
     local gui = Instance.new("ScreenGui")
     gui.Name = GUI_NAME
     gui.ResetOnSpawn = false
@@ -84,7 +119,7 @@ local function buildGui(): (ScreenGui, TextButton, TextLabel)
     status.Font = Enum.Font.Gotham
     status.Parent = button
 
-    return gui, button, status
+    return gui, button, title, status
 end
 
 function AbilityController.Init()
@@ -95,11 +130,12 @@ function AbilityController.Init()
 
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
-    local gui, button, status = buildGui()
+    local gui, button, title, status = buildGui()
 
     local remote: RemoteEvent? = nil
     local heartbeat: RBXScriptConnection? = nil
     local state = "ready" -- "ready" | "active" | "cooldown"
+    local current: AbilityDef? = nil
 
     local render: () -> ()
 
@@ -111,22 +147,24 @@ function AbilityController.Init()
     end
 
     render = function()
-        local isTank = player:GetAttribute("EvolutionForm") == Config.TankShellForm
-        button.Visible = isTank
-        if not isTank then
+        local def = getAbilityFor(player:GetAttribute("EvolutionForm"))
+        current = def
+        button.Visible = def ~= nil
+        if def == nil then
             state = "ready"
             stopTicking()
             return
         end
+        title.Text = def.title
 
         local now = workspace:GetServerTimeNow()
-        local activeUntil = readNumber(player, "ShellActiveUntil")
-        local readyAt = readNumber(player, "ShellReadyAt")
+        local activeUntil = readNumber(player, def.activeAttribute)
+        local readyAt = readNumber(player, def.readyAttribute)
 
         if Ability.IsActive(now, activeUntil) then
             state = "active"
             button.BackgroundColor3 = ACTIVE_COLOR
-            status.Text = string.format("Active %.1fs", activeUntil - now)
+            status.Text = string.format("%s %.1fs", def.activeText, activeUntil - now)
         elseif Ability.GetCooldownRemaining(now, readyAt) > 0 then
             state = "cooldown"
             button.BackgroundColor3 = COOLDOWN_COLOR
@@ -148,10 +186,10 @@ function AbilityController.Init()
     end
 
     local function request()
-        if remote == nil or state ~= "ready" or not button.Visible then
+        if remote == nil or current == nil or state ~= "ready" or not button.Visible then
             return
         end
-        remote:FireServer() -- bare request; the server decides the outcome
+        remote:FireServer(current.id) -- identifier only; the server decides the outcome
     end
 
     button.Activated:Connect(request)
@@ -167,8 +205,10 @@ function AbilityController.Init()
     end)
 
     player:GetAttributeChangedSignal("EvolutionForm"):Connect(render)
-    player:GetAttributeChangedSignal("ShellActiveUntil"):Connect(render)
-    player:GetAttributeChangedSignal("ShellReadyAt"):Connect(render)
+    for _, def in { SHELL, GLIDE } do
+        player:GetAttributeChangedSignal(def.activeAttribute):Connect(render)
+        player:GetAttributeChangedSignal(def.readyAttribute):Connect(render)
+    end
     render()
     gui.Parent = playerGui
 
