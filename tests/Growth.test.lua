@@ -39,6 +39,10 @@ check("ratio clamps above cap", Growth.GetProgressRatio(cap * 3, cap) == 1)
 check("ratio clamps below zero", Growth.GetProgressRatio(-5, cap) == 0)
 check("ratio NaN energy", Growth.GetProgressRatio(0 / 0, cap) == 0)
 check("ratio zero cap", Growth.GetProgressRatio(10, 0) == 0)
+local addedTotal, addedGain = Growth.AddEnergy(0, Config.FoodEnergy, cap)
+check("AddEnergy adds food energy", addedTotal == Config.FoodEnergy and addedGain == Config.FoodEnergy)
+local atCapTotal, atCapGain = Growth.AddEnergy(cap, Config.FoodEnergy, cap)
+check("AddEnergy at cap adds nothing", atCapTotal == cap and atCapGain == 0)
 check("food energy positive", Config.FoodEnergy > 0)
 
 if failures > 0 then

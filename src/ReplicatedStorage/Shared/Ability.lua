@@ -15,6 +15,11 @@ function Ability.GetCooldownRemaining(now: number, readyAt: number): number
     return math.max(0, readyAt - now)
 end
 
+-- True only for a string that exactly matches one of the known ability identifiers.
+function Ability.IsKnownAbilityId(id: any, knownIds: { string }): boolean
+    return type(id) == "string" and table.find(knownIds, id) ~= nil
+end
+
 -- True if a request arrives sooner than minInterval seconds after the last processed one.
 -- lastRequestAt is nil when the player has not made a processed request yet.
 -- This is anti-spam only and is unrelated to the gameplay cooldown.

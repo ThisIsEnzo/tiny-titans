@@ -57,6 +57,9 @@ local function onRequestEvolution(player: Player, form: any)
     if Evolution.IsRateLimited(lastRequestAt[player], now, Config.EvolutionRequestCooldown) then
         return -- dropped without touching state (and without extending the cooldown)
     end
+    if player.Parent ~= Players then
+        return -- player already left; do not re-create their rate-limit entry
+    end
     lastRequestAt[player] = now
 
     local currentForm = formByPlayer[player]

@@ -54,7 +54,7 @@ end
 
 local function onPlayerAdded(player: Player)
     player.CharacterAdded:Connect(function(character)
-        character:WaitForChild("Humanoid")
+        character:WaitForChild("Humanoid", 10) -- bounded: the character may be removed meanwhile
         applyForPlayer(player)
     end)
     -- Avatar appearance loading can reset scale values, so apply again afterwards.

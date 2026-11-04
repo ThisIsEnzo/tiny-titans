@@ -14,6 +14,20 @@ function Growth.ClampEnergy(energy: number, cap: number): number
     return math.clamp(energy, 0, cap)
 end
 
+-- Adds energy to one player's total. Returns (newEnergy, gained). Non-positive or NaN
+-- amounts add nothing; the result never exceeds cap.
+function Growth.AddEnergy(current: number, amount: number, cap: number): (number, number)
+    if amount ~= amount or amount <= 0 then
+        return current, 0
+    end
+    local updated = Growth.ClampEnergy(current + amount, cap)
+    local gained = updated - current
+    if gained <= 0 then
+        return current, 0
+    end
+    return updated, gained
+end
+
 -- Returns the 1-based index of the highest stage whose MinEnergy has been reached.
 -- Stages must be sorted by ascending MinEnergy.
 function Growth.GetStageIndex(energy: number, stages: { Stage }): number
