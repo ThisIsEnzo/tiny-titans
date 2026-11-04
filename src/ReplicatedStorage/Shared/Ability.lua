@@ -15,6 +15,16 @@ function Ability.GetCooldownRemaining(now: number, readyAt: number): number
     return math.max(0, readyAt - now)
 end
 
+-- True if a request arrives sooner than minInterval seconds after the last processed one.
+-- lastRequestAt is nil when the player has not made a processed request yet.
+-- This is anti-spam only and is unrelated to the gameplay cooldown.
+function Ability.IsRateLimited(lastRequestAt: number?, now: number, minInterval: number): boolean
+    if lastRequestAt == nil then
+        return false
+    end
+    return now - lastRequestAt < minInterval
+end
+
 -- Validates an activation request against server-owned state.
 -- Returns (ok, reason). Reasons: "Ok", "WrongForm", "NoLivingCharacter",
 -- "AlreadyActive", "OnCooldown".

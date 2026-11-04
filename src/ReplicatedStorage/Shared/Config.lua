@@ -15,6 +15,7 @@ local Config = {
     TankShellForm = "TANK", -- only this form may activate the shell
     TankShellDuration = 3, -- seconds the shell stays up
     TankShellCooldown = 12, -- seconds from activation until it can be used again
+    AbilityRequestInterval = 0.25, -- min seconds between processed RequestAbility calls per player (anti-spam; not gameplay)
 
     -- Food (server-authoritative; see ServerScriptService/Services/FoodService).
     FoodEnergy = 10, -- evolution energy awarded per food item

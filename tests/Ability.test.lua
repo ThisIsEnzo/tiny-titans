@@ -66,10 +66,33 @@ check("IsActive false when never used", not Ability.IsActive(100, 0))
 check("cooldown remaining counts down", Ability.GetCooldownRemaining(4, 12) == 8)
 check("cooldown remaining never negative", Ability.GetCooldownRemaining(20, 12) == 0)
 
+-- Request rate limiter (anti-spam; separate from the gameplay cooldown).
+local interval = Config.AbilityRequestInterval
+check("first request is not rate limited", not Ability.IsRateLimited(nil, 100, interval))
+check("request inside the interval is limited", Ability.IsRateLimited(100, 100 + interval / 2, interval))
+check("request in the same instant is limited", Ability.IsRateLimited(100, 100, interval))
+check("request exactly at the interval is allowed", not Ability.IsRateLimited(100, 100 + interval, interval))
+check("request after the interval is allowed", not Ability.IsRateLimited(100, 100 + interval + 1, interval))
+check("zero interval never limits", not Ability.IsRateLimited(100, 100, 0))
+-- Dropped requests must not extend the interval: only processed requests advance the timestamp.
+local last: number? = nil
+local processed = 0
+for i = 0, 999 do
+    local now = i / 1000
+    if not Ability.IsRateLimited(last, now, interval) then
+        last = now
+        processed += 1
+    end
+end
+check("spam over 1s processes at most ceil(1/interval) requests", processed <= math.ceil(1 / interval))
+check("a request is processed again once the interval passes", processed >= 2)
+
 -- Config sanity.
 check("duration positive", duration > 0)
 check("cooldown not shorter than duration", cooldown >= duration)
 check("shell form is a real evolution branch", table.find(Config.EvolutionForms, tank) ~= nil)
+check("request interval positive", interval > 0)
+check("request interval far below the gameplay cooldown", interval < cooldown / 10)
 check("ability key set", #Config.AbilityKey > 0)
 
 if failures > 0 then

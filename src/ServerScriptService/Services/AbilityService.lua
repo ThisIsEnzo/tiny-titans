@@ -7,6 +7,7 @@
 -- (workspace:GetServerTimeNow() timestamps; 0 = never). The shell is a server-created
 -- Part parented to the character, so every client sees it.
 -- Cooldown runs from activation and persists across death and respawn (session only).
+-- Requests are also rate limited per player (Config.AbilityRequestInterval) before any other work.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -31,6 +32,7 @@ local SHELL_SIZE_FACTOR = 1.3
 
 local states: { [Player]: State } = {}
 local evolution: any = nil
+local lastRequestAt: { [Player]: number } = {}
 
 local function endShell(player: Player, state: State)
     state.token += 1
@@ -82,7 +84,17 @@ local function createShell(character: Model, root: BasePart): Part
 end
 
 -- Client input is only a request. Every failure is silent and changes nothing.
+-- The rate limit runs first, so rejected requests count against it too.
 local function onRequestAbility(player: Player)
+    local clock = os.clock()
+    if Ability.IsRateLimited(lastRequestAt[player], clock, Config.AbilityRequestInterval) then
+        return -- dropped without touching state (and without extending the interval)
+    end
+    if player.Parent ~= Players then
+        return -- player already left; do not re-create their rate-limit entry
+    end
+    lastRequestAt[player] = clock
+
     local state = states[player]
     if state == nil or player.Parent ~= Players then
         return
@@ -154,6 +166,7 @@ local function onPlayerAdded(player: Player)
 end
 
 local function onPlayerRemoving(player: Player)
+    lastRequestAt[player] = nil
     local state = states[player]
     if state == nil then
         return
