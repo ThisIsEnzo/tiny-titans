@@ -120,7 +120,7 @@ Replicated Player attributes (visible to every client):
 - `EvolutionForm` (string): `BABY_BUG`, `TANK` or `GLIDER`.
 - `EvolutionAvailable` (bool): true while energy has reached the threshold and the player has not evolved. The server recomputes it whenever energy changes.
 
-Server validation of `RequestEvolution(form)`. The client sends only a branch name, and the server ignores a request, changing nothing, unless all of these hold:
+Server validation of `RequestEvolution(form)`. The client sends only a branch name. First, a per-player **rate limit** runs on the server: a request arriving less than `EvolutionRequestCooldown` (0.5 s) after that player's last *processed* request is dropped immediately, before any validation or state lookup. Every request that passes the limiter counts, including invalid ones, so bad requests cannot be used to bypass it. Dropped requests do not extend the cooldown, so a later legitimate request is never blocked for longer than 0.5 s. The timestamp is removed when the player leaves. The UI's 0.6 s click lock is only a convenience and is not relied on for security. After the limiter, the server ignores a request, changing nothing, unless all of these hold:
 
 1. The player is tracked by the server and has a living character (`Humanoid.Health > 0`).
 2. The player has not already evolved (current form is still `BABY_BUG`).
@@ -132,6 +132,7 @@ Because the server handles requests one at a time and sets the form before anyth
 Client behaviour:
 
 - The choice panel is visible exactly while `EvolutionAvailable` is true and hides when the server sets it false after a valid choice. Buttons have a 0.6 s local click lock to avoid spamming; this is not a security measure.
+- The overhead tag is attached only if, after waiting for the character's `Head`, that character is still the player's current character and the player is still in the game; stale characters are never tagged. A missing `Head` is skipped.
 - A badge above the Energy HUD shows `Form: <name>`.
 - Evolved players get an overhead tag (`TANK` / `GLIDER`) so other clients can see the choice. It is read from the replicated attribute.
 
@@ -143,7 +144,7 @@ Limitations:
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input). Run each with `lune run tests/<name>.test.lua`. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. Run each with `lune run tests/<name>.test.lua`. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
 
 ### Manual Studio test checklist
 
@@ -188,7 +189,12 @@ Two players (Test > Clients and Servers, 2 players):
 10. Player B (still below 100) fires a valid request from their command bar. Expected: ignored.
 11. B reaches 100 and picks GLIDER. Expected: A still shows TANK and B shows GLIDER, each seeing the other's tag.
 12. A leaves and rejoins. Expected: the new session starts as Baby Bug (no persistence).
-13. Screen sizes (Test > Device: phone portrait, phone landscape, tablet, 1080p): the choice panel is readable and centered, the buttons are tappable, and the badge does not overlap the Energy HUD.
+13. Rate limit (client command bar, at 100 energy, before choosing): run `local r = game.ReplicatedStorage.Remotes.RequestEvolution; for i = 1, 1000 do r:FireServer("TANK") end`. Expected: no server errors or lag, and the form becomes `TANK` once (the first request is processed, the rest are dropped or rejected as already evolved).
+14. Invalid requests count against the limit (fresh session, 100 energy): `r:FireServer("FLY"); r:FireServer("TANK")` in the same frame. Expected: still `BABY_BUG`, because the second request fell inside the cooldown. Wait one second and fire `"TANK"` again: it now works.
+15. Spam in a 2-player session: while Player A spams the remote, Player B can still evolve normally and sees no delay.
+16. Leave and rejoin repeatedly: no server errors (per-player rate-limit state is cleaned up).
+17. Tag lifecycle: evolve, then reset the character repeatedly and quickly (including right after spawning). Expected: each character has at most one `FormTag` under its `Head`, the tag follows the new character, and old characters do not keep or receive tags. On a second client, also check that a respawning player's tag does not appear on the previous character model.
+18. Screen sizes (Test > Device: phone portrait, phone landscape, tablet, 1080p): the choice panel is readable and centered, the buttons are tappable, and the badge does not overlap the Energy HUD.
 
 ## Validate
 

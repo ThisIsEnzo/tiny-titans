@@ -9,6 +9,15 @@ function Evolution.IsValidForm(form: any, forms: { string }): boolean
     return type(form) == "string" and table.find(forms, form) ~= nil
 end
 
+-- True if a request arrives sooner than minInterval seconds after the last processed one.
+-- lastRequestAt is nil when the player has not made a processed request yet.
+function Evolution.IsRateLimited(lastRequestAt: number?, now: number, minInterval: number): boolean
+    if lastRequestAt == nil then
+        return false
+    end
+    return now - lastRequestAt < minInterval
+end
+
 -- True while the player has reached the threshold and has not evolved yet.
 function Evolution.IsAvailable(energy: number, threshold: number, currentForm: string, baseForm: string): boolean
     return currentForm == baseForm and energy == energy and energy >= threshold

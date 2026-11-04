@@ -4,6 +4,7 @@
 -- marks evolution available; the client may then request one branch via the
 -- RequestEvolution RemoteEvent. The server validates every request and records the
 -- choice exactly once. Clients only ever send a branch name, never state.
+-- Requests are also rate limited per player on the server (Config.EvolutionRequestCooldown).
 -- Attributes replicated to all clients: "EvolutionForm" (string), "EvolutionAvailable" (bool).
 
 local Players = game:GetService("Players")
@@ -16,6 +17,7 @@ local Evolution = require(Shared:WaitForChild("Evolution") :: ModuleScript)
 local EvolutionService = {}
 
 local formByPlayer: { [Player]: string } = {}
+local lastRequestAt: { [Player]: number } = {}
 local playerData: any = nil
 
 local function refresh(player: Player)
@@ -49,7 +51,14 @@ local function onPlayerAdded(player: Player)
 end
 
 -- Rejected requests change nothing; the client learns the outcome from attributes only.
+-- The rate limit runs first, so invalid and repeated requests count against it too.
 local function onRequestEvolution(player: Player, form: any)
+    local now = os.clock()
+    if Evolution.IsRateLimited(lastRequestAt[player], now, Config.EvolutionRequestCooldown) then
+        return -- dropped without touching state (and without extending the cooldown)
+    end
+    lastRequestAt[player] = now
+
     local currentForm = formByPlayer[player]
     local energy = playerData.GetEnergy(player)
     if currentForm == nil or energy == nil or not isAlive(player) then
@@ -95,6 +104,7 @@ function EvolutionService.Init(playerDataService: any)
     Players.PlayerAdded:Connect(onPlayerAdded)
     Players.PlayerRemoving:Connect(function(player)
         formByPlayer[player] = nil
+        lastRequestAt[player] = nil
     end)
     for _, player in Players:GetPlayers() do
         onPlayerAdded(player)

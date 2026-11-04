@@ -8,6 +8,7 @@ local Config = {
     -- Evolution (server-authoritative; see ServerScriptService/Services/EvolutionService).
     BaseForm = "BABY_BUG", -- form every player starts in
     EvolutionForms = table.freeze({ "TANK", "GLIDER" }), -- valid branches
+    EvolutionRequestCooldown = 0.5, -- min seconds between processed requests per player (keep below the UI click lock)
 
     -- Food (server-authoritative; see ServerScriptService/Services/FoodService).
     FoodEnergy = 10, -- evolution energy awarded per food item

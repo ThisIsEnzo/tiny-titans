@@ -178,6 +178,11 @@ local function setupFormTags()
 
     local function attachTag(player: Player, character: Model)
         local head = character:WaitForChild("Head", 10)
+        -- WaitForChild yields: the character may have been replaced or the player may
+        -- have left meanwhile. Do not tag a stale character or re-register a gone player.
+        if player.Parent ~= Players or player.Character ~= character then
+            return
+        end
         if head == nil or not head:IsA("BasePart") then
             return
         end
