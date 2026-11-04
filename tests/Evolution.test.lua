@@ -58,6 +58,27 @@ check("rejects base form as target", not ok and reason == "InvalidForm")
 ok, reason = validate(nil, cap, base)
 check("rejects nil branch", not ok and reason == "InvalidForm")
 
+local cooldown = Config.EvolutionRequestCooldown
+check("cooldown is positive", cooldown > 0)
+check("first request is not limited", not Evolution.IsRateLimited(nil, 100, cooldown))
+check("request inside cooldown is limited", Evolution.IsRateLimited(100, 100 + cooldown / 2, cooldown))
+check("request in the same instant is limited", Evolution.IsRateLimited(100, 100, cooldown))
+check("request at exactly the cooldown is allowed", not Evolution.IsRateLimited(100, 100 + cooldown, cooldown))
+check("request after the cooldown is allowed", not Evolution.IsRateLimited(100, 100 + cooldown + 1, cooldown))
+check("zero interval never limits", not Evolution.IsRateLimited(100, 100, 0))
+-- Simulated spam: 1000 requests spread over 1 second, processed ones advance the timestamp.
+local last: number? = nil
+local processed = 0
+for i = 0, 999 do
+    local now = i / 1000
+    if not Evolution.IsRateLimited(last, now, cooldown) then
+        last = now
+        processed += 1
+    end
+end
+check("spam over 1s processes at most ceil(1/cooldown) requests", processed <= math.ceil(1 / cooldown))
+check("spam still lets the first request through", processed >= 1)
+
 check("branches are distinct", forms[1] ~= forms[2])
 check("energy threshold positive", cap > 0)
 
