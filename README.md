@@ -89,9 +89,9 @@ How it works:
 
 Design notes:
 
-- There are **no RemoteEvents and no client scripts for this loop**. The client never sends a pickup request, so there is nothing to spoof. Pickup validation uses the character position as the server sees it, and the range check is a distance check only (a movement-speed or teleport check is not implemented).
+- There are **no RemoteEvents and no client scripts for the food loop itself** (the evolution choice below adds one RemoteEvent). The client never sends a pickup request, so there is nothing to spoof. Pickup validation uses the character position as the server sees it, and the range check is a distance check only (a movement-speed or teleport check is not implemented).
 - The technical plan mentions a client pickup request; this milestone deliberately uses server proximity checks instead to avoid adding a remote.
-- Evolution at 100 energy and food variety are not implemented. The `Energy` / `GrowthStage` Player attributes are the source for the Energy HUD below.
+- Food variety is not implemented. The `Energy` / `GrowthStage` Player attributes are the source for the Energy HUD below.
 - Growth uses R15 body scale values. The place's Avatar Type must be R15 (Game Settings > Avatar). R6 characters are not scaled and a warning is printed once.
 
 ## Energy HUD
@@ -104,9 +104,46 @@ Design notes:
 - Layout: width is 30% of the screen, clamped to 240-420 px; text is scaled between 12 and 22 px. The bar fill is `Growth.GetProgressRatio(energy, cap)` (tested in `tests/Growth.test.lua`).
 - The attribute names are string literals in `PlayerDataService.lua` and `EnergyUIController.lua`; change both together.
 
+## Evolution choice
+
+Server-owned, session-only. Players start as `BABY_BUG`; at 100 energy they can choose `TANK` or `GLIDER` once.
+
+| File | Responsibility |
+|---|---|
+| `ReplicatedStorage/Shared/Evolution.lua` | Pure rules: `IsValidForm`, `IsAvailable`, `Validate` (returns `ok, reason`) |
+| `ReplicatedStorage/Shared/Config.lua` | `BaseForm = "BABY_BUG"`, `EvolutionForms = { "TANK", "GLIDER" }`; the threshold is the existing `EvolutionEnergyRequired` |
+| `ServerScriptService/Services/EvolutionService.lua` | Owns each player's form, sets the attributes, creates `ReplicatedStorage.Remotes.RequestEvolution`, validates requests |
+| `StarterPlayerScripts/Controllers/EvolutionUIController.lua` | Choice panel, form badge, overhead form tag |
+
+Replicated Player attributes (visible to every client):
+
+- `EvolutionForm` (string): `BABY_BUG`, `TANK` or `GLIDER`.
+- `EvolutionAvailable` (bool): true while energy has reached the threshold and the player has not evolved. The server recomputes it whenever energy changes.
+
+Server validation of `RequestEvolution(form)`. The client sends only a branch name, and the server ignores a request, changing nothing, unless all of these hold:
+
+1. The player is tracked by the server and has a living character (`Humanoid.Health > 0`).
+2. The player has not already evolved (current form is still `BABY_BUG`).
+3. The server-side energy has reached `EvolutionEnergyRequired`. Client-supplied energy is never read.
+4. The argument is exactly the string `"TANK"` or `"GLIDER"` (case-sensitive; any other type or value is rejected).
+
+Because the server handles requests one at a time and sets the form before anything else can run, a valid choice is recorded exactly once; repeats and spam are no-ops. Rejections are silent. The client learns the result only from the attributes. State is per player, so one player's choice never changes another's energy, form or availability. Form is kept across respawns and lost when the player leaves.
+
+Client behaviour:
+
+- The choice panel is visible exactly while `EvolutionAvailable` is true and hides when the server sets it false after a valid choice. Buttons have a 0.6 s local click lock to avoid spamming; this is not a security measure.
+- A badge above the Energy HUD shows `Form: <name>`.
+- Evolved players get an overhead tag (`TANK` / `GLIDER`) so other clients can see the choice. It is read from the replicated attribute.
+
+Limitations:
+
+- Evolution is **only recorded and displayed**. There are no abilities, no stat or model differences, and no gameplay advantage for either form; the character looks the same apart from the tag. The panel says abilities are not in this build yet.
+- Energy stays at 100 after evolving, so the Energy HUD stays full and the player cannot gain more energy.
+- A player who disconnects loses their form (no persistence). Rejections give no on-screen error.
+
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input). Run each with `lune run tests/<name>.test.lua`. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
 
 ### Manual Studio test checklist
 
@@ -132,12 +169,33 @@ Design notes:
 7. In the emulator (Test > Device) try a phone portrait, phone landscape, tablet and 1080p. Expected: the panel stays readable, centered, not clipped by the screen edge or the Roblox bottom bar, and does not cover the hotbar or touch controls.
 8. In Explorer during play, change your own Player attributes on the client side (not the server) and confirm the server value is not affected. This confirms the HUD is display-only.
 
+### Manual Studio test checklist: Evolution
+
+Solo (Play Solo, Avatar Type R15):
+
+1. At start: badge shows `Form: Baby Bug`; no choice panel; in Explorer the Player has `EvolutionForm = BABY_BUG`, `EvolutionAvailable = false`.
+2. Collect food up to 90 energy. Expected: still no panel, `EvolutionAvailable = false`.
+3. Collect the next food (100). Expected: the `EVOLUTION READY` panel appears with TANK and GLIDER buttons and `EvolutionAvailable = true`.
+4. Click TANK (or GLIDER). Expected: the panel hides, the badge shows the chosen form, `EvolutionForm` matches, `EvolutionAvailable = false`, and an overhead tag appears above your head.
+5. Reset the character. Expected: the form, badge and tag persist; the panel does not reappear.
+6. Try to choose again (command bar on the client): `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("GLIDER")`. Expected: no change to `EvolutionForm`.
+7. Reject checks, from a fresh server session before reaching 100 energy, via the client command bar: `...RequestEvolution:FireServer("TANK")` (threshold not reached), then at 100 energy `FireServer("FLY")`, `FireServer(nil)`, `FireServer("tank")`, `FireServer(123)`. Expected: all ignored, no errors in the server output, form stays `BABY_BUG`, and the panel stays open. Then a valid `FireServer("GLIDER")` works once.
+8. Dead character: at 100 energy, set the humanoid health to 0 and immediately fire a valid request. Expected: ignored while dead; works after respawn.
+
+Two players (Test > Clients and Servers, 2 players):
+
+9. Player A reaches 100 energy and evolves to TANK. Expected on Player B's client: A's `EvolutionForm` attribute shows `TANK` on their Player and a `TANK` tag appears over A's head; B's own panel, energy and form are unchanged.
+10. Player B (still below 100) fires a valid request from their command bar. Expected: ignored.
+11. B reaches 100 and picks GLIDER. Expected: A still shows TANK and B shows GLIDER, each seeing the other's tag.
+12. A leaves and rejoins. Expected: the new session starts as Baby Bug (no persistence).
+13. Screen sizes (Test > Device: phone portrait, phone landscape, tablet, 1080p): the choice panel is readable and centered, the buttons are tappable, and the badge does not overlap the Energy HUD.
+
 ## Validate
 
 ```powershell
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Energy HUD is implemented. Evolution, abilities, other UI and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Energy HUD and the evolution choice (TANK or GLIDER) are implemented. Form abilities, form models, combat and persistence are not implemented.
 
 See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.

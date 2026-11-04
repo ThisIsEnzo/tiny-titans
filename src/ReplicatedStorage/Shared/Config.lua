@@ -5,6 +5,10 @@
 local Config = {
     EvolutionEnergyRequired = 100,
 
+    -- Evolution (server-authoritative; see ServerScriptService/Services/EvolutionService).
+    BaseForm = "BABY_BUG", -- form every player starts in
+    EvolutionForms = table.freeze({ "TANK", "GLIDER" }), -- valid branches
+
     -- Food (server-authoritative; see ServerScriptService/Services/FoodService).
     FoodEnergy = 10, -- evolution energy awarded per food item
     FoodRespawnDelay = 8, -- seconds until a collected food item reappears
