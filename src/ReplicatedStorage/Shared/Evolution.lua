@@ -1,0 +1,39 @@
+--!strict
+-- Pure evolution rules. No Roblox services, so they are unit-testable outside Studio.
+-- Callers pass tuning data (see Config) explicitly.
+
+local Evolution = {}
+
+-- True only for a string that is one of the allowed branches (exact match).
+function Evolution.IsValidForm(form: any, forms: { string }): boolean
+    return type(form) == "string" and table.find(forms, form) ~= nil
+end
+
+-- True while the player has reached the threshold and has not evolved yet.
+function Evolution.IsAvailable(energy: number, threshold: number, currentForm: string, baseForm: string): boolean
+    return currentForm == baseForm and energy == energy and energy >= threshold
+end
+
+-- Validates an evolution request against server-owned state.
+-- Returns (ok, reason). Reasons: "Ok", "AlreadyEvolved", "ThresholdNotReached", "InvalidForm".
+function Evolution.Validate(
+    form: any,
+    energy: number,
+    threshold: number,
+    currentForm: string,
+    baseForm: string,
+    forms: { string }
+): (boolean, string)
+    if currentForm ~= baseForm then
+        return false, "AlreadyEvolved"
+    end
+    if not (energy == energy and energy >= threshold) then
+        return false, "ThresholdNotReached"
+    end
+    if not Evolution.IsValidForm(form, forms) then
+        return false, "InvalidForm"
+    end
+    return true, "Ok"
+end
+
+return table.freeze(Evolution)
