@@ -138,13 +138,48 @@ Client behaviour:
 
 Limitations:
 
-- Evolution is **only recorded and displayed**. There are no abilities, no stat or model differences, and no gameplay advantage for either form; the character looks the same apart from the tag. The panel says abilities are not in this build yet.
+- Evolution is recorded and displayed. The TANK form has the visual-only Defensive Shell (next section). GLIDER has **no ability**, and neither form has stat or model differences or a gameplay advantage. The choice panel notes this.
 - Energy stays at 100 after evolving, so the Energy HUD stays full and the player cannot gain more energy.
 - A player who disconnects loses their form (no persistence). Rejections give no on-screen error.
 
+## Tank Defensive Shell
+
+First TANK ability. **Visual only**: there is no damage, health, knockback or combat system in the project, so the shell does **not** reduce damage, grant invulnerability, resist knockback or change movement speed. It only shows a protective bubble.
+
+Behaviour (values in `Config.lua`, none hardcoded elsewhere):
+
+- Key `Q` (`AbilityKey`) or the on-screen **SHELL [Q]** button (mid-right of the screen, tappable on touch devices).
+- Only players whose server-side form is `TANK` (`TankShellForm`) can use it.
+- The shell stays for 3 s (`TankShellDuration`). The cooldown is 12 s (`TankShellCooldown`) and **runs from activation**, so the ability is usable again 9 s after the shell disappears.
+- Repeated input can neither extend the shell nor shorten the cooldown. The cooldown persists across death and respawn within the session and resets when the player leaves.
+
+| File | Responsibility |
+|---|---|
+| `ReplicatedStorage/Shared/Ability.lua` | Pure rules: `Validate`, `IsActive`, `GetCooldownRemaining` |
+| `ServerScriptService/Services/AbilityService.lua` | Creates `Remotes.RequestAbility`, validates, owns timing and state, builds and removes the shell |
+| `StarterPlayerScripts/Controllers/AbilityController.lua` | `Q` input, button, status text |
+
+Server authority:
+
+- `RequestAbility` takes **no arguments**; extra arguments are ignored. The server uses the player from the remote, reads the form from `EvolutionService`, and sets all times itself.
+- A request is ignored, changing nothing, unless: the player is still in the game, the form is `TANK`, the character has a living Humanoid and a `HumanoidRootPart`, the shell is not already active, and the cooldown has expired.
+- Timing uses `workspace:GetServerTimeNow()`. State is replicated as the Player attributes `ShellActiveUntil` and `ShellReadyAt` (timestamps, 0 = unused). The button is driven only by these attributes, so a rejected request changes nothing on screen. It ticks per frame only while a countdown is showing.
+- There is no extra rate limiter: the cooldown makes repeats cheap to reject. Requests from non-Tanks return after a form lookup.
+
+Shell visual and lifecycle:
+
+- A translucent blue ball `Part` (`ForceField` material) named `DefensiveShell`, created on the server and parented to the character, so all clients see it. It is welded to `HumanoidRootPart` with a `WeldConstraint`, sized 1.3x the character's largest bounding dimension at activation, with `CanCollide`, `CanTouch` and `CanQuery` off, `Massless` on and shadows off, so it cannot block movement or alter physics.
+- It is removed when the timer ends, when the Humanoid dies, when the character is removed or replaced (`CharacterRemoving`), if the form stops being `TANK`, and when the player leaves. Each activation bumps a token so a stale expiry timer can never remove a newer shell, and at most one shell exists per player.
+
+Limitations:
+
+- No gameplay effect, as above. The shell size is fixed at activation; if the character grows during the 3 s the shell does not resize.
+- The visual (size, material, readability) and button placement are untested guesses until checked in Studio.
+- Rejections are silent.
+
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. Run each with `lune run tests/<name>.test.lua`. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell rules (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
 
 ### Manual Studio test checklist
 
@@ -196,12 +231,32 @@ Two players (Test > Clients and Servers, 2 players):
 17. Tag lifecycle: evolve, then reset the character repeatedly and quickly (including right after spawning). Expected: each character has at most one `FormTag` under its `Head`, the tag follows the new character, and old characters do not keep or receive tags. On a second client, also check that a respawning player's tag does not appear on the previous character model.
 18. Screen sizes (Test > Device: phone portrait, phone landscape, tablet, 1080p): the choice panel is readable and centered, the buttons are tappable, and the badge does not overlap the Energy HUD.
 
+### Manual Studio test checklist: Tank Defensive Shell
+
+Prepare: Play Solo (R15) and get a TANK quickly, for example by raising energy with the Studio server command bar, then choosing TANK. Use Test > Clients and Servers for the multiplayer items.
+
+1. Tank, ready: the **SHELL [Q]** button appears (green, `Ready`). For BABY_BUG and GLIDER players it is hidden.
+2. Press `Q` (or click the button). Expected: a translucent blue bubble appears around the character and the button turns blue with an `Active` countdown.
+3. Second client: the bubble is visible around the Tank, moves with it, and does not push or block either player.
+4. After 3 s the bubble disappears and the button shows `Cooldown` counting down.
+5. Press `Q` repeatedly during the cooldown. Expected: nothing happens, no shell, no timer extension.
+6. About 12 s after the first activation the button returns to `Ready` and `Q` works again.
+7. GLIDER player: no button; from the client command bar run `game.ReplicatedStorage.Remotes.RequestAbility:FireServer()`. Expected: no shell, no `ShellActiveUntil`/`ShellReadyAt` change.
+8. BABY_BUG player: same as 7.
+9. Spam: while the shell is up, run `for i = 1, 200 do game.ReplicatedStorage.Remotes.RequestAbility:FireServer() end` on the client. Expected: duration stays 3 s and the cooldown is not shortened. Also try `FireServer("anything", 99)`: extra arguments change nothing.
+10. Death: activate, then reset the character or set health to 0. Expected: the bubble disappears immediately and the button shows the remaining cooldown (not `Active`).
+11. Respawn during and after activation: no stale bubble on the old or new character, and at most one `DefensiveShell` exists (check the character in Explorer on the server). Cooldown is still counting after respawn.
+12. Touch: in the Device emulator (phone) or on a real touch device, tap the button. Expected: it activates, is not hidden behind the jump button or thumbstick, and tapping it does not also move the character.
+13. Typing: focus a text box (for example the chat) and press `Q`. Expected: no activation.
+14. Leave and rejoin: no server errors; the new session starts as Baby Bug with no button.
+15. Walking through narrow gaps and over platforms with the shell up behaves exactly as without it (no snagging, no change in jump height or speed).
+
 ## Validate
 
 ```powershell
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Energy HUD and the evolution choice (TANK or GLIDER) are implemented. Form abilities, form models, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Energy HUD and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) is implemented. The GLIDER ability, form models, damage, combat and persistence are not implemented.
 
 See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.
