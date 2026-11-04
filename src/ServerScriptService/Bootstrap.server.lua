@@ -10,8 +10,10 @@ local PlayerDataService = require(Services:WaitForChild("PlayerDataService") :: 
 local GrowthService = require(Services:WaitForChild("GrowthService") :: ModuleScript)
 local FoodService = require(Services:WaitForChild("FoodService") :: ModuleScript)
 local EvolutionService = require(Services:WaitForChild("EvolutionService") :: ModuleScript)
+local AbilityService = require(Services:WaitForChild("AbilityService") :: ModuleScript)
 
 PlayerDataService.Init()
 GrowthService.Init(PlayerDataService)
 FoodService.Init(PlayerDataService)
 EvolutionService.Init(PlayerDataService)
+AbilityService.Init(EvolutionService)

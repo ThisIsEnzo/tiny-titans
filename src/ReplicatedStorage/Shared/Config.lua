@@ -10,6 +10,12 @@ local Config = {
     EvolutionForms = table.freeze({ "TANK", "GLIDER" }), -- valid branches
     EvolutionRequestCooldown = 0.5, -- min seconds between processed requests per player (keep below the UI click lock)
 
+    -- Tank Defensive Shell (server-authoritative, visual only; see AbilityService).
+    AbilityKey = "Q", -- client activation key (KeyCode name)
+    TankShellForm = "TANK", -- only this form may activate the shell
+    TankShellDuration = 3, -- seconds the shell stays up
+    TankShellCooldown = 12, -- seconds from activation until it can be used again
+
     -- Food (server-authoritative; see ServerScriptService/Services/FoodService).
     FoodEnergy = 10, -- evolution energy awarded per food item
     FoodRespawnDelay = 8, -- seconds until a collected food item reappears
