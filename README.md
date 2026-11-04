@@ -138,7 +138,7 @@ Client behaviour:
 
 Limitations:
 
-- Evolution is recorded and displayed. The TANK form has the visual-only Defensive Shell (next section). GLIDER has **no ability**, and neither form has stat or model differences or a gameplay advantage. The choice panel notes this.
+- Evolution is recorded and displayed. TANK gets the visual-only Defensive Shell and GLIDER gets the bounded Air Glide (next sections). Neither form has stat or model differences, and there is no damage or combat.
 - Energy stays at 100 after evolving, so the Energy HUD stays full and the player cannot gain more energy.
 - A player who disconnects loses their form (no persistence). Rejections give no on-screen error.
 
@@ -161,7 +161,7 @@ Behaviour (values in `Config.lua`, none hardcoded elsewhere):
 
 Server authority:
 
-- `RequestAbility` takes **no arguments**; extra arguments are ignored. The server uses the player from the remote, reads the form from `EvolutionService`, and sets all times itself.
+- `RequestAbility(abilityId)` is shared by Tank and Glider. The client sends only the identifier string (`"SHELL"` or `"GLIDE"`, from `Config`). A missing, non-string or unknown identifier is ignored; extra arguments are ignored. The server uses the player from the remote, reads the form from `EvolutionService`, and sets all times itself. `"SHELL"` needs form `TANK`, `"GLIDE"` needs form `GLIDER`.
 - A request is ignored, changing nothing, unless: the player is still in the game, the form is `TANK`, the character has a living Humanoid and a `HumanoidRootPart`, the shell is not already active, and the cooldown has expired.
 - Timing uses `workspace:GetServerTimeNow()`. State is replicated as the Player attributes `ShellActiveUntil` and `ShellReadyAt` (timestamps, 0 = unused). The button is driven only by these attributes, so a rejected request changes nothing on screen. It ticks per frame only while a countdown is showing.
 - A per-player **rate limit** runs first in the handler, before any form or character lookup: a request arriving less than `AbilityRequestInterval` (0.25 s, separate from the 3 s duration and 12 s cooldown) after that player's last *processed* request is dropped. Every request that passes the limiter counts, including rejected ones. Dropped requests do not extend the interval. The timestamp is removed when the player leaves, and requests from a player who already left are ignored. It uses `os.clock()` like the evolution limiter and does not change the gameplay cooldown.
@@ -177,9 +177,42 @@ Limitations:
 - The visual (size, material, readability) and button placement are untested guesses until checked in Studio.
 - Rejections are silent.
 
+## Glider Air Glide
+
+Second form ability: a **bounded glide, not flight**. It is server-authorised and uses a simple temporary upward force; it adds no damage, stamina, combat or movement-setting changes.
+
+Behaviour (values in `Config.lua`):
+
+- Key `Q` (`AbilityKey`, shared with the Tank shell) or the on-screen **GLIDE [Q]** button (same mid-right position as the Tank's **SHELL** button; only one of the two is ever shown, depending on the form).
+- Only players whose server-side form is `GLIDER` (`GliderForm`) can use it, and only while **airborne** (`Humanoid.FloorMaterial == Air`, read on the server).
+- One press starts an automatic glide for up to 3 s (`GliderDuration`); no holding is needed. **Landing ends it immediately.**
+- Cooldown 10 s (`GliderCooldown`), measured from successful activation; it persists across death and respawn in the session and resets when the player leaves.
+- While gliding, a server-created `VectorForce` pushes up with `GliderGravityCompensation` (0.65) of the character's weight (`AssemblyMass * Workspace.Gravity`). The compensation is capped below 1 in `Ability.GetGlideForce`, so gravity always wins and the net vertical force is always downward. No horizontal force is applied: steering is the normal Roblox character controls. `WalkSpeed`, jump settings and network ownership are not changed.
+- Visual: two thin neon "wings" welded beside the torso, created on the server so all clients see them. They are massless and have no collision, touch or query. Removed when the glide ends.
+
+How the state is shared:
+
+| Piece | Responsibility |
+|---|---|
+| `Shared/Ability.lua` | Pure rules: `ValidateGlide`, `GetGlideForce`, shared `IsActive` / `GetCooldownRemaining` / `IsRateLimited` |
+| `Services/AbilityService.lua` | Same `RequestAbility` remote as Tank. Validates, owns timestamps and cooldown, creates and removes the force, attachment and wings, ends the glide on landing, death, character removal, form change and player leave |
+| `Controllers/AbilityController.lua` | One shared controller: picks SHELL or GLIDE from the replicated `EvolutionForm`, sends only the identifier, shows `Ready`, `Gliding` or `Cooldown` from `GliderActiveUntil` / `GliderReadyAt` (server-time timestamps). It never shows `Gliding` before the server sets the attribute and ticks per frame only while a countdown is showing |
+
+Server validation for `"GLIDE"`, after the existing per-player rate limit (`AbilityRequestInterval`, separate from the gameplay cooldown, counting rejected requests): the player is still connected, the server-owned form is `GLIDER`, the character exists with a living Humanoid and a `HumanoidRootPart`, `FloorMaterial` is `Air`, no glide is active, and the cooldown has expired. Stale expiry timers are invalidated with a per-player token.
+
+Trust boundary (important): Roblox gives the player's client physics ownership of their own character, and this feature does not change that. The server decides when a glide may start and end and when the cooldown allows another, and the force object replicates to the owning client, but the server **cannot prevent a modified client from ignoring the force or moving the character however it likes**. That is true of all player movement in this game; no server-side movement validation (speed, height checks) was added. Landing detection uses the server's copy of `FloorMaterial` and `Humanoid.StateChanged`; the 3 s timer ends the glide regardless.
+
+Jump height and arena (analytic estimate, **not a Studio test**): with default `Workspace.Gravity` (196.2) and `JumpHeight` 7.2, a normal jump rises about 7.2 studs. Activating the glide near the start of a jump leaves 35% of gravity, so the same jump would rise to roughly 20 studs, and activating later gives less. This is a direct consequence of the specified 65% compensation: it does not provide upward acceleration, but it does raise the jump apex. The existing `GliderPlatform1/3` tops are at Y = 16 and `GliderPlatform2` at Y = 20, while a Baby Bug jumping from the highest jumpable surface (`HillTier2`/`LedgeB`, top 6.5) reaches about 13.7, so by calculation they are out of an ordinary jump's reach. No arena geometry was changed. Whether the glide actually reaches them reliably must be tested in Studio; if the apex gain is too large or too small, tune `GliderGravityCompensation` (or later add a rule about when the glide may start).
+
+Limitations:
+
+- Untested in Studio: physics feel, wing look and the landing detection are unverified.
+- Rejections are silent. The glide ends on landing, so the 3 s may not be used in full.
+- If the character is scaled (growth) the force is computed at activation from the current `AssemblyMass`.
+
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell rules and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
 
 ### Manual Studio test checklist
 
@@ -241,16 +274,37 @@ Prepare: Play Solo (R15) and get a TANK quickly, for example by raising energy w
 4. After 3 s the bubble disappears and the button shows `Cooldown` counting down.
 5. Press `Q` repeatedly during the cooldown. Expected: nothing happens, no shell, no timer extension.
 6. About 12 s after the first activation the button returns to `Ready` and `Q` works again.
-7. GLIDER player: no button; from the client command bar run `game.ReplicatedStorage.Remotes.RequestAbility:FireServer()`. Expected: no shell, no `ShellActiveUntil`/`ShellReadyAt` change.
+7. GLIDER player: no button; from the client command bar run `game.ReplicatedStorage.Remotes.RequestAbility:FireServer("SHELL")`. Expected: no shell, no `ShellActiveUntil`/`ShellReadyAt` change.
 8. BABY_BUG player: same as 7.
-9. Spam: while the shell is up, run `for i = 1, 200 do game.ReplicatedStorage.Remotes.RequestAbility:FireServer() end` on the client. Expected: duration stays 3 s and the cooldown is not shortened. Also try `FireServer("anything", 99)`: extra arguments change nothing.
+9. Spam: while the shell is up, run `for i = 1, 200 do game.ReplicatedStorage.Remotes.RequestAbility:FireServer("SHELL") end` on the client. Expected: duration stays 3 s and the cooldown is not shortened. Also try `FireServer("SHELL", 99)`, `FireServer()` and `FireServer("anything")`: extra arguments change nothing and a missing or unknown identifier does nothing.
 10. Death: activate, then reset the character or set health to 0. Expected: the bubble disappears immediately and the button shows the remaining cooldown (not `Active`).
 11. Respawn during and after activation: no stale bubble on the old or new character, and at most one `DefensiveShell` exists (check the character in Explorer on the server). Cooldown is still counting after respawn.
 12. Touch: in the Device emulator (phone) or on a real touch device, tap the button. Expected: it activates, is not hidden behind the jump button or thumbstick, and tapping it does not also move the character.
 13. Typing: focus a text box (for example the chat) and press `Q`. Expected: no activation.
 14. Leave and rejoin: no server errors; the new session starts as Baby Bug with no button.
 15. Walking through narrow gaps and over platforms with the shell up behaves exactly as without it (no snagging, no change in jump height or speed).
-16. Rate limit: with the shell ready, `local r = game.ReplicatedStorage.Remotes.RequestAbility; r:FireServer(); r:FireServer()` in the same frame activates one shell only (the second request is dropped). After waiting 0.5 s the cooldown rules apply as before (still cooling down). A GLIDER or BABY_BUG player firing in a loop gets no shell and no server errors; their requests are throttled.
+16. Rate limit: with the shell ready, `local r = game.ReplicatedStorage.Remotes.RequestAbility; r:FireServer("SHELL"); r:FireServer("SHELL")` in the same frame activates one shell only (the second request is dropped). After waiting 0.5 s the cooldown rules apply as before (still cooling down). A GLIDER or BABY_BUG player firing in a loop gets no shell and no server errors; their requests are throttled.
+
+### Manual Studio test checklist: Glider Air Glide
+
+These are **manual tests; none has been performed**. Use Play Solo (R15) and Test > Clients and Servers. Get a GLIDER by raising energy to 100 with the Studio command bar, then choosing GLIDER.
+
+1. Glider, ready: the **GLIDE [Q]** button appears (green, `Ready`). It is hidden for BABY_BUG, and TANK sees **SHELL [Q]** instead.
+2. Airborne: jump, then press `Q` (or tap the button) in the air. Expected: two wings appear, the button turns blue with a `Gliding` countdown, the fall is clearly slower than a normal fall, and you can still steer with WASD or the thumbstick.
+3. Ground: press `Q` while standing. Expected: nothing happens (no wings, no attribute change).
+4. BABY_BUG: from the client command bar, `game.ReplicatedStorage.Remotes.RequestAbility:FireServer("GLIDE")` in the air. Expected: nothing. Same for a TANK (also confirm Tank's `Q` still raises the shell).
+5. Identifier checks (as GLIDER): `FireServer()`, `FireServer("FLY")`, `FireServer(123)`, `FireServer("GLIDE", 99)` in the air. Expected: only a valid `"GLIDE"` works; extras are ignored.
+6. Duration: jump from a high place (a hill top) and activate. Expected: it ends after about 3 s if you have not landed; you then fall normally. Gravity is never cancelled completely: you never rise or hover.
+7. Cooldown: after activating, `Q` does nothing for 10 s from the activation. The button shows `Cooldown` and returns to `Ready`. Pressing `Q` repeatedly (or the spam loop `for i = 1, 200 do r:FireServer("GLIDE") end`) never extends the glide or shortens the cooldown.
+8. Landing: activate, then land before 3 s. Expected: wings vanish immediately and the button shows `Cooldown` (not `Gliding`). Check `GliderActiveUntil` returns to 0 on the Player in the server view.
+9. Death during a glide: reset the character mid-glide. Expected: wings and force gone at once, no `GlideForce`/`GlideAttachment` left under the old character, no glide state on the new one. In Explorer (server view) confirm they are removed.
+10. Respawn during cooldown: the cooldown keeps counting after respawn, `Q` is rejected until it ends.
+11. Leaving during a glide: with 2 clients, one leaves mid-glide. Expected: no server errors, and the remaining client sees no stray wings.
+12. Visual on other clients: with 2 or more clients, the wings and slow fall of the glider are visible to the others and disappear for everyone when the glide ends.
+13. Reachability: from ground level, a Baby Bug cannot reach `GliderPlatform1` (top Y = 16) with ordinary jumps. Then, as GLIDER, jump toward it and activate in the air: record whether you can land on it, how reliably, and how high the apex gets compared with a normal jump. Record the result before tuning `GliderGravityCompensation`.
+14. Touch: on a phone emulator or real device, the button is tappable in the air and not covered by the jump button.
+15. Typing: with a TextBox focused (chat), `Q` does not start a glide.
+16. Tank regression: as TANK, repeat the shell checklist above (activation, 3 s duration, 12 s cooldown, death, respawn).
 
 ## Validate
 
@@ -258,6 +312,6 @@ Prepare: Play Solo (R15) and get a TANK quickly, for example by raising energy w
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Energy HUD and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) is implemented. The GLIDER ability, form models, damage, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Energy HUD and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. Form models, damage, combat and persistence are not implemented.
 
 See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.

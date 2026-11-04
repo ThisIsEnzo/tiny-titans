@@ -17,6 +17,16 @@ local Config = {
     TankShellCooldown = 12, -- seconds from activation until it can be used again
     AbilityRequestInterval = 0.25, -- min seconds between processed RequestAbility calls per player (anti-spam; not gameplay)
 
+    -- RequestAbility identifiers (the only thing a client sends; the server checks it against the player's form).
+    AbilityShellId = "SHELL",
+    AbilityGlideId = "GLIDE",
+
+    -- Glider Air Glide (server-authoritative; see AbilityService). A bounded glide, not flight.
+    GliderForm = "GLIDER", -- only this form may glide
+    GliderDuration = 3, -- max seconds of glide per activation (landing ends it earlier)
+    GliderCooldown = 10, -- seconds from activation until it can be used again
+    GliderGravityCompensation = 0.65, -- fraction of gravity cancelled while gliding (always capped below 1)
+
     -- Food (server-authoritative; see ServerScriptService/Services/FoodService).
     FoodEnergy = 10, -- evolution energy awarded per food item
     FoodRespawnDelay = 8, -- seconds until a collected food item reappears
