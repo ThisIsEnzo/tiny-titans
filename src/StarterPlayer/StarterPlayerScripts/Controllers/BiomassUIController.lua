@@ -1,5 +1,5 @@
 --!strict
--- Read-only Energy HUD. Displays the server-owned "Energy" and "GrowthStage"
+-- Read-only Biomass HUD. Displays the server-owned "Biomass" and "GrowthStage"
 -- Player attributes. The client never writes these values and sends nothing
 -- to the server; attribute replication is the only data source.
 
@@ -11,9 +11,9 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config") :: ModuleScript)
 local Growth = require(Shared:WaitForChild("Growth") :: ModuleScript)
 
-local EnergyUIController = {}
+local BiomassUIController = {}
 
-local GUI_NAME = "EnergyHud"
+local GUI_NAME = "BiomassHud"
 local FILL_COLOR = Color3.fromRGB(110, 220, 90)
 local FULL_COLOR = Color3.fromRGB(255, 200, 60)
 local TWEEN_INFO = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -77,8 +77,8 @@ local function buildGui(): (ScreenGui, TextLabel, TextLabel, Frame)
     stroke.Thickness = 1
     stroke.Parent = panel
 
-    local energyLabel = makeLabel("EnergyLabel", UDim2.fromScale(0.05, 0.08), UDim2.fromScale(0.6, 0.42), Enum.TextXAlignment.Left)
-    energyLabel.Parent = panel
+    local biomassLabel = makeLabel("BiomassLabel", UDim2.fromScale(0.05, 0.08), UDim2.fromScale(0.6, 0.42), Enum.TextXAlignment.Left)
+    biomassLabel.Parent = panel
 
     local stageLabel = makeLabel("StageLabel", UDim2.fromScale(0.65, 0.08), UDim2.fromScale(0.3, 0.42), Enum.TextXAlignment.Right)
     stageLabel.Parent = panel
@@ -107,11 +107,11 @@ local function buildGui(): (ScreenGui, TextLabel, TextLabel, Frame)
     fillCorner.CornerRadius = UDim.new(1, 0)
     fillCorner.Parent = fill
 
-    return gui, energyLabel, stageLabel, fill
+    return gui, biomassLabel, stageLabel, fill
 end
 
 -- Builds the HUD once and keeps it in sync with the local player's attributes.
-function EnergyUIController.Init()
+function BiomassUIController.Init()
     if initialized then
         return
     end
@@ -119,19 +119,19 @@ function EnergyUIController.Init()
 
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
-    local gui, energyLabel, stageLabel, fill = buildGui()
+    local gui, biomassLabel, stageLabel, fill = buildGui()
 
     local currentTween: Tween? = nil
     local firstRender = true
 
     local function render()
-        local cap = Config.EvolutionEnergyRequired
-        local energy = math.clamp(readNumber(player, "Energy", 0), 0, cap)
+        local cap = Config.EvolutionBiomassRequired
+        local biomass = math.clamp(readNumber(player, "Biomass", 0), 0, cap)
         local stageCount = #Config.GrowthStages
         local stage = math.clamp(math.floor(readNumber(player, "GrowthStage", 1)), 1, stageCount)
-        local ratio = Growth.GetProgressRatio(energy, cap)
+        local ratio = Growth.GetProgressRatio(biomass, cap)
 
-        energyLabel.Text = string.format("Energy  %d / %d", math.floor(energy), cap)
+        biomassLabel.Text = string.format("Biomass  %d / %d", math.floor(biomass), cap)
         stageLabel.Text = string.format("Stage %d/%d", stage, stageCount)
         fill.BackgroundColor3 = if ratio >= 1 then FULL_COLOR else FILL_COLOR
 
@@ -150,10 +150,10 @@ function EnergyUIController.Init()
         end
     end
 
-    player:GetAttributeChangedSignal("Energy"):Connect(render)
+    player:GetAttributeChangedSignal("Biomass"):Connect(render)
     player:GetAttributeChangedSignal("GrowthStage"):Connect(render)
     render()
     gui.Parent = playerGui
 end
 
-return EnergyUIController
+return BiomassUIController

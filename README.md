@@ -4,9 +4,9 @@ Roblox prototype: a multiplayer creature evolution arena.
 
 ## Direction and architecture documents
 
-The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death does **not** reset anything: Energy, growth stage and form survive a respawn and are lost only when the player leaves, and there is no persistence.
+The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death does **not** reset anything: Biomass, growth stage and form survive a respawn and are lost only when the player leaves, and there is no persistence.
 
-Current implementation versus target: today there are three forms (`BABY_BUG`, `TANK`, `GLIDER`), with no damage, combat, PvE or PvP. The target (provisional) is the Baby Bug starter, which is not a class, plus four evolved classes (Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller); Striker / Hunter and Support / Controller are not implemented. "Energy" is today's name for the growth resource; the architecture documents propose renaming it Biomass, which has not been done or finally decided.
+Current implementation versus target: today there are three forms (`BABY_BUG`, `TANK`, `GLIDER`), with no damage, combat, PvE or PvP. The target (provisional) is the Baby Bug starter, which is not a class, plus four evolved classes (Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller); Striker / Hunter and Support / Controller are not implemented. "Biomass" is the name of the Current Life growth resource (approved by the project owner as the final player-facing name).
 
 - [Evolution Sandbox Architecture v0.1](docs/Evolution%20Sandbox%20Architecture%20v0.1.md): audit of the current code and proposed architecture.
 - [TT-P0-02R Implementation Migration Plan](docs/TT-P0-02R%20Implementation%20Migration%20Plan.md): proposed engineering sequence (P1–P7, including the proposed P3.5 combat-design gate); it does not replace the product roadmap.
@@ -85,61 +85,61 @@ Server-only gameplay, wired in `ServerScriptService/Bootstrap.server.lua`:
 
 | File | Responsibility |
 |---|---|
-| `ServerScriptService/Services/PlayerDataService.lua` | Per-player energy (session only). `AddEnergy` is server-only, clamps to `Config.EvolutionEnergyRequired`, mirrors `Energy` and `GrowthStage` to Player attributes, fires a server-side `ProgressChanged` signal |
-| `ServerScriptService/Services/FoodService.lua` | Creates one food ball per `FoodSpawn`-tagged part, detects pickups, awards energy, respawns food |
+| `ServerScriptService/Services/PlayerDataService.lua` | Per-player biomass (session only). `AddBiomass` is server-only, clamps to `Config.EvolutionBiomassRequired`, mirrors `Biomass` and `GrowthStage` to Player attributes, fires a server-side `ProgressChanged` signal |
+| `ServerScriptService/Services/FoodService.lua` | Creates one food ball per `FoodSpawn`-tagged part, detects pickups, awards biomass, respawns food |
 | `ServerScriptService/Services/GrowthService.lua` | Applies the current stage's body scale to the player's R15 character (on stage change, spawn and appearance load) |
 | `ReplicatedStorage/Shared/Growth.lua` | Pure stage/scale/clamp helpers (no Roblox services) |
-| `ReplicatedStorage/Shared/Config.lua` | Tuning: `FoodEnergy`, `FoodRespawnDelay`, `FoodPickupRange`, `FoodHoverHeight`, `FoodCheckInterval`, `GrowthStages` |
+| `ReplicatedStorage/Shared/Config.lua` | Tuning: `FoodBiomass`, `FoodRespawnDelay`, `FoodPickupRange`, `FoodHoverHeight`, `FoodCheckInterval`, `GrowthStages` |
 
 How it works:
 
 1. On server start, `FoodService` spawns a neon ball 2 studs above each `FoodSpawn` marker (8 in the arena), under `Workspace.Food`.
-2. Every 0.1 s the server checks each active food item against every player. A player qualifies if their character is alive, has a `HumanoidRootPart` within `FoodPickupRange` (5 studs) of the food, and is below the energy cap. If several players qualify at once, the closest one wins.
-3. The food is marked inactive and removed before energy is awarded, so it cannot be collected twice. It respawns after `FoodRespawnDelay` (8 s).
-4. Each food gives `FoodEnergy` (10). Energy caps at 100 (`EvolutionEnergyRequired`); a player at the cap does not consume food.
-5. Stages: 0 energy = 0.6 scale, 30 = 0.8, 60 = 1.0. Crossing a threshold on a living character tweens its scale over 0.8 s (`GrowthTweenSeconds`); a new character (spawn or respawn) is set to its stage's scale at once. Progress is kept across respawns in the same session and lost when the player leaves.
+2. Every 0.1 s the server checks each active food item against every player. A player qualifies if their character is alive, has a `HumanoidRootPart` within `FoodPickupRange` (5 studs) of the food, and is below the biomass cap. If several players qualify at once, the closest one wins.
+3. The food is marked inactive and removed before biomass is awarded, so it cannot be collected twice. It respawns after `FoodRespawnDelay` (8 s).
+4. Each food gives `FoodBiomass` (10). Biomass caps at 100 (`EvolutionBiomassRequired`); a player at the cap does not consume food.
+5. Stages: 0 biomass = 0.6 scale, 30 = 0.8, 60 = 1.0. Crossing a threshold on a living character tweens its scale over 0.8 s (`GrowthTweenSeconds`); a new character (spawn or respawn) is set to its stage's scale at once. Progress is kept across respawns in the same session and lost when the player leaves.
 
 Design notes:
 
 - There are **no RemoteEvents and no client scripts for the food loop itself** (the evolution choice below adds one RemoteEvent). The client never sends a pickup request, so there is nothing to spoof. Pickup validation uses the character position as the server sees it, and the range check is a distance check only (a movement-speed or teleport check is not implemented).
 - The technical plan mentions a client pickup request; this milestone deliberately uses server proximity checks instead to avoid adding a remote.
-- Food variety is not implemented. The `Energy` / `GrowthStage` Player attributes are the source for the Energy HUD below.
+- Food variety is not implemented. The `Biomass` / `GrowthStage` Player attributes are the source for the Biomass HUD below.
 - Growth uses R15 body scale values. The place's Avatar Type must be R15 (Game Settings > Avatar). R6 characters are not scaled and a warning is printed once.
 
-## Energy HUD
+## Biomass HUD
 
-`StarterPlayer/StarterPlayerScripts/Controllers/EnergyUIController.lua`, started from `ClientBootstrap.client.lua`, builds a small HUD in code (no Studio-authored assets) at the bottom center of the screen:
+`StarterPlayer/StarterPlayerScripts/Controllers/BiomassUIController.lua`, started from `ClientBootstrap.client.lua`, builds a small HUD in code (no Studio-authored assets) at the bottom center of the screen:
 
-- `Energy N / 100` text, `Stage N/3` text and a progress bar (the bar turns gold at 100).
-- It reads only the server-set `Energy` and `GrowthStage` Player attributes and redraws when either changes. It never writes them and uses no RemoteEvents. Missing attributes show as 0 energy, stage 1.
+- `Biomass N / 100` text, `Stage N/3` text and a progress bar (the bar turns gold at 100).
+- It reads only the server-set `Biomass` and `GrowthStage` Player attributes and redraws when either changes. It never writes them and uses no RemoteEvents. Missing attributes show as 0 biomass, stage 1.
 - The `ScreenGui` has `ResetOnSpawn = false`, and the attributes live on the Player, so the HUD is unaffected by respawns.
-- Layout: width is 30% of the screen, clamped to 240-420 px; text is scaled between 12 and 22 px. The bar fill is `Growth.GetProgressRatio(energy, cap)` (tested in `tests/Growth.test.lua`).
-- The attribute names are string literals in `PlayerDataService.lua` and `EnergyUIController.lua`; change both together.
+- Layout: width is 30% of the screen, clamped to 240-420 px; text is scaled between 12 and 22 px. The bar fill is `Growth.GetProgressRatio(biomass, cap)` (tested in `tests/Growth.test.lua`).
+- The attribute names are string literals in `PlayerDataService.lua` and `BiomassUIController.lua`; change both together.
 
 ## Evolution choice
 
-Server-owned, session-only. Players start as `BABY_BUG`; at 100 energy they can choose `TANK` or `GLIDER` once.
+Server-owned, session-only. Players start as `BABY_BUG`; at 100 biomass they can choose `TANK` or `GLIDER` once.
 
 | File | Responsibility |
 |---|---|
 | `ReplicatedStorage/Shared/Evolution.lua` | Pure rules: `IsValidForm`, `IsAvailable`, `Validate` (returns `ok, reason`) |
-| `ReplicatedStorage/Shared/Config.lua` | `BaseForm = "BABY_BUG"`, `EvolutionForms = { "TANK", "GLIDER" }`; the threshold is the existing `EvolutionEnergyRequired` |
+| `ReplicatedStorage/Shared/Config.lua` | `BaseForm = "BABY_BUG"`, `EvolutionForms = { "TANK", "GLIDER" }`; the threshold is the existing `EvolutionBiomassRequired` |
 | `ServerScriptService/Services/EvolutionService.lua` | Owns each player's form, sets the attributes, creates `ReplicatedStorage.Remotes.RequestEvolution`, validates requests |
 | `StarterPlayerScripts/Controllers/EvolutionUIController.lua` | Choice panel, form badge, overhead form tag |
 
 Replicated Player attributes (visible to every client):
 
 - `EvolutionForm` (string): `BABY_BUG`, `TANK` or `GLIDER`.
-- `EvolutionAvailable` (bool): true while energy has reached the threshold and the player has not evolved. The server recomputes it whenever energy changes.
+- `EvolutionAvailable` (bool): true while biomass has reached the threshold and the player has not evolved. The server recomputes it whenever biomass changes.
 
 Server validation of `RequestEvolution(form)`. The client sends only a branch name. First, a per-player **rate limit** runs on the server: a request arriving less than `EvolutionRequestCooldown` (0.5 s) after that player's last *processed* request is dropped immediately, before any validation or state lookup. Every request that passes the limiter counts, including invalid ones, so bad requests cannot be used to bypass it. Dropped requests do not extend the cooldown, so a later legitimate request is never blocked for longer than 0.5 s. The timestamp is removed when the player leaves. The UI's 0.6 s click lock is only a convenience and is not relied on for security. After the limiter, the server ignores a request, changing nothing, unless all of these hold:
 
 1. The player is tracked by the server and has a living character (`Humanoid.Health > 0`).
 2. The player has not already evolved (current form is still `BABY_BUG`).
-3. The server-side energy has reached `EvolutionEnergyRequired`. Client-supplied energy is never read.
+3. The server-side biomass has reached `EvolutionBiomassRequired`. Client-supplied biomass is never read.
 4. The argument is exactly the string `"TANK"` or `"GLIDER"` (case-sensitive; any other type or value is rejected).
 
-Because the server handles requests one at a time and sets the form before anything else can run, a valid choice is recorded exactly once; repeats and spam are no-ops. A rejected request changes nothing. The UI state comes from the replicated attributes, and the requesting player (only) also receives `Remotes.EvolutionResult(reason)` (`Ok`, `ThresholdNotReached`, `AlreadyEvolved`, `InvalidForm` or `NoLivingCharacter`) so the UI can explain a rejection. Requests dropped by the rate limit get no reply. The pure transition is `Evolution.Select`, which returns the unchanged form on any rejection. State is per player, so one player's choice never changes another's energy, form or availability. Form is kept across respawns and lost when the player leaves.
+Because the server handles requests one at a time and sets the form before anything else can run, a valid choice is recorded exactly once; repeats and spam are no-ops. A rejected request changes nothing. The UI state comes from the replicated attributes, and the requesting player (only) also receives `Remotes.EvolutionResult(reason)` (`Ok`, `ThresholdNotReached`, `AlreadyEvolved`, `InvalidForm` or `NoLivingCharacter`) so the UI can explain a rejection. Requests dropped by the rate limit get no reply. The pure transition is `Evolution.Select`, which returns the unchanged form on any rejection. State is per player, so one player's choice never changes another's biomass, form or availability. Form is kept across respawns and lost when the player leaves.
 
 Client behaviour (`EvolutionUIController`):
 
@@ -148,13 +148,13 @@ Client behaviour (`EvolutionUIController`):
 - On success the panel hides (driven by the attribute) and a short toast says `You evolved into <Form>!`. On rejection the panel stays and the status line shows a plain message from the server's reason.
 - The panel scales with the screen (50% x 62%, clamped to 320x240 to 560x340 px) with scaled, size-limited text.
 - The overhead tag is attached only if, after waiting for the character's `Head`, that character is still the player's current character and the player is still in the game; stale characters are never tagged. A missing `Head` is skipped.
-- A badge above the Energy HUD shows `Form: <name>`.
+- A badge above the Biomass HUD shows `Form: <name>`.
 - Evolved players get an overhead tag (`TANK` / `GLIDER`) so other clients can see the choice. It is read from the replicated attribute.
 
 Limitations:
 
 - Evolution is recorded and displayed. TANK gets the visual-only Defensive Shell and GLIDER gets the bounded Air Glide (next sections). Neither form has stat or model differences, and there is no damage or combat.
-- Energy stays at 100 after evolving, so the Energy HUD stays full and the player cannot gain more energy.
+- Biomass stays at 100 after evolving, so the Biomass HUD stays full and the player cannot gain more biomass.
 - A player who disconnects loses their form (no persistence).
 - TANK and GLIDER differ **only by their ability**. There are no stat, speed or health differences and no new models, because the project has no such systems and none were invented. Tank's shell has no combat effect until a damage system exists.
 - Client-side changes to Player attributes (for example `EvolutionForm`) do not replicate to the server, which keeps its own form table and never reads those attributes for decisions.
@@ -230,29 +230,29 @@ Limitations:
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 energy, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
 
 ### Manual Studio test checklist
 
 1. `rojo build default.project.json -o build.rbxlx`, open it in Studio (or use `rojo serve`) and confirm Avatar Type is R15.
 2. Play Solo. Expected: character spawns small (scale 0.6); `Workspace.Food` holds 8 green balls above the green food markers; no output errors.
-3. Walk into one ball. Expected: it disappears, and in Explorer `Players > <you>` attributes show `Energy = 10`, `GrowthStage = 1`.
-4. Collect 3 balls total. Expected: `Energy = 30`, `GrowthStage = 2`, character visibly larger. Collect 6 total: `Energy = 60`, `GrowthStage = 3`, normal size.
+3. Walk into one ball. Expected: it disappears, and in Explorer `Players > <you>` attributes show `Biomass = 10`, `GrowthStage = 1`.
+4. Collect 3 balls total. Expected: `Biomass = 30`, `GrowthStage = 2`, character visibly larger. Collect 6 total: `Biomass = 60`, `GrowthStage = 3`, normal size.
 5. Wait 8 s after collecting. Expected: the ball reappears.
-6. Collect until `Energy = 100`. Expected: energy stops at 100 and food is no longer consumed by you.
-7. Reset the character (or die). Expected: you respawn at your current stage's size, with energy unchanged.
-8. Test > Clients and Servers, 2 players, both stand near the same ball. Expected: only one player gains energy; the closer one if distances differ.
+6. Collect until `Biomass = 100`. Expected: biomass stops at 100 and food is no longer consumed by you.
+7. Reset the character (or die). Expected: you respawn at your current stage's size, with biomass unchanged.
+8. Test > Clients and Servers, 2 players, both stand near the same ball. Expected: only one player gains biomass; the closer one if distances differ.
 9. Check the platform food: the ball on `HillTier2` is reachable by jumping, and the one on `GliderPlatform2` is not reachable yet (needs the future glide ability).
 10. Check that the smaller character fits routes, jumps normally and the camera behaves at scale 0.6.
 
-### Manual Studio test checklist: Energy HUD
+### Manual Studio test checklist: Biomass HUD
 
-1. Play Solo. Expected: HUD at bottom center shows `Energy  0 / 100`, `Stage 1/3`, empty bar, no output errors.
-2. Collect one food. Expected: text becomes `Energy  10 / 100`, the bar animates to 10%.
-3. Collect to 30 and 60 energy. Expected: stage text changes to `Stage 2/3` at 30 and `Stage 3/3` at 60, in step with the character growing; the bar fill matches energy / 100 each time.
-4. Collect to 100. Expected: `Energy  100 / 100`, full gold bar, no overflow.
+1. Play Solo. Expected: HUD at bottom center shows `Biomass  0 / 100`, `Stage 1/3`, empty bar, no output errors.
+2. Collect one food. Expected: text becomes `Biomass  10 / 100`, the bar animates to 10%.
+3. Collect to 30 and 60 biomass. Expected: stage text changes to `Stage 2/3` at 30 and `Stage 3/3` at 60, in step with the character growing; the bar fill matches biomass / 100 each time.
+4. Collect to 100. Expected: `Biomass  100 / 100`, full gold bar, no overflow.
 5. Reset the character. Expected: the HUD stays visible and unchanged, and still updates after the next food.
-6. Test > Clients and Servers with 2 players. Expected: each client's HUD shows only its own energy; collecting on one client does not change the other's HUD.
+6. Test > Clients and Servers with 2 players. Expected: each client's HUD shows only its own biomass; collecting on one client does not change the other's HUD.
 7. In the emulator (Test > Device) try a phone portrait, phone landscape, tablet and 1080p. Expected: the panel stays readable, centered, not clipped by the screen edge or the Roblox bottom bar, and does not cover the hotbar or touch controls.
 8. In Explorer during play, change your own Player attributes on the client side (not the server) and confirm the server value is not affected. This confirms the HUD is display-only.
 
@@ -261,30 +261,30 @@ Limitations:
 Solo (Play Solo, Avatar Type R15):
 
 1. At start: badge shows `Form: Baby Bug`; no choice panel; in Explorer the Player has `EvolutionForm = BABY_BUG`, `EvolutionAvailable = false`.
-2. Collect food up to 90 energy. Expected: still no panel, `EvolutionAvailable = false`.
+2. Collect food up to 90 biomass. Expected: still no panel, `EvolutionAvailable = false`.
 3. Collect the next food (100). Expected: the `EVOLUTION READY` panel appears with TANK and GLIDER buttons and `EvolutionAvailable = true`.
 4. Click TANK (or GLIDER). Expected: the panel hides, the badge shows the chosen form, `EvolutionForm` matches, `EvolutionAvailable = false`, and an overhead tag appears above your head.
 5. Reset the character. Expected: the form, badge and tag persist; the panel does not reappear.
 6. Try to choose again (command bar on the client): `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("GLIDER")`. Expected: no change to `EvolutionForm`.
-7. Reject checks, from a fresh server session before reaching 100 energy, via the client command bar: `...RequestEvolution:FireServer("TANK")` (threshold not reached), then at 100 energy `FireServer("FLY")`, `FireServer(nil)`, `FireServer("tank")`, `FireServer(123)`. Expected: all ignored, no errors in the server output, form stays `BABY_BUG`, and the panel stays open. Then a valid `FireServer("GLIDER")` works once.
-8. Dead character: at 100 energy, set the humanoid health to 0 and immediately fire a valid request. Expected: ignored while dead; works after respawn.
+7. Reject checks, from a fresh server session before reaching 100 biomass, via the client command bar: `...RequestEvolution:FireServer("TANK")` (threshold not reached), then at 100 biomass `FireServer("FLY")`, `FireServer(nil)`, `FireServer("tank")`, `FireServer(123)`. Expected: all ignored, no errors in the server output, form stays `BABY_BUG`, and the panel stays open. Then a valid `FireServer("GLIDER")` works once.
+8. Dead character: at 100 biomass, set the humanoid health to 0 and immediately fire a valid request. Expected: ignored while dead; works after respawn.
 
 Two players (Test > Clients and Servers, 2 players):
 
-9. Player A reaches 100 energy and evolves to TANK. Expected on Player B's client: A's `EvolutionForm` attribute shows `TANK` on their Player and a `TANK` tag appears over A's head; B's own panel, energy and form are unchanged.
+9. Player A reaches 100 biomass and evolves to TANK. Expected on Player B's client: A's `EvolutionForm` attribute shows `TANK` on their Player and a `TANK` tag appears over A's head; B's own panel, biomass and form are unchanged.
 10. Player B (still below 100) fires a valid request from their command bar. Expected: ignored.
 11. B reaches 100 and picks GLIDER. Expected: A still shows TANK and B shows GLIDER, each seeing the other's tag.
 12. A leaves and rejoins. Expected: the new session starts as Baby Bug (no persistence).
-13. Rate limit (client command bar, at 100 energy, before choosing): run `local r = game.ReplicatedStorage.Remotes.RequestEvolution; for i = 1, 1000 do r:FireServer("TANK") end`. Expected: no server errors or lag, and the form becomes `TANK` once (the first request is processed, the rest are dropped or rejected as already evolved).
-14. Invalid requests count against the limit (fresh session, 100 energy): `r:FireServer("FLY"); r:FireServer("TANK")` in the same frame. Expected: still `BABY_BUG`, because the second request fell inside the cooldown. Wait one second and fire `"TANK"` again: it now works.
+13. Rate limit (client command bar, at 100 biomass, before choosing): run `local r = game.ReplicatedStorage.Remotes.RequestEvolution; for i = 1, 1000 do r:FireServer("TANK") end`. Expected: no server errors or lag, and the form becomes `TANK` once (the first request is processed, the rest are dropped or rejected as already evolved).
+14. Invalid requests count against the limit (fresh session, 100 biomass): `r:FireServer("FLY"); r:FireServer("TANK")` in the same frame. Expected: still `BABY_BUG`, because the second request fell inside the cooldown. Wait one second and fire `"TANK"` again: it now works.
 15. Spam in a 2-player session: while Player A spams the remote, Player B can still evolve normally and sees no delay.
 16. Leave and rejoin repeatedly: no server errors (per-player rate-limit state is cleaned up).
 17. Tag lifecycle: evolve, then reset the character repeatedly and quickly (including right after spawning). Expected: each character has at most one `FormTag` under its `Head`, the tag follows the new character, and old characters do not keep or receive tags. On a second client, also check that a respawning player's tag does not appear on the previous character model.
-18. Screen sizes (Test > Device: phone portrait, phone landscape, tablet, 1080p): the choice panel is readable and centered, the buttons are tappable, and the badge does not overlap the Energy HUD.
+18. Screen sizes (Test > Device: phone portrait, phone landscape, tablet, 1080p): the choice panel is readable and centered, the buttons are tappable, and the badge does not overlap the Biomass HUD.
 
 ### Manual Studio test checklist: Tank Defensive Shell
 
-Prepare: Play Solo (R15) and get a TANK quickly, for example by raising energy with the Studio server command bar, then choosing TANK. Use Test > Clients and Servers for the multiplayer items.
+Prepare: Play Solo (R15) and get a TANK quickly, for example by raising biomass with the Studio server command bar, then choosing TANK. Use Test > Clients and Servers for the multiplayer items.
 
 1. Tank, ready: the **SHELL [Q]** button appears (green, `Ready`). For BABY_BUG and GLIDER players it is hidden.
 2. Press `Q` (or click the button). Expected: a translucent blue bubble appears around the character and the button turns blue with an `Active` countdown.
@@ -305,7 +305,7 @@ Prepare: Play Solo (R15) and get a TANK quickly, for example by raising energy w
 
 ### Manual Studio test checklist: Glider Air Glide
 
-These are **manual tests; none has been performed**. Use Play Solo (R15) and Test > Clients and Servers. Get a GLIDER by raising energy to 100 with the Studio command bar, then choosing GLIDER.
+These are **manual tests; none has been performed**. Use Play Solo (R15) and Test > Clients and Servers. Get a GLIDER by raising biomass to 100 with the Studio command bar, then choosing GLIDER.
 
 1. Glider, ready: the **GLIDE [Q]** button appears (green, `Ready`). It is hidden for BABY_BUG, and TANK sees **SHELL [Q]** instead.
 2. Airborne: jump, then press `Q` (or tap the button) in the air. Expected: two wings appear, the button turns blue with a `Gliding` countdown, the fall is clearly slower than a normal fall, and you can still steer with WASD or the thumbstick.
@@ -331,33 +331,33 @@ Audit of the code as it exists in this repository, plus small fixes. No new game
 Inventory:
 
 - Client to server: only two RemoteEvents, both created by the server under `ReplicatedStorage.Remotes`: `RequestEvolution(form)` and `RequestAbility(abilityId)`. There are no RemoteFunctions and no server-to-client remotes. Food collection has no client request at all (server proximity checks).
-- Server to client: Player attributes only: `Energy`, `GrowthStage`, `EvolutionForm`, `EvolutionAvailable`, `ShellActiveUntil`, `ShellReadyAt`, `GliderActiveUntil`, `GliderReadyAt`. Instances created by the server: `Workspace.Food` (food balls), `DefensiveShell`, `GlideWing`, `GlideAttachment` and `GlideForce`.
-- Per-player server state is in tables keyed by the `Player` object (`PlayerDataService` energy, `EvolutionService` forms and rate-limit timestamps, `AbilityService` shell/glide state including its own wings table and connections, and its rate-limit timestamps). Each player's state record is created fresh in `PlayerAdded`; nothing mutable is shared between players. The only shared mutable tables are two scratch lists in `FoodService`, cleared at the start of every scan; that code never yields, so scans cannot interleave.
-- Player identity always comes from `OnServerEvent`; no remote carries a Player, UserId, energy, form, cooldown or timestamp.
+- Server to client: Player attributes only: `Biomass`, `GrowthStage`, `EvolutionForm`, `EvolutionAvailable`, `ShellActiveUntil`, `ShellReadyAt`, `GliderActiveUntil`, `GliderReadyAt`. Instances created by the server: `Workspace.Food` (food balls), `DefensiveShell`, `GlideWing`, `GlideAttachment` and `GlideForce`.
+- Per-player server state is in tables keyed by the `Player` object (`PlayerDataService` biomass, `EvolutionService` forms and rate-limit timestamps, `AbilityService` shell/glide state including its own wings table and connections, and its rate-limit timestamps). Each player's state record is created fresh in `PlayerAdded`; nothing mutable is shared between players. The only shared mutable tables are two scratch lists in `FoodService`, cleared at the start of every scan; that code never yields, so scans cannot interleave.
+- Player identity always comes from `OnServerEvent`; no remote carries a Player, UserId, biomass, form, cooldown or timestamp.
 
 Bugs found and fixed:
 
-1. **Food could be lost without a reward.** `FoodService` consumed a food item first and ignored the result of `AddEnergy`. If the winner's record had vanished the item still disappeared for the respawn delay. It now restores the item when nothing was awarded.
+1. **Food could be lost without a reward.** `FoodService` consumed a food item first and ignored the result of `AddBiomass`. If the winner's record had vanished the item still disappeared for the respawn delay. It now restores the item when nothing was awarded.
 2. **Evolution rate-limit entry could leak.** A `RequestEvolution` arriving after `PlayerRemoving` re-created that player's timestamp entry forever. `EvolutionService` now ignores requests from players who already left (the same guard the ability limiter already had).
 3. **Infinite-yield warnings.** `GrowthService` waited for a character's `Humanoid` with no timeout; if the character was removed meanwhile the thread waited forever. The wait is now bounded (10 s).
 4. **Possible duplicate tracking on the client.** `EvolutionUIController` could connect its tag listeners twice for a player if `PlayerAdded` and the initial loop overlapped. It now tracks each player once.
 
-Small testability changes (behaviour preserved): food selection and consumption moved into the pure `Shared/Food.lua` (`PickClosest`, `TryConsume`, `Respawn`); energy accounting into `Growth.AddEnergy`; ability identifier validation into `Ability.IsKnownAbilityId`. When several players are in range of a food item at the same time, the closest wins; an exact tie now goes to the first player in `Players:GetPlayers()` order (previously the last).
+Small testability changes (behaviour preserved): food selection and consumption moved into the pure `Shared/Food.lua` (`PickClosest`, `TryConsume`, `Respawn`); biomass accounting into `Growth.AddBiomass`; ability identifier validation into `Ability.IsKnownAbilityId`. When several players are in range of a food item at the same time, the closest wins; an exact tie now goes to the first player in `Players:GetPlayers()` order (previously the last).
 
 Verified by reading, no change needed:
 
-- Food: one winner per scan, consumed once (`TryConsume`) before awarding, never yielding in between. Respawn only re-enables an inactive item, so no duplicates. Dead, missing or root-less characters and players at the energy cap are skipped. Energy is clamped to `EvolutionEnergyRequired`.
+- Food: one winner per scan, consumed once (`TryConsume`) before awarding, never yielding in between. Respawn only re-enables an inactive item, so no duplicates. Dead, missing or root-less characters and players at the biomass cap are skipped. Biomass is clamped to `EvolutionBiomassRequired`.
 - Evolution: validated on the server against the player's own record (alive, not already evolved, threshold reached, exact `TANK`/`GLIDER` string), after a per-player rate limit.
 - Abilities: identifier validated, must match the player's own form, cooldowns per player, effects only on the requesting player's character, `endShell`/`endGlide` idempotent and invalidate stale timers, run on death, `CharacterRemoving`, form change and `PlayerRemoving`.
 - HUD: `ScreenGui`s use `ResetOnSpawn = false` and each controller initialises once, so respawning does not duplicate GUIs or connections.
 
 Not changed (limitations):
 
-- Every attribute above replicates to **all** clients, so other players can read your Energy, stage and ability timestamps. The overhead tag and form display rely on this for `EvolutionForm`; hiding the rest would need a redesign (per-player remotes), which is out of scope.
+- Every attribute above replicates to **all** clients, so other players can read your Biomass, stage and ability timestamps. The overhead tag and form display rely on this for `EvolutionForm`; hiding the rest would need a redesign (per-player remotes), which is out of scope.
 - The glide trust boundary described in the Glider section is unchanged: the player's client owns character physics.
 - A food item destroyed by some other script is not recreated. Late-arriving, malformed or spammed requests are dropped silently.
 
-Automated tests: `tests/Multiplayer.test.lua` covers, with the pure rules only, independent energy, one winner per food, no double payout across repeated scans, the energy cap, independent evolution and eligibility, another form's ability, per-player cooldowns, spam against a cooldown, and malformed remote arguments. Scenarios that need Roblox objects (player cleanup, respawn duplicating effects or HUD connections) cannot be unit-tested in this setup and are covered by the manual checklist below. These tests do not prove runtime multiplayer correctness.
+Automated tests: `tests/Multiplayer.test.lua` covers, with the pure rules only, independent biomass, one winner per food, no double payout across repeated scans, the biomass cap, independent evolution and eligibility, another form's ability, per-player cooldowns, spam against a cooldown, and malformed remote arguments. Scenarios that need Roblox objects (player cleanup, respawn duplicating effects or HUD connections) cannot be unit-tested in this setup and are covered by the manual checklist below. These tests do not prove runtime multiplayer correctness.
 
 ### Manual Studio multiplayer checklist
 
@@ -365,15 +365,15 @@ These are **manual tests; none has been performed**. Use Test > Start with 2 pla
 
 Food:
 
-1. Both players stand at the same food ball (a friend or two clients at the same spot). Expected: it disappears once and exactly one player's `Energy` rises by 10 (the closer one).
-2. Each player collects a different ball. Expected: each `Energy` rises independently; the other's value does not change.
-3. Run a player to 100 energy and keep walking into food. Expected: energy stays at 100 and food is not consumed by that player.
+1. Both players stand at the same food ball (a friend or two clients at the same spot). Expected: it disappears once and exactly one player's `Biomass` rises by 10 (the closer one).
+2. Each player collects a different ball. Expected: each `Biomass` rises independently; the other's value does not change.
+3. Run a player to 100 biomass and keep walking into food. Expected: biomass stays at 100 and food is not consumed by that player.
 4. A player leaves while standing in a food ball's range. Expected: no server error and the food is still there or respawns once (never two balls at one marker).
 
 Evolution:
 
-5. Player A reaches 100 energy, Player B does not. Expected: only A sees the choice panel. From B's command bar run `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("TANK")`. Expected: nothing changes.
-6. A selects TANK, B (after reaching 100) selects GLIDER. Expected: each sees their own form; the other player's overhead tag shows the right form; neither affects the other's energy or panel.
+5. Player A reaches 100 biomass, Player B does not. Expected: only A sees the choice panel. From B's command bar run `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("TANK")`. Expected: nothing changes.
+6. A selects TANK, B (after reaching 100) selects GLIDER. Expected: each sees their own form; the other player's overhead tag shows the right form; neither affects the other's biomass or panel.
 7. A fires `RequestEvolution:FireServer("GLIDER")` again after evolving, and `FireServer(nil)`, `FireServer(123)`, `FireServer("tank")`. Expected: A stays TANK, no errors.
 
 Abilities:
@@ -387,7 +387,7 @@ Lifecycle:
 11. While B is gliding or has a shell up, A dies. Expected: B's effect continues unaffected; A's effects vanish.
 12. B leaves during an active glide. Expected: no server errors; A sees no stray wings, force or attachment left on anything (check Explorer on the server).
 13. A respawns while B keeps playing. Expected: B's HUD, cooldown and effects unchanged; A has exactly one HUD, no duplicate button, no stale shell/wings, and A's cooldown and form persist.
-14. Join and leave several players quickly (Test > Start with 3, close and re-run clients). Expected: no errors, no duplicate `Workspace.Food` folder, each new player starts as BABY_BUG with 0 energy.
+14. Join and leave several players quickly (Test > Start with 3, close and re-run clients). Expected: no errors, no duplicate `Workspace.Food` folder, each new player starts as BABY_BUG with 0 biomass.
 
 ## Growth smoothing and ground contact (P0 audit)
 
@@ -401,7 +401,7 @@ Changes (`GrowthService.lua`, `Growth.ShouldUpdateScale`, two `Config` values):
 - At most one set of tweens exists per player. A new target cancels the previous tweens (tweening from wherever the values currently are), and an identical target is ignored, so collecting food inside a stage creates no tweens.
 - A new character (spawn or respawn) is set to its stage's scale immediately, with no animation, and the per-character state is reset so nothing carries over from the previous character. State and tweens are cleared on `CharacterRemoving` and `PlayerRemoving`; delayed callbacks ignore players who left.
 - Scale values are no longer created at `CharacterAdded` before the avatar appearance has loaded. The service uses the engine's own values and sets them after `CharacterAppearanceLoaded`; it creates missing values only after that event or after `AppearanceFallbackSeconds` (5 s) as a fallback. Reason: creating them early could leave two values with the same name on the Humanoid. Whether that actually happened in your runs is **unconfirmed**.
-- Energy values, thresholds (0 / 30 / 60), food reward, HUD, evolution and abilities are untouched.
+- Biomass values, thresholds (0 / 30 / 60), food reward, HUD, evolution and abilities are untouched.
 
 Intermittent ground clipping: **root cause NOT confirmed.** I cannot run Studio, and static analysis does not establish it. Nothing in the project's own code sets `HipHeight`, collision groups, `CanCollide` on the character, character positioning, or any custom movement/physics for Baby Bug. Candidate causes, most to least likely:
 
@@ -443,36 +443,36 @@ Limitations: the smoothness of the tween (server tweens replicate at network rat
 
 These are **manual tests; none has been performed**.
 
-1. Fresh spawn at Energy 0: the character spawns at 0.6 scale at once (no visible grow animation), `copies` = 1 for each scale value, HUD shows `Energy  0 / 100`, `Stage 1/3`.
-2. Around Energy 30: collect the third food. Expected: the body grows smoothly over about 0.8 s, with no instant pop, the HUD changes to `Stage 2/3`, the character stays on the ground (no sinking or floating) and keeps moving normally while growing.
-3. Around Energy 60: same for the sixth food (`Stage 3/3`, scale 1.0).
+1. Fresh spawn at Biomass 0: the character spawns at 0.6 scale at once (no visible grow animation), `copies` = 1 for each scale value, HUD shows `Biomass  0 / 100`, `Stage 1/3`.
+2. Around Biomass 30: collect the third food. Expected: the body grows smoothly over about 0.8 s, with no instant pop, the HUD changes to `Stage 2/3`, the character stays on the ground (no sinking or floating) and keeps moving normally while growing.
+3. Around Biomass 60: same for the sixth food (`Stage 3/3`, scale 1.0).
 4. Collect another food inside a stage (for example 30 to 40). Expected: no size change at all.
 5. Collect two foods that cross a threshold in quick succession and mid-jump. Expected: no flicker, one smooth change, final scale equals the stage's target.
 6. Repeated ordinary jumps and landings on flat floor at stage 1, 2 and 3 (about 20 each). Record any partial sinking using the procedure above and its frequency per stage.
 7. Respawn after growth (reset at stage 2, then at stage 3): the new character appears at the stage's scale at once, never at 1.0 first, and a second reset does not shrink or enlarge it incorrectly.
 8. Food collection after respawn works and growth still tweens when the next threshold is crossed.
-9. Reach Energy 100: the evolution panel appears and TANK/GLIDER can be chosen as before.
+9. Reach Biomass 100: the evolution panel appears and TANK/GLIDER can be chosen as before.
 10. Abilities regression: as TANK press `Q` (shell appears and follows the scaled body, 3 s, 12 s cooldown); as GLIDER jump and press `Q` (wings, slower fall, landing ends it, 10 s cooldown). Check the shell/wings size after a growth tween (they are sized at activation).
 11. Two players: one growing must not change the other's size; both HUDs stay correct.
 
 ### Manual Studio test checklist: evolution system (P0-02)
 
-These are **manual tests; none has been performed**. Use Play Solo, then Test > Start with 2 players. Raise energy with the Studio server command bar as needed.
+These are **manual tests; none has been performed**. Use Play Solo, then Test > Start with 2 players. Raise biomass with the Studio server command bar as needed.
 
-1. Below 100 energy there is no choice panel; the badge shows `Form: Baby Bug`. From the client command bar `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("TANK")` changes nothing.
-2. At exactly 100 energy the EVOLUTION READY panel appears with both cards and the `Choose a form` button disabled.
+1. Below 100 biomass there is no choice panel; the badge shows `Form: Baby Bug`. From the client command bar `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("TANK")` changes nothing.
+2. At exactly 100 biomass the EVOLUTION READY panel appears with both cards and the `Choose a form` button disabled.
 3. Tap TANK: highlighted, button reads `Evolve into Tank`, nothing sent yet. Tap GLIDER: highlight moves, only one card is ever selected.
 4. Press Confirm. Expected: `Evolving...`, then the panel hides, the toast says `You evolved into ...!`, the badge and overhead tag show the form, `EvolutionAvailable` is false. Pressing Confirm repeatedly or quickly causes one evolution only.
 5. After evolving, run `RequestEvolution:FireServer("GLIDER")` and `FireServer("TANK")`, `FireServer(nil)`, `FireServer(123)`. Expected: `EvolutionForm` is unchanged; no errors.
 6. Rejection feedback: reach 100, then run (client command bar) `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("FLY")`. Expected: the panel stays, status text shows `That form is not available.`
-7. Dead character: at 100 energy, set health to 0 and press Confirm quickly. Expected: `Respawn first, then try again.` and no evolution.
+7. Dead character: at 100 biomass, set health to 0 and press Confirm quickly. Expected: `Respawn first, then try again.` and no evolution.
 8. Respawn after evolving: reset the character. Expected: form, badge, tag and the matching ability button are unchanged; no panel; never back to Baby Bug.
 9. Correct ability only: as TANK `Q` raises the shell and the button says SHELL; as GLIDER `Q` in the air glides and the button says GLIDE. From the command bar a Tank firing `RequestAbility:FireServer("GLIDE")` or a Glider firing `FireServer("SHELL")` does nothing.
 10. Two players: A reaches 100 and picks TANK, B (below 100) has no panel and cannot evolve. Then B reaches 100 and picks GLIDER. Expected: forms, panels, toasts and ability buttons stay independent, and each sees the other's tag.
 11. Attribute tampering: on a client, `game.Players.LocalPlayer:SetAttribute("EvolutionForm", "TANK")` while Baby Bug. Expected: the local badge may change but the server form does not, and `Q` still does nothing on the server.
-12. Leave and rejoin: the new session starts as Baby Bug with 0 energy, and there are no server errors.
-13. Layout: Device emulator (phone portrait, phone landscape, tablet, 1080p). Expected: the panel is fully on screen, text readable, cards and the button tappable, nothing overlaps the Energy HUD or toast.
-14. Reduced regression: collecting food, stage growth tweens, the Energy HUD, and Tank and Glider cooldowns behave as before.
+12. Leave and rejoin: the new session starts as Baby Bug with 0 biomass, and there are no server errors.
+13. Layout: Device emulator (phone portrait, phone landscape, tablet, 1080p). Expected: the panel is fully on screen, text readable, cards and the button tappable, nothing overlaps the Biomass HUD or toast.
+14. Reduced regression: collecting food, stage growth tweens, the Biomass HUD, and Tank and Glider cooldowns behave as before.
 
 ## Validate
 
@@ -480,6 +480,6 @@ These are **manual tests; none has been performed**. Use Play Solo, then Test > 
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Energy HUD and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. Form models, damage, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Biomass HUD and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. Form models, damage, combat and persistence are not implemented.
 
 See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.

@@ -19,15 +19,15 @@ function Evolution.IsRateLimited(lastRequestAt: number?, now: number, minInterva
 end
 
 -- True while the player has reached the threshold and has not evolved yet.
-function Evolution.IsAvailable(energy: number, threshold: number, currentForm: string, baseForm: string): boolean
-    return currentForm == baseForm and energy == energy and energy >= threshold
+function Evolution.IsAvailable(biomass: number, threshold: number, currentForm: string, baseForm: string): boolean
+    return currentForm == baseForm and biomass == biomass and biomass >= threshold
 end
 
 -- Validates an evolution request against server-owned state.
 -- Returns (ok, reason). Reasons: "Ok", "AlreadyEvolved", "ThresholdNotReached", "InvalidForm".
 function Evolution.Validate(
     form: any,
-    energy: number,
+    biomass: number,
     threshold: number,
     currentForm: string,
     baseForm: string,
@@ -36,7 +36,7 @@ function Evolution.Validate(
     if currentForm ~= baseForm then
         return false, "AlreadyEvolved"
     end
-    if not (energy == energy and energy >= threshold) then
+    if not (biomass == biomass and biomass >= threshold) then
         return false, "ThresholdNotReached"
     end
     if not Evolution.IsValidForm(form, forms) then
@@ -50,13 +50,13 @@ end
 -- rejected request can never change state. Each player has their own currentForm.
 function Evolution.Select(
     form: any,
-    energy: number,
+    biomass: number,
     threshold: number,
     currentForm: string,
     baseForm: string,
     forms: { string }
 ): (string, string)
-    local ok, reason = Evolution.Validate(form, energy, threshold, currentForm, baseForm, forms)
+    local ok, reason = Evolution.Validate(form, biomass, threshold, currentForm, baseForm, forms)
     if ok then
         return form :: string, reason
     end
