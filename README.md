@@ -89,6 +89,8 @@ Server-only gameplay, wired in `ServerScriptService/Bootstrap.server.lua`:
 | `ServerScriptService/Services/FoodService.lua` | Creates one food ball per `FoodSpawn`-tagged part, detects pickups, awards biomass, respawns food |
 | `ServerScriptService/Services/GrowthService.lua` | Applies the current stage's body scale to the player's R15 character (on stage change, spawn and appearance load) |
 | `ReplicatedStorage/Shared/Growth.lua` | Pure stage/scale/clamp helpers (no Roblox services) |
+| `ServerScriptService/Services/LifeService.lua` | Tracks each player's life (`Alive` / `Ended`) and `lifeId`; detects life start and end; server-only `LifeBegan` / `LifeEnded` events. Resets nothing (see Life tracking) |
+| `ReplicatedStorage/Shared/Life.lua` | Pure life transition rules (no Roblox services) |
 | `ReplicatedStorage/Shared/Config.lua` | Tuning: `FoodBiomass`, `FoodRespawnDelay`, `FoodPickupRange`, `FoodHoverHeight`, `FoodCheckInterval`, `GrowthStages` |
 
 How it works:
@@ -115,6 +117,15 @@ Design notes:
 - The `ScreenGui` has `ResetOnSpawn = false`, and the attributes live on the Player, so the HUD is unaffected by respawns.
 - Layout: width is 30% of the screen, clamped to 240-420 px; text is scaled between 12 and 22 px. The bar fill is `Growth.GetProgressRatio(biomass, cap)` (tested in `tests/Growth.test.lua`).
 - The attribute names are string literals in `PlayerDataService.lua` and `BiomassUIController.lua`; change both together.
+
+## Life tracking (P1-02)
+
+`LifeService` (started first in `Bootstrap.server.lua`) only detects when a life begins and ends. It does not reset or change anything: Biomass, `GrowthStage`, `EvolutionForm` and ability cooldowns still survive death and respawn, and Roblox's automatic respawn is unchanged. Resetting on death is a later milestone.
+
+- A life is one character. It begins on `CharacterAdded` (`lifeId` + 1) and ends on the first of `Humanoid.Died`, `CharacterRemoving`, a replacement character, or the player leaving. A second signal for the same life is ignored, and a late signal from an older character cannot end a newer life.
+- Server-only API: `LifeService.LifeBegan(player, lifeId)`, `LifeService.LifeEnded(player, lifeId, reason)` (reason: `HumanoidDied`, `CharacterRemoving`, `CharacterReplaced`, `PlayerRemoving`), `GetState(player)`, `GetLifeId(player)`, `IsAlive(player)`. The events are BindableEvents inside the module, not remotes.
+- State lives in a server table. The `LifeState` Player attribute (`Alive` / `Ended`) is a debugging mirror only and must never be used for a decision. `lifeId` is not replicated.
+- The transition rules are in `ReplicatedStorage/Shared/Life.lua` and are covered by `tests/Life.test.lua`. That file does not test the Roblox signal wiring, which needs the Studio checklist below.
 
 ## Evolution choice
 
@@ -230,7 +241,7 @@ Limitations:
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio. `tests/Life.test.lua` covers the pure rules in `Life.lua` (begin/end transitions, `lifeId`, duplicate and stale end requests, invalid input); it does not cover the Roblox signal wiring.
 
 ### Manual Studio test checklist
 
@@ -255,6 +266,21 @@ Limitations:
 6. Test > Clients and Servers with 2 players. Expected: each client's HUD shows only its own biomass; collecting on one client does not change the other's HUD.
 7. In the emulator (Test > Device) try a phone portrait, phone landscape, tablet and 1080p. Expected: the panel stays readable, centered, not clipped by the screen edge or the Roblox bottom bar, and does not cover the hotbar or touch controls.
 8. In Explorer during play, change your own Player attributes on the client side (not the server) and confirm the server value is not affected. This confirms the HUD is display-only.
+
+### Manual Studio test checklist: life tracking (P1-02)
+
+Check `LifeState` on your Player in Explorer (server view while playing). To see `lifeId`, run in the server command bar: `print(require(game.ServerScriptService.Services.LifeService).GetLifeId(game.Players.YourName))`. If that does not match what you see, use a temporary local `print` in `LifeService.lua` instead and do not commit it.
+
+1. Play Solo. Expected: the character spawns and `LifeState` is `Alive`.
+2. Use Roblox Reset Character. Expected: `LifeState` becomes `Ended`.
+3. Wait for the automatic respawn. Expected: `LifeState` is `Alive` again.
+4. Repeat the death a few times. Expected: `lifeId` rises by exactly 1 per spawn and never on death.
+5. Log `LifeEnded` for one death. Expected: exactly one event, even though `Humanoid.Died` and `CharacterRemoving` both occur.
+6. Collect food, evolve, then die and respawn. Expected: Biomass and `EvolutionForm` are unchanged across death and respawn.
+7. Use Tank Shell and Glider before and after a death. Expected: both still work and existing cleanup is not broken.
+8. Test > Clients and Servers with 2 players, reset one. Expected: the other player's `LifeState` and `lifeId` do not change.
+9. Have a player leave during an active life. Expected: no errors; the lifecycle record and connections are cleaned up.
+10. Expected throughout: no errors or warnings from `LifeService` in Output.
 
 ### Manual Studio test checklist: Evolution
 
