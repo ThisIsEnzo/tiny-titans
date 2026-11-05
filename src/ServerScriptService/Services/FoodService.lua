@@ -45,9 +45,9 @@ local function createFoodItem(marker: BasePart, folder: Folder): FoodItem
     return { marker = marker, part = part, active = true }
 end
 
--- Returns the character root if the player is alive and may gain energy.
+-- Returns the character root if the player is alive and may gain biomass.
 local function getEligibleRoot(player: Player): BasePart?
-    if not playerData.CanGainEnergy(player) then
+    if not playerData.CanGainBiomass(player) then
         return nil
     end
     local character = player.Character
@@ -96,7 +96,7 @@ local function step(folder: Folder)
         -- yields), so the item can be collected by one player only, once per spawn cycle.
         if winner ~= nil and Food.TryConsume(food) then
             food.part.Parent = nil
-            local gained = playerData.AddEnergy(winner, Config.FoodEnergy)
+            local gained = playerData.AddBiomass(winner, Config.FoodBiomass)
             if gained > 0 then
                 task.delay(Config.FoodRespawnDelay, respawnFood, food, folder)
             else

@@ -1,6 +1,6 @@
 --!strict
 -- Server-owned evolution state (session only, no persistence).
--- Each player starts as Config.BaseForm. When energy reaches the threshold the server
+-- Each player starts as Config.BaseForm. When biomass reaches the threshold the server
 -- marks evolution available; the client may then request one branch via the
 -- RequestEvolution RemoteEvent. The server validates every request and records the
 -- choice exactly once. Clients only ever send a branch name, never state.
@@ -29,11 +29,11 @@ local function refresh(player: Player)
     if form == nil then
         return
     end
-    local energy = playerData.GetEnergy(player) or 0
+    local biomass = playerData.GetBiomass(player) or 0
     player:SetAttribute("EvolutionForm", form)
     player:SetAttribute(
         "EvolutionAvailable",
-        Evolution.IsAvailable(energy, Config.EvolutionEnergyRequired, form, Config.BaseForm)
+        Evolution.IsAvailable(biomass, Config.EvolutionBiomassRequired, form, Config.BaseForm)
     )
 end
 
@@ -73,8 +73,8 @@ local function onRequestEvolution(player: Player, form: any)
     lastRequestAt[player] = now
 
     local currentForm = formByPlayer[player]
-    local energy = playerData.GetEnergy(player)
-    if currentForm == nil or energy == nil then
+    local biomass = playerData.GetBiomass(player)
+    if currentForm == nil or biomass == nil then
         return
     end
     if not isAlive(player) then
@@ -83,8 +83,8 @@ local function onRequestEvolution(player: Player, form: any)
     end
     local newForm, reason = Evolution.Select(
         form,
-        energy,
-        Config.EvolutionEnergyRequired,
+        biomass,
+        Config.EvolutionBiomassRequired,
         currentForm,
         Config.BaseForm,
         Config.EvolutionForms

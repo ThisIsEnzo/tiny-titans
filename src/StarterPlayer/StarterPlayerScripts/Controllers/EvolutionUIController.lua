@@ -35,7 +35,7 @@ local FORM_INFO: { [string]: { role: string, ability: string, color: Color3 } } 
 }
 
 local RESULT_MESSAGES: { [string]: string } = {
-    ThresholdNotReached = "Not enough Energy yet.",
+    ThresholdNotReached = "Not enough Biomass yet.",
     AlreadyEvolved = "You have already evolved.",
     InvalidForm = "That form is not available.",
     NoLivingCharacter = "Respawn first, then try again.",
@@ -142,7 +142,7 @@ local function buildGui(): Ui
     gui.DisplayOrder = 11
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- Form badge, just above the Energy HUD.
+    -- Form badge, just above the Biomass HUD.
     local badge = Instance.new("Frame")
     badge.Name = "FormBadge"
     badge.AnchorPoint = Vector2.new(0.5, 1)

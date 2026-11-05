@@ -3,7 +3,7 @@
 -- Keep gameplay decisions and validation on the server.
 
 local Config = {
-    EvolutionEnergyRequired = 100,
+    EvolutionBiomassRequired = 100,
 
     -- Evolution (server-authoritative; see ServerScriptService/Services/EvolutionService).
     BaseForm = "BABY_BUG", -- form every player starts in
@@ -28,18 +28,18 @@ local Config = {
     GliderGravityCompensation = 0.65, -- fraction of gravity cancelled while gliding (always capped below 1)
 
     -- Food (server-authoritative; see ServerScriptService/Services/FoodService).
-    FoodEnergy = 10, -- evolution energy awarded per food item
+    FoodBiomass = 10, -- evolution biomass awarded per food item
     FoodRespawnDelay = 8, -- seconds until a collected food item reappears
     FoodPickupRange = 5, -- studs from the character root to the food center
     FoodHoverHeight = 2, -- studs above the FoodSpawn marker's center
     FoodCheckInterval = 0.1, -- seconds between server pickup checks
 
-    -- Growth stages. A player is in the last stage whose MinEnergy they have reached.
+    -- Growth stages. A player is in the last stage whose MinBiomass they have reached.
     -- Scale is applied to the R15 body scale values (visual growth).
     GrowthStages = table.freeze({
-        table.freeze({ MinEnergy = 0, Scale = 0.6 }),
-        table.freeze({ MinEnergy = 30, Scale = 0.8 }),
-        table.freeze({ MinEnergy = 60, Scale = 1.0 }),
+        table.freeze({ MinBiomass = 0, Scale = 0.6 }),
+        table.freeze({ MinBiomass = 30, Scale = 0.8 }),
+        table.freeze({ MinBiomass = 60, Scale = 1.0 }),
     }),
     GrowthTweenSeconds = 0.8, -- length of the smooth transition when a stage threshold is crossed
     AppearanceFallbackSeconds = 5, -- scale a new character anyway if its appearance never finishes loading

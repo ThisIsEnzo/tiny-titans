@@ -1,7 +1,7 @@
 --!strict
 -- Server-owned per-player progression (session only, no persistence).
--- Only server code may call AddEnergy. Clients never send energy values.
--- Energy and stage are mirrored to Player attributes ("Energy", "GrowthStage")
+-- Only server code may call AddBiomass. Clients never send biomass values.
+-- Biomass and stage are mirrored to Player attributes ("Biomass", "GrowthStage")
 -- so future UI can read them without a RemoteEvent.
 
 local Players = game:GetService("Players")
@@ -13,63 +13,63 @@ local Growth = require(Shared:WaitForChild("Growth") :: ModuleScript)
 
 local PlayerDataService = {}
 
-local energyByPlayer: { [Player]: number } = {}
+local biomassByPlayer: { [Player]: number } = {}
 local progressChanged = Instance.new("BindableEvent")
 
--- Fires (player: Player, energy: number, stageIndex: number) on the server only.
+-- Fires (player: Player, biomass: number, stageIndex: number) on the server only.
 PlayerDataService.ProgressChanged = progressChanged.Event
 
-local function publish(player: Player, energy: number)
-    local stage = Growth.GetStageIndex(energy, Config.GrowthStages)
-    player:SetAttribute("Energy", energy)
+local function publish(player: Player, biomass: number)
+    local stage = Growth.GetStageIndex(biomass, Config.GrowthStages)
+    player:SetAttribute("Biomass", biomass)
     player:SetAttribute("GrowthStage", stage)
-    progressChanged:Fire(player, energy, stage)
+    progressChanged:Fire(player, biomass, stage)
 end
 
 local function onPlayerAdded(player: Player)
-    if energyByPlayer[player] ~= nil then
+    if biomassByPlayer[player] ~= nil then
         return
     end
-    energyByPlayer[player] = 0
+    biomassByPlayer[player] = 0
     publish(player, 0)
 end
 
 function PlayerDataService.Init()
     Players.PlayerAdded:Connect(onPlayerAdded)
     Players.PlayerRemoving:Connect(function(player)
-        energyByPlayer[player] = nil
+        biomassByPlayer[player] = nil
     end)
     for _, player in Players:GetPlayers() do
         onPlayerAdded(player)
     end
 end
 
-function PlayerDataService.GetEnergy(player: Player): number?
-    return energyByPlayer[player]
+function PlayerDataService.GetBiomass(player: Player): number?
+    return biomassByPlayer[player]
 end
 
 function PlayerDataService.GetStageIndex(player: Player): number
-    local energy = energyByPlayer[player] or 0
-    return Growth.GetStageIndex(energy, Config.GrowthStages)
+    local biomass = biomassByPlayer[player] or 0
+    return Growth.GetStageIndex(biomass, Config.GrowthStages)
 end
 
--- True if the player has a record and has not reached the energy cap.
-function PlayerDataService.CanGainEnergy(player: Player): boolean
-    local energy = energyByPlayer[player]
-    return energy ~= nil and energy < Config.EvolutionEnergyRequired
+-- True if the player has a record and has not reached the biomass cap.
+function PlayerDataService.CanGainBiomass(player: Player): boolean
+    local biomass = biomassByPlayer[player]
+    return biomass ~= nil and biomass < Config.EvolutionBiomassRequired
 end
 
--- Adds energy (clamped to the cap). Returns the amount actually added.
-function PlayerDataService.AddEnergy(player: Player, amount: number): number
-    local current = energyByPlayer[player]
+-- Adds biomass (clamped to the cap). Returns the amount actually added.
+function PlayerDataService.AddBiomass(player: Player, amount: number): number
+    local current = biomassByPlayer[player]
     if current == nil then
         return 0
     end
-    local updated, gained = Growth.AddEnergy(current, amount, Config.EvolutionEnergyRequired)
+    local updated, gained = Growth.AddBiomass(current, amount, Config.EvolutionBiomassRequired)
     if gained <= 0 then
         return 0
     end
-    energyByPlayer[player] = updated
+    biomassByPlayer[player] = updated
     publish(player, updated)
     return gained
 end

@@ -19,10 +19,10 @@ end
 
 local base = Config.BaseForm
 local forms = Config.EvolutionForms
-local cap = Config.EvolutionEnergyRequired
+local cap = Config.EvolutionBiomassRequired
 
-local function validate(form: any, energy: number, current: string)
-    local ok, reason = Evolution.Validate(form, energy, cap, current, base, forms)
+local function validate(form: any, biomass: number, current: string)
+    local ok, reason = Evolution.Validate(form, biomass, cap, current, base, forms)
     return ok, reason
 end
 
@@ -38,7 +38,7 @@ check("empty string rejected", not Evolution.IsValidForm("", forms))
 check("not available below threshold", not Evolution.IsAvailable(cap - 1, cap, base, base))
 check("available at threshold", Evolution.IsAvailable(cap, cap, base, base))
 check("not available once evolved", not Evolution.IsAvailable(cap, cap, "TANK", base))
-check("not available for NaN energy", not Evolution.IsAvailable(0 / 0, cap, base, base))
+check("not available for NaN biomass", not Evolution.IsAvailable(0 / 0, cap, base, base))
 
 local ok, reason = validate("TANK", cap, base)
 check("accepts TANK at threshold", ok and reason == "Ok")
@@ -47,7 +47,7 @@ check("accepts GLIDER at threshold", ok and reason == "Ok")
 ok, reason = validate("TANK", cap - 1, base)
 check("rejects below threshold", not ok and reason == "ThresholdNotReached")
 ok, reason = validate("TANK", 0 / 0, base)
-check("rejects NaN energy", not ok and reason == "ThresholdNotReached")
+check("rejects NaN biomass", not ok and reason == "ThresholdNotReached")
 ok, reason = validate("TANK", cap, "GLIDER")
 check("rejects repeat after evolving", not ok and reason == "AlreadyEvolved")
 ok, reason = validate("GLIDER", cap, "GLIDER")
@@ -106,8 +106,8 @@ playerForms.B = Evolution.Select("GLIDER", cap, cap, playerForms.B, base, forms)
 check("B selects GLIDER independently", playerForms.A == "TANK" and playerForms.B == "GLIDER")
 
 -- Evolution readiness (existing behaviour must not change).
-check("not ready at 99 energy", not Evolution.IsAvailable(99, cap, base, base))
-check("ready at 100 energy", Evolution.IsAvailable(100, cap, base, base))
+check("not ready at 99 biomass", not Evolution.IsAvailable(99, cap, base, base))
+check("ready at 100 biomass", Evolution.IsAvailable(100, cap, base, base))
 check("not ready again after evolving", not Evolution.IsAvailable(100, cap, "GLIDER", base))
 
 -- Forms and abilities: each form can only use its own ability.
@@ -122,7 +122,7 @@ check("BABY_BUG has no ability", not (Ability.Validate(base, true, 100, 0, 0, Co
 -- verified manually (README checklist), not by this file.
 
 check("branches are distinct", forms[1] ~= forms[2])
-check("energy threshold positive", cap > 0)
+check("biomass threshold positive", cap > 0)
 
 if failures > 0 then
     error(failures .. " test(s) failed")
