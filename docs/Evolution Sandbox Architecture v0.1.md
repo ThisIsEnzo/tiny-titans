@@ -1,22 +1,22 @@
 # TINY TITANS — Evolution Sandbox Architecture v0.1
 
 **Status:** Proposal for review. Documentation only; no runtime code is changed by this document.
-**Branch:** `docs/tt-p0-02r-evolution-sandbox-architecture`
+**Branch:** `docs/define-evolution-sandbox`
 **Companion document:** `TT-P0-02R Implementation Migration Plan.md`
 **Audited baseline:** the repository as it stands after the evolution-flow work (the "PR #17" implementation: `Evolution.Select`, `EvolutionResult`, two-step selection UI).
 
 ## 0. Scope, sources and honesty notes
 
 - This is an architecture and product-alignment document. It describes the current code accurately and proposes a path; it does not build anything.
-- **Source documents and integration status.** The canonical product documents could not be verified, so this document is **not** claimed to be integrated with them:
+- **Source documents and integration status.** The three project-level source documents were available on `master` and reviewed for this proposal. This document is aligned with them where decisions are sufficiently defined; unresolved design choices remain explicitly provisional.
 
-  | Source | Status in this review | Consequence |
+  | Source | Status reviewed | Architectural consequence |
   |---|---|---|
-  | `docs/Evolution Adventure Sandbox Roadmap v0.1.md` (PR #18) | Not in `docs/`, in any local branch, or in git history; the PR itself was not accessible (no network access) | Direction below comes from the briefs only. If the roadmap differs, it wins and this document is corrected |
-  | Combat Progression & Endgame Design (PR #19) | Same: not found, PR not accessible | Combat, endgame, PvE/PvP/PvPvE detail is **not** specified here; only the guardrails in section 1.2 are stated |
-  | Product Vision & Top 1000 Strategy | Same: not found | Appendix A lists the edits it needs; it was not reconstructed |
+  | `docs/Evolution Adventure Sandbox Roadmap v0.1.md` (PR #18) | Present on `master`; proposed product roadmap, reviewed | Defines the Evolution Adventure Sandbox, Current Life / Evolution / Legacy, death and rebirth, and product phases P0–P7. This architecture is the TT-P0-02R architecture deliverable; it does not replace the roadmap. |
+  | `docs/Combat Progression & Endgame Design v0.1.md` (PR #19) | Present on `master`; proposed combat/progression design, reviewed | Defines combat principles, the exploratory 4–6-form long-term target, first combat-ready four-form target, and a proposed P3.5 Combat & Ecosystem Design milestone. P3.5 is a proposed roadmap addition, not approval to begin full combat implementation. |
+  | `docs/Product Vision & Top 1000 Strategy.md` | Present on `master`; product north star and living strategy, reviewed | Governs product priorities and evidence gates. Its P0–P8 strategy roadmap is distinct from the Evolution Adventure Sandbox roadmap's P0–P7 product phases and from this document's proposed engineering sequence. Top 1000 remains an ambition, not a forecast. |
 
-  The product direction used here (three layers, death resets the current life, Biomass as proposed resource, P1 to P7 sequence, the four-class target, the guardrails in section 1.2) is taken from the task briefs for this milestone and its correction pass, not from a verified canonical document. Where a canonical document later disagrees, it takes precedence.
+  **How to resolve overlap:** Product Vision governs product priorities and quality principles; the Evolution Adventure Sandbox Roadmap defines the product progression model and phase outcomes; Combat Progression & Endgame Design supplies combat-specific principles and the proposed P3.5 addition. This architecture translates those directions into system boundaries. The companion migration plan is an implementation proposal, not a replacement for any source roadmap. A proposed decision in this document does not mean it is implemented or finally approved.
 - **Verification level:** everything in section 2 was read from the source files. Nothing in this document was tested in Roblox Studio by the author. The team's own Play Solo observations (spawn, walking, jumping, food, HUD at 40/100 and Stage 2/3, abrupt growth, intermittent ground clipping) are reported by the team, not re-verified here. The unit tests (section 2.8) have not been executed by the author either (the test runner was unavailable in the authoring environment).
 - Items that cannot be established from code are labelled **Unknown** or **Needs Studio validation**.
 
@@ -56,17 +56,19 @@ A discovery never makes an option available by itself, and availability never by
 Notes:
 
 - The four role names are **provisional role directions**, not finalized class names, abilities, statistics or balance. This document defines no abilities or numbers for any class, and the two missing classes have no definitions, ids or code.
+- The Combat Progression & Endgame Design document keeps a broader **4–6-form long-term exploration target** and lists Support / Warden and Controller / Disruptor as separate candidate directions. The current initial-roster proposal deliberately combines those two candidate directions into one **Support / Controller** hybrid role, yielding four initial evolved classes. That combination is a project direction to validate, not a claim that the combat source has finalized the roster.
 - Each class should eventually have distinct strengths, weaknesses, counterplay and a meaningful gameplay identity. Today Tank and Glider differ only by their ability, and the Tank shell has no combat effect because no combat system exists.
-- Initial launch scope is the starter plus these four classes. **No fifth or sixth class is in scope**; further classes may be considered only after real player feedback and gameplay validation.
+- Initial launch planning is the starter plus these four provisional roles. **Do not add a fifth or sixth class before the initial roster and core loop are validated with players.** The combat design's 4–6 target is a long-term exploration range, not a requirement to ship six.
 
 ### 1.2 Product guardrails (direction; none of this is implemented)
 
-Taken from the briefs and not verified against canonical documents (section 0):
+These guardrails are grounded in the reviewed Evolution Adventure Sandbox Roadmap, Combat Progression & Endgame Design and Product Vision documents. They describe product direction; none of the future systems below is implemented today:
 
-- Death resets the current life, not all player progress. Legacy keeps discoveries, achievements, collections and identity.
-- Legacy never grants permanent raw combat advantages.
-- PvE is a core gameplay direction. PvP should be optional and fair. PvPvE can be explored as a distinctive future mode.
-- No paid resurrection, death protection or combat advantages.
+- Death ends the current life, resetting Current Life state while Legacy discoveries, achievements, collections and identity persist.
+- Legacy and long-term progression grant choices, knowledge, identity and access—not permanent raw combat power or unchecked numerical advantages.
+- PvE is a core activity. PvP is optional and fair; PvPvE remains an exploratory future mode and must not be forced on players.
+- No paid resurrection, death protection, or monetized combat advantage.
+- Combat outcomes, damage, healing, status effects, targets and rewards must be server-authoritative.
 - Today: there is no damage, health, combat, PvE, PvP or PvPvE system, and no persistence or DataStore code.
 
 ## 2. Implementation inventory (what exists today)
@@ -480,17 +482,8 @@ Open questions:
 | Q9 | May other players see anyone's Biomass, or only form? | Privacy; attributes vs remotes |
 | Q10 | What are Roblox place settings for respawn (`RespawnTime`, `CharacterAutoLoads`)? | Currently **Unknown** |
 | Q11 | What is the cause of the intermittent ground clipping? | Unresolved; needs the Studio procedure in the README |
-| Q12 | When does real damage and health arrive (P4), and does Tank's shell then become mechanical? | Tank identity |
-| Q13 | What are the designs of Striker / Hunter and Support / Controller, and what do they need from combat (PR #19, unverified)? | Roster completion and ordering |
-| Q14 | What are the scopes of optional PvP and of PvPvE, and when are they explored (after PvE is validated)? | Combat design (PR #19, unverified) |
+| Q12 | What is the exact P3.5 combat prototype scope and its exit gate before P4 production implementation? | Combat foundation, Studio validation and scope control |
+| Q13 | What signature mechanics and counterplay define Striker / Hunter and the proposed combined Support / Controller role? | Class identity; the combined role must be validated against the separate Support and Controller candidate directions in the combat design |
+| Q14 | Which optional PvP format, if any, is justified after the PvE core is validated, and what PvPvE experiment is worth testing? | Fairness, anti-farming and multiplayer scope |
 
-## Appendix A. Edits needed in the Product Vision & Top 1000 Strategy document (not present in this copy)
-
-Apply these only, without rewriting the document:
-
-1. Add a short "Product model" paragraph: Current Life / Evolution / Legacy, with the sentence "Legacy never grants permanent raw power."
-2. Add a "Death and rebirth" principle: death ends the current life, resets form and Current Life state, and returns the player to `BABY_BUG`; discoveries are permanent.
-3. Reference `Evolution Sandbox Architecture v0.1.md` for the architecture and `TT-P0-02R Implementation Migration Plan.md` for the ordered plan (P1 to P7).
-4. State the roster: Baby Bug starter plus four provisional classes (Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller), two implemented, no fifth or sixth class at launch.
-5. Restate the guardrails of section 1.2 (including no paid resurrection, death protection or combat advantages) so the documents do not diverge.
-6. Where the strategy mentions prototype constraints (no persistence), note that Legacy persistence is planned for P5 and that session-only play remains the behavior until then.
+The source documents are present and reviewed; this appendix is intentionally omitted rather than retaining obsolete instructions to update a supposedly unavailable Product Vision document.

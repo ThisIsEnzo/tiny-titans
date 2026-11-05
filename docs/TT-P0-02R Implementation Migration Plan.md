@@ -1,6 +1,6 @@
 # TT-P0-02R — Implementation Migration Plan
 
-**Status:** Proposal for review. Documentation only. **P1 to P7 is a proposed implementation sequence, not an immutable product roadmap**: the roadmap (PR #18) and combat design (PR #19) could not be verified when this was written, so this plan is not claimed to be integrated with them and must be reconciled once they are available. Approving this document is **not** runtime validation of anything.
+**Status:** Proposal for review. Documentation only. This is a proposed engineering sequence, aligned with the reviewed Evolution Adventure Sandbox Roadmap (PR #18), Combat Progression & Endgame Design (PR #19), and Product Vision & Top 1000 Strategy. It does **not** replace those product documents or authorize implementation by itself. It includes a proposed P3.5 Combat & Ecosystem Design gate before P4 combat implementation. Approving this document is **not** runtime validation of anything.
 **Companion:** `Evolution Sandbox Architecture v0.1.md` (section numbers below refer to it).
 **Principle:** small, reviewable steps that keep the game playable after every merge. No big-bang rewrite. Working systems are adapted, not replaced.
 
@@ -17,16 +17,19 @@ Not implemented (everything below is future work): lives, death reset and recap;
 - Steps are numbered `P<phase>-<nn>`. Each step is intended to be one focused PR.
 - **Studio** says whether Roblox Studio runtime validation is required before the step is accepted. Automated tests only cover the pure shared modules (Lune); services, UI, remotes and character lifecycle need Studio.
 - "Existing files" lists what the step reads or changes; "New files" lists what it adds. Test names refer to the existing Lune convention (`tests/<Name>.test.lua`).
-- The roadmap document that defines P1 to P7 was not available when this plan was written. The phase names follow the task brief; scope inside P3 to P7 is deliberately coarser than P1 and P2 and must be refined when those phases start.
+- The Evolution Adventure Sandbox Roadmap defines product phases P0–P7; the Combat Progression & Endgame Design document proposes an additional P3.5 design/prototype milestone. This document is a more detailed engineering sequence, not the product roadmap itself. Product Vision & Top 1000 Strategy has a separate P0–P8 strategy roadmap; do not treat those phase numbers as interchangeable with this plan's engineering steps.
+- Scope inside P3 to P7 is deliberately coarser than P1 and P2 and must be refined when those phases start. P3.5 must be scoped and approved after the P0 architecture review; it is a gate before full P4 combat implementation, not permission to skip P0/P3 validation.
 
 ## Sequence changes from the brief (and why)
 
 1. **Energy to Biomass rename is the first step of P1**, before lifecycle code, so the reset logic, tests and later Legacy schema use the final name once (architecture section 7).
 2. **A damage/health step is placed in P4**, but P1 does not depend on it: lifecycle work is verified with the Roblox reset (Humanoid health set to 0). Natural death causes arrive in P4.
 3. **Controlled respawn comes after the reset logic** (P1-03 before P1-04): resetting state on death is testable with default respawn; changing `CharacterAutoLoads` is the riskiest part and is isolated in its own step.
-4. **Persistence (P5) is split** into an in-memory Legacy model first and the DataStore layer second, so discovery gameplay can be built and tested before any DataStore code exists.
+4. **P3.5 Combat & Ecosystem Design is inserted between P3 and P4**, as proposed by the combat design. It defines and prototypes the combat foundation, first PvE encounter, damage/defence/cooldown model, telegraphs, counterplay, reward economy, PvP boundaries and balance test plan before P4 scales into a polished PvE loop.
+5. **Striker / Hunter and Support / Controller are gated by P3.5 and PvE validation.** Their roles and kits are not invented in this plan; they require explicit design and playtest evidence before implementation. The proposed Support / Controller role combines two candidate directions from the combat source and remains provisional.
+6. **Persistence (P5) is split** into an in-memory Legacy model first and the DataStore layer second, so discovery gameplay can be built and tested before any DataStore code exists.
 
-Everything else follows the brief's order.
+This engineering sequence follows the product roadmap's intent while retaining its exit gates; it does not make the proposed P3.5 milestone final or authorize full combat implementation before the design review.
 
 ## Dependency overview
 
@@ -41,12 +44,13 @@ flowchart LR
     P2_1 --> P2_4[P2-04 Availability and requirements]
     P1_4 --> P3[P3 First Habitat]
     P2_4 --> P3
-    P3 --> P4[P4 Adventure and Survival]
+    P3 --> P3_5[P3.5 Combat & Ecosystem Design]
+    P3_5 --> P4[P4 Adventure and Survival]
     P3 --> P5_1[P5-01 In-memory Legacy]
     P5_1 --> P5_2[P5-02 DataStore layer]
-    P4 --> P6[P6 Multiplayer]
+    P4 --> P6[P6 Multiplayer experiences]
     P5_2 --> P6
-    P6 --> P7[P7 Identity, polish, launch]
+    P6 --> P7[P7 Retention, identity, launch readiness]
 ```
 
 ---
@@ -191,6 +195,30 @@ Goal: turn the greybox arena into the first habitat with things to find, without
 
 ---
 
+## P3.5 — Combat & Ecosystem Design (proposed gate)
+
+This is the proposed milestone from Combat Progression & Endgame Design. It must be formalized after the P0 architecture review and completed before P4 expands into production combat. It is a **design and limited-prototype milestone**, not a full combat rollout.
+
+### P3.5-01 — Combat rules and first PvE encounter design
+
+- **Goal:** define a compact, readable combat loop and one or two first NPC encounter concepts that fit the first habitat and current forms.
+- **Dependencies:** P0 architecture review and P3 habitat direction; do not start full implementation before these are accepted.
+- **Deliverables:** attack/defence action set; wind-up, active and recovery windows; hit/damage authority rules; interruption and stagger limits; cooldown/resource model; telegraphs and counterplay; accessibility/input requirements; first PvE encounter specification.
+- **Acceptance:** players can understand why an action hits, misses, is blocked or interrupted; no unavoidable chain-stuns or invisible damage; server authority and exploit boundaries are documented; scope is small enough for a first vertical slice.
+- **Tests / Studio:** tabletop/design review plus a limited Studio prototype where appropriate; record what was actually tested. No production combat system is implied by this design step.
+
+### P3.5-02 — Rewards, defeat, PvP boundaries and balance plan
+
+- **Goal:** define reward integrity and the boundaries that keep PvE enjoyable and multiplayer fair.
+- **Dependencies:** P3.5-01.
+- **Deliverables:** risk- and contribution-aware PvE rewards; defeat/death interaction; anti-farming rules; optional PvP boundaries; PvPvE questions to explore only if justified; initial balance/playtest/telemetry plan.
+- **Acceptance:** PvE progression does not require PvP; PvP remains optional; ordinary player kills do not create large Biomass rewards; new players are protected from repeated farming; no monetized combat advantage; balance hypotheses have observable tests.
+- **Tests / Studio:** review with representative playtest scenarios; validate the first prototype and record unresolved questions before P4 approval.
+
+**P3.5 exit gate:** approve the combat rules, one small PvE encounter prototype, server-authority contract, reward/anti-farming rules and balance test plan. If the prototype is not readable or fun, revise it before P4; do not compensate by adding more classes or complexity.
+
+---
+
 ## P4 — Adventure and Survival
 
 Goal: reasons to take risk, and real death causes. Scope is coarse.
@@ -200,8 +228,8 @@ Goal: reasons to take risk, and real death causes. Scope is coarse.
 - **Goal:** a server-owned health/damage model so lives can end naturally and abilities can mean something.
 - **Existing files:** `AbilityService.lua`, `PlayerDataService.lua`, HUD.
 - **New files:** damage service and pure rules; tests.
-- **Dependencies:** P1-03.
-- **Acceptance:** damage applied only by the server; death goes through `LifeService`; no client-reported damage.
+- **Dependencies:** P1-03, approved P3.5 combat rules/prototype.
+- **Acceptance:** damage applied only by the server; death goes through `LifeService`; no client-reported damage; implementation matches the P3.5 authority and telegraph contract.
 - **Tests:** pure damage rules.
 - **Studio:** yes.
 
@@ -215,7 +243,7 @@ Goal: reasons to take risk, and real death causes. Scope is coarse.
 - **Goal:** Current Life objectives and temporary upgrades, reset on death.
 - **Dependencies:** P1-03. **Acceptance:** all state reset on life end; none persists. **Tests:** pure rules. **Studio:** yes.
 
-### P4-04 — Make the Tank shell mechanical (if approved, Q12)
+### P4-04 — Make the Tank shell mechanical (if approved by the combat design)
 
 - **Goal:** replace "visual only" with a real defensive effect once damage exists.
 - **Dependencies:** P4-01. **Acceptance:** documented, balanced, server-side only. **Tests:** pure rules. **Studio:** yes.
@@ -225,16 +253,16 @@ Goal: reasons to take risk, and real death causes. Scope is coarse.
 - **Goal:** design and add the third evolved class. Its abilities, numbers and final name are **not defined by this plan**; they come from the class design.
 - **Existing files:** `CreatureDefinitions.lua` (P2-01), `AbilityService.lua` handlers (P2-02), `EvolutionUIController.lua` (data-driven cards, P2-03).
 - **New files:** a form definition, ability definition and handler.
-- **Dependencies:** P4-01, P2-02, P2-03.
-- **Acceptance:** distinct strengths, weaknesses, counterplay and gameplay identity written down before coding; selectable only through the existing validated flow; server-authoritative; no permanent power; wrong-form requests rejected.
+- **Dependencies:** P3.5 exit gate, P4-01, P4-02, P2-02, P2-03. Do not begin class implementation until the first PvE loop has been playtested and the role has a validated use case.
+- **Acceptance:** distinct strengths, weaknesses, counterplay and gameplay identity written down before coding; the class adds a meaningful interaction not already served by Tank/Glider; selectable only through the existing validated flow; server-authoritative; no permanent power; wrong-form requests rejected. This is a conditional follow-up, not a prerequisite for the first PvE vertical slice.
 - **Tests:** pure rules for its ability; form/ability definition validation.
 - **Studio:** yes.
 
 ### P4-06 — Support / Controller class (provisional role; design first)
 
 - **Goal:** design and add the fourth evolved class, completing the initial roster. Same rules and unknowns as P4-05.
-- **Dependencies:** P4-05 (and any multiplayer-interaction needs from P6, to be confirmed by the design).
-- **Acceptance and tests:** as P4-05; adding it must need no UI code changes. Roster stays at four; a fifth class is out of scope until real player feedback and gameplay validation.
+- **Dependencies:** P3.5 exit gate, P4-01, P4-02, P4-05, P2-02, P2-03; any multiplayer-interaction needs from P6 must be identified by the design first.
+- **Acceptance and tests:** as P4-05. The proposed Support / Controller hybrid must be validated against the separate Support / Warden and Controller / Disruptor candidate directions in the combat design. Adding it must need no UI code changes. The initial roster remains four; a fifth or sixth form is out of scope until real player feedback and gameplay validation.
 - **Studio:** yes.
 
 ---
@@ -278,7 +306,7 @@ Goal: reasons to take risk, and real death causes. Scope is coarse.
 
 ---
 
-## P6 — Multiplayer
+## P6 — Multiplayer experiences
 
 Scope is coarse; refine at phase start.
 
@@ -292,22 +320,29 @@ Scope is coarse; refine at phase start.
 - **Goal:** decide what other players may see (Q9); move private data off Player attributes onto owner-only remotes; review replication volume.
 - **Dependencies:** P5-01. **Acceptance:** no private data visible to other clients. **Studio:** yes.
 
-### P6-03 — Player-versus-player and PvPvE scope
+### P6-03 — Cooperative activities and helping-friends loop
 
-- **Goal:** only after the PvE core (P4) is validated and the combat design exists: decide and implement **optional, fair** PvP and explore PvPvE as a distinctive mode. **Out of scope until that design exists**; PvE remains the core direction. Nothing here grants paid or permanent combat advantages.
-- **Dependencies:** P4, P6-01. **Acceptance:** to be defined from the combat design; server-authoritative damage only. **Tests and Studio:** yes, with 3+ clients.
+- **Goal:** add co-op contracts, group encounters/events and useful ways for experienced players to help newer friends, without making solo play feel excluded or helpless.
+- **Dependencies:** validated PvE loop (P4), P6-01 and the relevant Legacy/progression rules.
+- **Acceptance:** contribution and rewards are readable; party scaling avoids trivial carry/farming; solo play remains viable; no permanent raw-power gap is created. **Tests and Studio:** yes, with 3+ clients.
+
+### P6-04 — Optional PvP and exploratory PvPvE
+
+- **Goal:** only after the PvE core (P4) and cooperative foundations are validated, test clearly optional, fair PvP formats. Explore PvPvE only if a specific world interaction justifies it; neither mode is required for progression.
+- **Dependencies:** P3.5 PvP boundaries, P4, P6-01 and P6-03.
+- **Acceptance:** safe onboarding, opt-in boundaries, anti-griefing and anti-farming rules; server-authoritative damage and rewards; no paid or permanent combat advantages. **Tests and Studio:** yes, with 3+ clients.
 
 ---
 
-## P7 — Identity, polish and launch readiness
+## P7 — Retention, identity, polish and launch readiness
 
 Scope is coarse; each item becomes its own plan when reached.
 
 - **P7-01 Creature identity:** final models, animation, audio, VFX for forms (replaces P2-05 placeholders). **Studio:** yes.
 - **P7-02 Onboarding:** first-minute flow, controls teaching, mobile layout pass. **Studio:** yes.
 - **P7-03 Performance and stability:** server/client budgets, remote and attribute volume, memory (connection/instance leaks), low-end device checks. **Studio:** yes.
-- **P7-04 Telemetry and QA matrix:** what to measure; full multiplayer, mobile and persistence QA pass.
-- **P7-05 Launch readiness:** store page, policy review, moderation considerations. Monetization is outside this plan; whatever is decided later must not include paid resurrection, death protection or combat advantages.
+- **P7-04 Retention, telemetry and QA matrix:** repeatable challenges/endgame hooks, what to measure, and full multiplayer, mobile and persistence QA pass.
+- **P7-05 Launch readiness:** accessibility, store page, policy review, moderation considerations. Monetization is outside this plan; whatever is decided later must not include paid resurrection, death protection or combat advantages.
 
 ---
 
