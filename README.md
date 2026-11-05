@@ -2,6 +2,18 @@
 
 Roblox prototype: a multiplayer creature evolution arena.
 
+## Direction and architecture documents
+
+The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death does **not** reset anything: Energy, growth stage and form survive a respawn and are lost only when the player leaves, and there is no persistence.
+
+Current implementation versus target: today there are three forms (`BABY_BUG`, `TANK`, `GLIDER`), with no damage, combat, PvE or PvP. The target (provisional) is the Baby Bug starter, which is not a class, plus four evolved classes (Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller); Striker / Hunter and Support / Controller are not implemented. "Energy" is today's name for the growth resource; the architecture documents propose renaming it Biomass, which has not been done or finally decided.
+
+- [Evolution Sandbox Architecture v0.1](docs/Evolution%20Sandbox%20Architecture%20v0.1.md): audit of the current code and proposed architecture.
+- [TT-P0-02R Implementation Migration Plan](docs/TT-P0-02R%20Implementation%20Migration%20Plan.md): proposed engineering sequence (P1–P7, including the proposed P3.5 combat-design gate); it does not replace the product roadmap.
+- [Evolution Adventure Sandbox Roadmap v0.1](docs/Evolution%20Adventure%20Sandbox%20Roadmap%20v0.1.md): product progression model and product phases P0–P7.
+- [Combat Progression & Endgame Design v0.1](docs/Combat%20Progression%20%26%20Endgame%20Design%20v0.1.md): proposed combat, progression and endgame direction, including P3.5.
+- [Product Vision & Top 1000 Strategy](docs/Product%20Vision%20%26%20Top%201000%20Strategy.md): product north star and separate P0–P8 strategy roadmap.
+
 ## Toolchain
 
 - Roblox Studio
