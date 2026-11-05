@@ -13,6 +13,7 @@ Current implementation versus target: today there are three forms (`BABY_BUG`, `
 - [Evolution Adventure Sandbox Roadmap v0.1](docs/Evolution%20Adventure%20Sandbox%20Roadmap%20v0.1.md): product progression model and product phases P0–P7.
 - [Combat Progression & Endgame Design v0.1](docs/Combat%20Progression%20%26%20Endgame%20Design%20v0.1.md): proposed combat, progression and endgame direction, including P3.5.
 - [Product Vision & Top 1000 Strategy](docs/Product%20Vision%20%26%20Top%201000%20Strategy.md): product north star and separate P0–P8 strategy roadmap.
+- [Tiny Titans Master Roadmap v0.1](docs/Tiny%20Titans%20Master%20Roadmap%20v0.1.md): unified roadmap from prototype through MVP/public launch and post-launch phases, with explicit scope, gates and estimated progress.
 
 ## Toolchain
 
