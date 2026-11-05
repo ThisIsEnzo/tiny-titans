@@ -8,8 +8,15 @@
 ## 0. Scope, sources and honesty notes
 
 - This is an architecture and product-alignment document. It describes the current code accurately and proposes a path; it does not build anything.
-- **Roadmap source:** `docs/Evolution Adventure Sandbox Roadmap v0.1.md` was **not present** in the repository copy used for this audit, and its content was not available to the author. The product direction used here (three layers, death resets the current life, Biomass as proposed central resource, P1 to P7 phases) is taken from the task brief only. Anything the roadmap says that differs from this document should win, and this document should then be corrected.
-- **Strategy source:** a "Product Vision & Top 1000 Strategy" document was also **not present** in this copy. Appendix A lists the exact edits it needs once it is available. It was not invented or rewritten here.
+- **Source documents and integration status.** The canonical product documents could not be verified, so this document is **not** claimed to be integrated with them:
+
+  | Source | Status in this review | Consequence |
+  |---|---|---|
+  | `docs/Evolution Adventure Sandbox Roadmap v0.1.md` (PR #18) | Not in `docs/`, in any local branch, or in git history; the PR itself was not accessible (no network access) | Direction below comes from the briefs only. If the roadmap differs, it wins and this document is corrected |
+  | Combat Progression & Endgame Design (PR #19) | Same: not found, PR not accessible | Combat, endgame, PvE/PvP/PvPvE detail is **not** specified here; only the guardrails in section 1.2 are stated |
+  | Product Vision & Top 1000 Strategy | Same: not found | Appendix A lists the edits it needs; it was not reconstructed |
+
+  The product direction used here (three layers, death resets the current life, Biomass as proposed resource, P1 to P7 sequence, the four-class target, the guardrails in section 1.2) is taken from the task briefs for this milestone and its correction pass, not from a verified canonical document. Where a canonical document later disagrees, it takes precedence.
 - **Verification level:** everything in section 2 was read from the source files. Nothing in this document was tested in Roblox Studio by the author. The team's own Play Solo observations (spawn, walking, jumping, food, HUD at 40/100 and Stage 2/3, abrupt growth, intermittent ground clipping) are reported by the team, not re-verified here. The unit tests (section 2.8) have not been executed by the author either (the test runner was unavailable in the authoring environment).
 - Items that cannot be established from code are labelled **Unknown** or **Needs Studio validation**.
 
@@ -21,7 +28,8 @@ The game is an **Evolution Adventure Sandbox**. A player lives a series of lives
 |---|---|
 | **Life** | One continuous run from spawning as `BABY_BUG` until death. Identified by a `lifeId`. |
 | **Current Life** | All temporary state that belongs to one life. Reset on death. |
-| **Form** | The creature body and ability set in use right now: `BABY_BUG`, `TANK`, `GLIDER`. |
+| **Form** | The creature body and ability set in use right now. Today: `BABY_BUG`, `TANK`, `GLIDER`. |
+| **Class** | An evolved playable form with its own role. The target roster is four classes (section 1.1). **Baby Bug is the starter form and tutorial identity, not a class.** |
 | **Evolution** | The act of changing form during a life, and the system (definitions, requirements, selection) that governs it. |
 | **Legacy** | Persistent, player-level knowledge that survives death and rejoining. Never raw power. |
 | **Discovery** | A permanent record that something was found or seen (species, landmark, secret, form). |
@@ -36,6 +44,30 @@ Three questions about an evolution option must never be confused:
 3. **Selected**: which form is the player actually using in this life? (Current Life.)
 
 A discovery never makes an option available by itself, and availability never bypasses the selection rules.
+
+### 1.1 Class roster: current implementation versus target
+
+| | Current implementation | Target for initial launch (provisional) |
+|---|---|---|
+| Starter | `BABY_BUG` (form, tutorial identity) | Baby Bug (not a class) |
+| Evolved classes | `TANK` (Shell, visual only) and `GLIDER` (Air Glide). **Two of the four.** | Exactly **four**: Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller |
+| Not implemented | n/a | **Striker / Hunter** and **Support / Controller** |
+
+Notes:
+
+- The four role names are **provisional role directions**, not finalized class names, abilities, statistics or balance. This document defines no abilities or numbers for any class, and the two missing classes have no definitions, ids or code.
+- Each class should eventually have distinct strengths, weaknesses, counterplay and a meaningful gameplay identity. Today Tank and Glider differ only by their ability, and the Tank shell has no combat effect because no combat system exists.
+- Initial launch scope is the starter plus these four classes. **No fifth or sixth class is in scope**; further classes may be considered only after real player feedback and gameplay validation.
+
+### 1.2 Product guardrails (direction; none of this is implemented)
+
+Taken from the briefs and not verified against canonical documents (section 0):
+
+- Death resets the current life, not all player progress. Legacy keeps discoveries, achievements, collections and identity.
+- Legacy never grants permanent raw combat advantages.
+- PvE is a core gameplay direction. PvP should be optional and fair. PvPvE can be explored as a distinctive future mode.
+- No paid resurrection, death protection or combat advantages.
+- Today: there is no damage, health, combat, PvE, PvP or PvPvE system, and no persistence or DataStore code.
 
 ## 2. Implementation inventory (what exists today)
 
@@ -127,7 +159,8 @@ Evolution UI layout and confirm flow; glide feel, landing detection and wing vis
 | 5 | Forms and abilities are hardcoded in `Config`, `AbilityService` branches and `FORM_INFO` in the UI | Definition-driven forms and abilities |
 | 6 | No persistence (explicit non-goal of the v0.1 Technical Design) | Legacy persists across lives and sessions |
 | 7 | One arena, no discovery concept | Habitat with discoverable species, territories, secrets |
-| 8 | No damage, health or hazard systems; Tank shell is visual only | Needed for real death causes and a meaningful Tank |
+| 8 | No damage, health or hazard systems; Tank shell is visual only | Needed for real death causes and a meaningful Tank; PvE is a core direction, PvP optional and fair |
+| 8a | Two evolved classes implemented (Tank, Glider) | Four evolved classes (adds Striker / Hunter and Support / Controller, provisional) |
 | 9 | Respawn is Roblox's automatic one | Controlled respawn with a Life Recap and "Begin New Life" |
 | 10 | All progression attributes are visible to all clients | Legacy and recap data must be private to the owner |
 | 11 | Single resource, no temporary upgrades or objectives | Current Life includes temporary upgrades and objectives |
@@ -258,12 +291,13 @@ Rules: only `LifeService` ends and begins lives; each service resets only its ow
 
 ## 6. Configurable evolution model
 
-**Goal.** Add forms by adding data, not by editing `if` branches in several files. Keep the scope small: three forms today, a handful later.
+**Goal.** Add forms by adding data, not by editing `if` branches in several files. Keep the scope small: three forms today (the starter and two classes), and a target of the starter plus four classes. The model is not meant to open a larger roster.
 
 **Conceptual data contract** (illustration only; not implemented here; the v0.1 Technical Design already anticipated a `CreatureDefinitions.lua`):
 
 ```lua
--- Shared/CreatureDefinitions.lua (conceptual)
+-- Shared/CreatureDefinitions.lua (conceptual; only forms that exist today are shown.
+-- Striker / Hunter and Support / Controller have no definition because they are not designed yet.)
 Forms = {
     BABY_BUG = { id = "BABY_BUG", displayName = "Baby Bug", role = "Starter", isStarter = true },
     TANK = {
@@ -429,6 +463,7 @@ Decisions this document proposes (need owner approval):
 | D5 | Definition-driven forms and abilities; keep Tank/Glider handlers | Yes |
 | D6 | Legacy never grants raw power; discoveries do not bypass traversal | Yes |
 | D7 | Legacy persistence via `UpdateAsync` with mergeable data and no session lock in v1 | Yes |
+| D8 | Initial launch roster is the Baby Bug starter plus exactly four evolved classes; no fifth or sixth class before validation | Yes (from the brief) |
 
 Open questions:
 
@@ -446,6 +481,8 @@ Open questions:
 | Q10 | What are Roblox place settings for respawn (`RespawnTime`, `CharacterAutoLoads`)? | Currently **Unknown** |
 | Q11 | What is the cause of the intermittent ground clipping? | Unresolved; needs the Studio procedure in the README |
 | Q12 | When does real damage and health arrive (P4), and does Tank's shell then become mechanical? | Tank identity |
+| Q13 | What are the designs of Striker / Hunter and Support / Controller, and what do they need from combat (PR #19, unverified)? | Roster completion and ordering |
+| Q14 | What are the scopes of optional PvP and of PvPvE, and when are they explored (after PvE is validated)? | Combat design (PR #19, unverified) |
 
 ## Appendix A. Edits needed in the Product Vision & Top 1000 Strategy document (not present in this copy)
 
@@ -454,4 +491,6 @@ Apply these only, without rewriting the document:
 1. Add a short "Product model" paragraph: Current Life / Evolution / Legacy, with the sentence "Legacy never grants permanent raw power."
 2. Add a "Death and rebirth" principle: death ends the current life, resets form and Current Life state, and returns the player to `BABY_BUG`; discoveries are permanent.
 3. Reference `Evolution Sandbox Architecture v0.1.md` for the architecture and `TT-P0-02R Implementation Migration Plan.md` for the ordered plan (P1 to P7).
-4. Where the strategy mentions prototype constraints (no persistence), note that Legacy persistence is planned for P5 and that session-only play remains the behavior until then.
+4. State the roster: Baby Bug starter plus four provisional classes (Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller), two implemented, no fifth or sixth class at launch.
+5. Restate the guardrails of section 1.2 (including no paid resurrection, death protection or combat advantages) so the documents do not diverge.
+6. Where the strategy mentions prototype constraints (no persistence), note that Legacy persistence is planned for P5 and that session-only play remains the behavior until then.

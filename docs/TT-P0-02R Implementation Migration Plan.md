@@ -1,8 +1,16 @@
 # TT-P0-02R — Implementation Migration Plan
 
-**Status:** Proposal for review. Documentation only.
+**Status:** Proposal for review. Documentation only. **P1 to P7 is a proposed implementation sequence, not an immutable product roadmap**: the roadmap (PR #18) and combat design (PR #19) could not be verified when this was written, so this plan is not claimed to be integrated with them and must be reconciled once they are available. Approving this document is **not** runtime validation of anything.
 **Companion:** `Evolution Sandbox Architecture v0.1.md` (section numbers below refer to it).
 **Principle:** small, reviewable steps that keep the game playable after every merge. No big-bang rewrite. Working systems are adapted, not replaced.
+
+## What exists today versus what this plan adds
+
+Already implemented and **not** part of this plan (code as of the audited baseline): arena and spawn; food collection and 0/30/60/100 progression; smooth growth; Energy HUD; evolution selection (two-step UI, `EvolutionResult`); Tank Defensive Shell (visual only); Glider Air Glide; session-only per-player state; per-player rate limits. Forms in the prototype: `BABY_BUG`, `TANK`, `GLIDER`.
+
+Not implemented (everything below is future work): lives, death reset and recap; Biomass rename; definition-driven forms and abilities; habitat and discoveries; health, damage, PvE; the Striker / Hunter and Support / Controller classes; Legacy and any DataStore code; PvP and PvPvE.
+
+**Target roster (provisional):** the Baby Bug starter (not a class) plus exactly four evolved classes: Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller. Two exist; two do not. No fifth or sixth class is in initial scope.
 
 ## How to read this plan
 
@@ -92,6 +100,8 @@ Goal of the phase: a life can end and a new one begins from a clean `BABY_BUG` s
 ## P2 — Evolution System
 
 Goal of the phase: forms and abilities are data; Tank and Glider behave exactly as before. **No new forms are added in P2.**
+
+P2 adds **no new classes**. Striker / Hunter and Support / Controller are scheduled in P4 (P4-05, P4-06) because their roles most likely need combat interactions to be meaningful; that ordering is a proposal to be confirmed against the combat design document.
 
 ### P2-01 — Form definitions
 
@@ -210,6 +220,23 @@ Goal: reasons to take risk, and real death causes. Scope is coarse.
 - **Goal:** replace "visual only" with a real defensive effect once damage exists.
 - **Dependencies:** P4-01. **Acceptance:** documented, balanced, server-side only. **Tests:** pure rules. **Studio:** yes.
 
+### P4-05 — Striker / Hunter class (provisional role; design first)
+
+- **Goal:** design and add the third evolved class. Its abilities, numbers and final name are **not defined by this plan**; they come from the class design.
+- **Existing files:** `CreatureDefinitions.lua` (P2-01), `AbilityService.lua` handlers (P2-02), `EvolutionUIController.lua` (data-driven cards, P2-03).
+- **New files:** a form definition, ability definition and handler.
+- **Dependencies:** P4-01, P2-02, P2-03.
+- **Acceptance:** distinct strengths, weaknesses, counterplay and gameplay identity written down before coding; selectable only through the existing validated flow; server-authoritative; no permanent power; wrong-form requests rejected.
+- **Tests:** pure rules for its ability; form/ability definition validation.
+- **Studio:** yes.
+
+### P4-06 — Support / Controller class (provisional role; design first)
+
+- **Goal:** design and add the fourth evolved class, completing the initial roster. Same rules and unknowns as P4-05.
+- **Dependencies:** P4-05 (and any multiplayer-interaction needs from P6, to be confirmed by the design).
+- **Acceptance and tests:** as P4-05; adding it must need no UI code changes. Roster stays at four; a fifth class is out of scope until real player feedback and gameplay validation.
+- **Studio:** yes.
+
 ---
 
 ## P5 — Legacy and Persistence
@@ -265,9 +292,10 @@ Scope is coarse; refine at phase start.
 - **Goal:** decide what other players may see (Q9); move private data off Player attributes onto owner-only remotes; review replication volume.
 - **Dependencies:** P5-01. **Acceptance:** no private data visible to other clients. **Studio:** yes.
 
-### P6-03 — Interaction rules between players
+### P6-03 — Player-versus-player and PvPvE scope
 
-- **Goal:** only if designed: shared-world interactions. **Out of scope until the design exists.** No PvP or combat is implied by this plan.
+- **Goal:** only after the PvE core (P4) is validated and the combat design exists: decide and implement **optional, fair** PvP and explore PvPvE as a distinctive mode. **Out of scope until that design exists**; PvE remains the core direction. Nothing here grants paid or permanent combat advantages.
+- **Dependencies:** P4, P6-01. **Acceptance:** to be defined from the combat design; server-authoritative damage only. **Tests and Studio:** yes, with 3+ clients.
 
 ---
 
@@ -279,7 +307,7 @@ Scope is coarse; each item becomes its own plan when reached.
 - **P7-02 Onboarding:** first-minute flow, controls teaching, mobile layout pass. **Studio:** yes.
 - **P7-03 Performance and stability:** server/client budgets, remote and attribute volume, memory (connection/instance leaks), low-end device checks. **Studio:** yes.
 - **P7-04 Telemetry and QA matrix:** what to measure; full multiplayer, mobile and persistence QA pass.
-- **P7-05 Launch readiness:** store page, policy review, moderation considerations. Monetization, if ever added, must not sell raw power and is outside this plan.
+- **P7-05 Launch readiness:** store page, policy review, moderation considerations. Monetization is outside this plan; whatever is decided later must not include paid resurrection, death protection or combat advantages.
 
 ---
 
