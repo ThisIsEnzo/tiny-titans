@@ -28,6 +28,16 @@ function Growth.AddEnergy(current: number, amount: number, cap: number): (number
     return updated, gained
 end
 
+-- True if a character still needs its scale set or changed. appliedTarget is the absolute
+-- target last applied to this character (nil = nothing applied yet, e.g. a new character).
+-- Targets are absolute scales, never multipliers, so repeating an update cannot compound.
+function Growth.ShouldUpdateScale(appliedTarget: number?, target: number): boolean
+    if appliedTarget == nil then
+        return true
+    end
+    return math.abs(appliedTarget - target) > 1e-4
+end
+
 -- Returns the 1-based index of the highest stage whose MinEnergy has been reached.
 -- Stages must be sorted by ascending MinEnergy.
 function Growth.GetStageIndex(energy: number, stages: { Stage }): number

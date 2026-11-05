@@ -43,6 +43,37 @@ local addedTotal, addedGain = Growth.AddEnergy(0, Config.FoodEnergy, cap)
 check("AddEnergy adds food energy", addedTotal == Config.FoodEnergy and addedGain == Config.FoodEnergy)
 local atCapTotal, atCapGain = Growth.AddEnergy(cap, Config.FoodEnergy, cap)
 check("AddEnergy at cap adds nothing", atCapTotal == cap and atCapGain == 0)
+-- Stage boundaries and targets are the agreed design values (regression protection).
+check("boundary 0 is stage 1", Growth.GetStageIndex(0, stages) == 1)
+check("boundary 29 is stage 1", Growth.GetStageIndex(29, stages) == 1)
+check("boundary 30 is stage 2", Growth.GetStageIndex(30, stages) == 2)
+check("boundary 59 is stage 2", Growth.GetStageIndex(59, stages) == 2)
+check("boundary 60 is stage 3", Growth.GetStageIndex(60, stages) == 3)
+check("boundary 100 is stage 3", Growth.GetStageIndex(100, stages) == 3)
+check("thresholds are 0, 30, 60", stages[1].MinEnergy == 0 and stages[2].MinEnergy == 30 and stages[3].MinEnergy == 60)
+check("targets are 0.6, 0.8, 1.0", Growth.GetScale(1, stages) == 0.6 and Growth.GetScale(2, stages) == 0.8 and Growth.GetScale(3, stages) == 1.0)
+check("energy cap and food reward unchanged", cap == 100 and Config.FoodEnergy == 10)
+check("energy 40 is stage 2 (as observed in Studio)", Growth.GetStageIndex(40, stages) == 2)
+
+-- Scale updates use absolute targets, so repeating them cannot compound.
+local applied: number? = nil
+local appliedCount = 0
+for _ = 1, 100 do
+    local wanted = Growth.GetScale(2, stages)
+    if Growth.ShouldUpdateScale(applied, wanted) then
+        applied = wanted
+        appliedCount += 1
+    end
+end
+check("100 identical updates apply once", appliedCount == 1 and applied == 0.8)
+check("a new stage target is applied", Growth.ShouldUpdateScale(0.8, 1.0))
+check("a tiny float difference is not an update", not Growth.ShouldUpdateScale(0.8, 0.8 + 1e-6))
+-- Respawn: a new character has no applied target, so it is set to its stage's scale
+-- (not left at the previous character's value or at the default 1).
+check("new character always needs a scale", Growth.ShouldUpdateScale(nil, Growth.GetScale(1, stages)))
+check("new character at stage 3 needs a scale", Growth.ShouldUpdateScale(nil, Growth.GetScale(3, stages)))
+check("growth tween is positive and short", Config.GrowthTweenSeconds > 0 and Config.GrowthTweenSeconds <= 2)
+check("fallback delay is positive", Config.AppearanceFallbackSeconds > 0)
 check("food energy positive", Config.FoodEnergy > 0)
 
 if failures > 0 then

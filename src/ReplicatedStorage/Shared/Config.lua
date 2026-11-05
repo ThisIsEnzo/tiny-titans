@@ -41,6 +41,8 @@ local Config = {
         table.freeze({ MinEnergy = 30, Scale = 0.8 }),
         table.freeze({ MinEnergy = 60, Scale = 1.0 }),
     }),
+    GrowthTweenSeconds = 0.8, -- length of the smooth transition when a stage threshold is crossed
+    AppearanceFallbackSeconds = 5, -- scale a new character anyway if its appearance never finishes loading
 }
 
 return table.freeze(Config)
