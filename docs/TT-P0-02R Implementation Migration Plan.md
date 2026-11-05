@@ -105,7 +105,7 @@ Goal of the phase: a life can end and a new one begins from a clean `BABY_BUG` s
 
 Goal of the phase: forms and abilities are data; Tank and Glider behave exactly as before. **No new forms are added in P2.**
 
-P2 adds **no new classes**. Striker / Hunter and Support / Controller are scheduled in P4 (P4-05, P4-06) because their roles most likely need combat interactions to be meaningful; that ordering is a proposal to be confirmed against the combat design document.
+P2 adds **no new classes**. Striker / Hunter and the proposed Support / Controller hybrid remain future roles; their mechanics are not designed here. They are gated by the P3.5 combat design and the first validated PvE loop, then may be implemented as conditional P4 follow-ups (P4-05 and P4-06).
 
 ### P2-01 — Form definitions
 
