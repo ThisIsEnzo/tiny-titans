@@ -127,11 +127,14 @@ Server validation of `RequestEvolution(form)`. The client sends only a branch na
 3. The server-side energy has reached `EvolutionEnergyRequired`. Client-supplied energy is never read.
 4. The argument is exactly the string `"TANK"` or `"GLIDER"` (case-sensitive; any other type or value is rejected).
 
-Because the server handles requests one at a time and sets the form before anything else can run, a valid choice is recorded exactly once; repeats and spam are no-ops. Rejections are silent. The client learns the result only from the attributes. State is per player, so one player's choice never changes another's energy, form or availability. Form is kept across respawns and lost when the player leaves.
+Because the server handles requests one at a time and sets the form before anything else can run, a valid choice is recorded exactly once; repeats and spam are no-ops. A rejected request changes nothing. The UI state comes from the replicated attributes, and the requesting player (only) also receives `Remotes.EvolutionResult(reason)` (`Ok`, `ThresholdNotReached`, `AlreadyEvolved`, `InvalidForm` or `NoLivingCharacter`) so the UI can explain a rejection. Requests dropped by the rate limit get no reply. The pure transition is `Evolution.Select`, which returns the unchanged form on any rejection. State is per player, so one player's choice never changes another's energy, form or availability. Form is kept across respawns and lost when the player leaves.
 
-Client behaviour:
+Client behaviour (`EvolutionUIController`):
 
-- The choice panel is visible exactly while `EvolutionAvailable` is true and hides when the server sets it false after a valid choice. Buttons have a 0.6 s local click lock to avoid spamming; this is not a security measure.
+- When the server sets `EvolutionAvailable`, an **EVOLUTION READY** panel shows two cards: **TANK** (Defensive; Shell [Q], protective bubble, visual only for now) and **GLIDER** (Mobility; Air Glide [Q], slow your fall in the air). The descriptions are deliberately honest: the forms differ only by ability, and the shell has no combat effect yet.
+- Choosing is two steps: tap a card (local highlight only, nothing is sent), then **Confirm**. This prevents accidental and double selection; the Confirm button is disabled until a card is picked and while a request is pending ("Evolving..."). The local pending state times out after 3 s with "No response. Please try again." This lock is a convenience, not security.
+- On success the panel hides (driven by the attribute) and a short toast says `You evolved into <Form>!`. On rejection the panel stays and the status line shows a plain message from the server's reason.
+- The panel scales with the screen (50% x 62%, clamped to 320x240 to 560x340 px) with scaled, size-limited text.
 - The overhead tag is attached only if, after waiting for the character's `Head`, that character is still the player's current character and the player is still in the game; stale characters are never tagged. A missing `Head` is skipped.
 - A badge above the Energy HUD shows `Form: <name>`.
 - Evolved players get an overhead tag (`TANK` / `GLIDER`) so other clients can see the choice. It is read from the replicated attribute.
@@ -140,7 +143,10 @@ Limitations:
 
 - Evolution is recorded and displayed. TANK gets the visual-only Defensive Shell and GLIDER gets the bounded Air Glide (next sections). Neither form has stat or model differences, and there is no damage or combat.
 - Energy stays at 100 after evolving, so the Energy HUD stays full and the player cannot gain more energy.
-- A player who disconnects loses their form (no persistence). Rejections give no on-screen error.
+- A player who disconnects loses their form (no persistence).
+- TANK and GLIDER differ **only by their ability**. There are no stat, speed or health differences and no new models, because the project has no such systems and none were invented. Tank's shell has no combat effect until a damage system exists.
+- Client-side changes to Player attributes (for example `EvolutionForm`) do not replicate to the server, which keeps its own form table and never reads those attributes for decisions.
+- The success toast and the form badge follow the replicated attribute, so they can appear a moment after the server accepted the request.
 
 ## Tank Defensive Shell
 
@@ -212,7 +218,7 @@ Limitations:
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 energy, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio.
 
 ### Manual Studio test checklist
 
@@ -436,6 +442,25 @@ These are **manual tests; none has been performed**.
 9. Reach Energy 100: the evolution panel appears and TANK/GLIDER can be chosen as before.
 10. Abilities regression: as TANK press `Q` (shell appears and follows the scaled body, 3 s, 12 s cooldown); as GLIDER jump and press `Q` (wings, slower fall, landing ends it, 10 s cooldown). Check the shell/wings size after a growth tween (they are sized at activation).
 11. Two players: one growing must not change the other's size; both HUDs stay correct.
+
+### Manual Studio test checklist: evolution system (P0-02)
+
+These are **manual tests; none has been performed**. Use Play Solo, then Test > Start with 2 players. Raise energy with the Studio server command bar as needed.
+
+1. Below 100 energy there is no choice panel; the badge shows `Form: Baby Bug`. From the client command bar `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("TANK")` changes nothing.
+2. At exactly 100 energy the EVOLUTION READY panel appears with both cards and the `Choose a form` button disabled.
+3. Tap TANK: highlighted, button reads `Evolve into Tank`, nothing sent yet. Tap GLIDER: highlight moves, only one card is ever selected.
+4. Press Confirm. Expected: `Evolving...`, then the panel hides, the toast says `You evolved into ...!`, the badge and overhead tag show the form, `EvolutionAvailable` is false. Pressing Confirm repeatedly or quickly causes one evolution only.
+5. After evolving, run `RequestEvolution:FireServer("GLIDER")` and `FireServer("TANK")`, `FireServer(nil)`, `FireServer(123)`. Expected: `EvolutionForm` is unchanged; no errors.
+6. Rejection feedback: reach 100, then run (client command bar) `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("FLY")`. Expected: the panel stays, status text shows `That form is not available.`
+7. Dead character: at 100 energy, set health to 0 and press Confirm quickly. Expected: `Respawn first, then try again.` and no evolution.
+8. Respawn after evolving: reset the character. Expected: form, badge, tag and the matching ability button are unchanged; no panel; never back to Baby Bug.
+9. Correct ability only: as TANK `Q` raises the shell and the button says SHELL; as GLIDER `Q` in the air glides and the button says GLIDE. From the command bar a Tank firing `RequestAbility:FireServer("GLIDE")` or a Glider firing `FireServer("SHELL")` does nothing.
+10. Two players: A reaches 100 and picks TANK, B (below 100) has no panel and cannot evolve. Then B reaches 100 and picks GLIDER. Expected: forms, panels, toasts and ability buttons stay independent, and each sees the other's tag.
+11. Attribute tampering: on a client, `game.Players.LocalPlayer:SetAttribute("EvolutionForm", "TANK")` while Baby Bug. Expected: the local badge may change but the server form does not, and `Q` still does nothing on the server.
+12. Leave and rejoin: the new session starts as Baby Bug with 0 energy, and there are no server errors.
+13. Layout: Device emulator (phone portrait, phone landscape, tablet, 1080p). Expected: the panel is fully on screen, text readable, cards and the button tappable, nothing overlaps the Energy HUD or toast.
+14. Reduced regression: collecting food, stage growth tweens, the Energy HUD, and Tank and Glider cooldowns behave as before.
 
 ## Validate
 

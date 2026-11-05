@@ -6,6 +6,9 @@
 -- choice exactly once. Clients only ever send a branch name, never state.
 -- Requests are also rate limited per player on the server (Config.EvolutionRequestCooldown).
 -- Attributes replicated to all clients: "EvolutionForm" (string), "EvolutionAvailable" (bool).
+-- Attributes are the source of truth for the UI. After each processed request the
+-- requesting player (only) also receives EvolutionResult(reason: string) so the UI can
+-- explain a rejection; requests dropped by the rate limit get no reply.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -19,6 +22,7 @@ local EvolutionService = {}
 local formByPlayer: { [Player]: string } = {}
 local lastRequestAt: { [Player]: number } = {}
 local playerData: any = nil
+local resultEvent: RemoteEvent? = nil
 
 local function refresh(player: Player)
     local form = formByPlayer[player]
@@ -50,7 +54,13 @@ local function onPlayerAdded(player: Player)
     refresh(player)
 end
 
--- Rejected requests change nothing; the client learns the outcome from attributes only.
+local function reply(player: Player, reason: string)
+    if resultEvent ~= nil and player.Parent == Players then
+        resultEvent:FireClient(player, reason)
+    end
+end
+
+-- Rejected requests change nothing; the requester gets the reason, everyone else sees nothing.
 -- The rate limit runs first, so invalid and repeated requests count against it too.
 local function onRequestEvolution(player: Player, form: any)
     local now = os.clock()
@@ -64,10 +74,14 @@ local function onRequestEvolution(player: Player, form: any)
 
     local currentForm = formByPlayer[player]
     local energy = playerData.GetEnergy(player)
-    if currentForm == nil or energy == nil or not isAlive(player) then
+    if currentForm == nil or energy == nil then
         return
     end
-    local ok = Evolution.Validate(
+    if not isAlive(player) then
+        reply(player, "NoLivingCharacter")
+        return
+    end
+    local newForm, reason = Evolution.Select(
         form,
         energy,
         Config.EvolutionEnergyRequired,
@@ -75,11 +89,11 @@ local function onRequestEvolution(player: Player, form: any)
         Config.BaseForm,
         Config.EvolutionForms
     )
-    if not ok then
-        return
+    if reason == "Ok" then
+        formByPlayer[player] = newForm
+        refresh(player)
     end
-    formByPlayer[player] = form :: string
-    refresh(player)
+    reply(player, reason)
 end
 
 function EvolutionService.GetForm(player: Player): string?
@@ -100,6 +114,10 @@ function EvolutionService.Init(playerDataService: any)
     request.Name = "RequestEvolution"
     request.Parent = remotes
     request.OnServerEvent:Connect(onRequestEvolution)
+    local result = Instance.new("RemoteEvent")
+    result.Name = "EvolutionResult"
+    result.Parent = remotes
+    resultEvent = result
 
     playerDataService.ProgressChanged:Connect(function(player: Player)
         refresh(player)
