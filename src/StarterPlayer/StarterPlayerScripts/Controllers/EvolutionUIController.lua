@@ -1,9 +1,10 @@
 --!strict
--- Evolution UI. Display-only except for one request: when the server marks
--- evolution available, the player can click TANK or GLIDER, which fires the
--- RequestEvolution RemoteEvent with only the branch name. Everything shown is
--- driven by the server-owned Player attributes "EvolutionAvailable" and
--- "EvolutionForm"; the UI never assumes a request succeeded.
+-- Evolution UI. Display-only except for one request: when the server marks evolution
+-- available, the player picks TANK or GLIDER (local highlight only), then presses Confirm,
+-- which fires RequestEvolution with only the branch name. The panel, form badge and
+-- success toast are driven by the server-owned Player attributes "EvolutionAvailable" and
+-- "EvolutionForm"; the UI never assumes a request succeeded. The server's
+-- EvolutionResult(reason) reply, sent to this player only, just explains a rejection.
 -- Also shows an overhead form tag for evolved players so other clients can see it.
 
 local Players = game:GetService("Players")
@@ -16,7 +17,29 @@ local EvolutionUIController = {}
 
 local GUI_NAME = "EvolutionHud"
 local TAG_NAME = "FormTag"
-local CLICK_LOCK_SECONDS = 0.6
+local RESPONSE_TIMEOUT_SECONDS = 3
+local TOAST_SECONDS = 3
+
+-- Honest descriptions: the forms differ only by their ability. Tank's shell is visual only.
+local FORM_INFO: { [string]: { role: string, ability: string, color: Color3 } } = {
+    TANK = {
+        role = "Defensive",
+        ability = "Shell [" .. Config.AbilityKey .. "]: protective bubble (visual only for now)",
+        color = Color3.fromRGB(70, 110, 160),
+    },
+    GLIDER = {
+        role = "Mobility",
+        ability = "Air Glide [" .. Config.AbilityKey .. "]: slow your fall in the air",
+        color = Color3.fromRGB(60, 150, 140),
+    },
+}
+
+local RESULT_MESSAGES: { [string]: string } = {
+    ThresholdNotReached = "Not enough Energy yet.",
+    AlreadyEvolved = "You have already evolved.",
+    InvalidForm = "That form is not available.",
+    NoLivingCharacter = "Respawn first, then try again.",
+}
 
 local DISPLAY_NAMES: { [string]: string } = {
     BABY_BUG = "Baby Bug",
@@ -67,29 +90,52 @@ local function roundCorners(instance: Instance, radius: number)
     corner.Parent = instance
 end
 
-local function makeChoiceButton(form: string, description: string, color: Color3, position: UDim2): TextButton
-    local button = Instance.new("TextButton")
-    button.Name = form .. "Button"
-    button.Position = position
-    button.Size = UDim2.fromScale(0.425, 0.5)
-    button.BackgroundColor3 = color
-    button.AutoButtonColor = true
-    button.Text = ""
-    button.BorderSizePixel = 0
-    roundCorners(button, 8)
+local function makeFormCard(form: string, position: UDim2): (TextButton, UIStroke)
+    local info = FORM_INFO[form]
+    local card = Instance.new("TextButton")
+    card.Name = form .. "Card"
+    card.Position = position
+    card.Size = UDim2.fromScale(0.44, 0.46)
+    card.BackgroundColor3 = info.color
+    card.AutoButtonColor = true
+    card.Text = ""
+    card.BorderSizePixel = 0
+    roundCorners(card, 8)
 
-    local title = makeLabel("Title", UDim2.fromScale(0.05, 0.1), UDim2.fromScale(0.9, 0.45), 26, Enum.TextXAlignment.Center)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(255, 255, 255)
+    stroke.Thickness = 0
+    stroke.Parent = card
+
+    local title = makeLabel("Title", UDim2.fromScale(0.06, 0.06), UDim2.fromScale(0.88, 0.26), 24, Enum.TextXAlignment.Center)
     title.Text = string.upper(displayName(form))
-    title.Parent = button
+    title.Parent = card
 
-    local detail = makeLabel("Detail", UDim2.fromScale(0.05, 0.58), UDim2.fromScale(0.9, 0.34), 16, Enum.TextXAlignment.Center)
-    detail.Font = Enum.Font.Gotham
-    detail.Text = description
-    detail.Parent = button
-    return button
+    local role = makeLabel("Role", UDim2.fromScale(0.06, 0.32), UDim2.fromScale(0.88, 0.16), 15, Enum.TextXAlignment.Center)
+    role.Font = Enum.Font.GothamMedium
+    role.Text = info.role
+    role.Parent = card
+
+    local ability = makeLabel("Ability", UDim2.fromScale(0.06, 0.5), UDim2.fromScale(0.88, 0.44), 14, Enum.TextXAlignment.Center)
+    ability.Font = Enum.Font.Gotham
+    ability.TextWrapped = true
+    ability.Text = info.ability
+    ability.Parent = card
+    return card, stroke
 end
 
-local function buildGui(): (ScreenGui, Frame, TextLabel, TextButton, TextButton)
+type Ui = {
+    gui: ScreenGui,
+    formLabel: TextLabel,
+    panel: Frame,
+    cards: { [string]: TextButton },
+    strokes: { [string]: UIStroke },
+    confirm: TextButton,
+    status: TextLabel,
+    toast: TextLabel,
+}
+
+local function buildGui(): Ui
     local gui = Instance.new("ScreenGui")
     gui.Name = GUI_NAME
     gui.ResetOnSpawn = false
@@ -118,8 +164,8 @@ local function buildGui(): (ScreenGui, Frame, TextLabel, TextButton, TextButton)
     local panel = Instance.new("Frame")
     panel.Name = "ChoicePanel"
     panel.AnchorPoint = Vector2.new(0.5, 0.5)
-    panel.Position = UDim2.fromScale(0.5, 0.4)
-    panel.Size = UDim2.new(0.5, 0, 0, 200)
+    panel.Position = UDim2.fromScale(0.5, 0.42)
+    panel.Size = UDim2.fromScale(0.5, 0.62)
     panel.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
     panel.BackgroundTransparency = 0.1
     panel.BorderSizePixel = 0
@@ -127,36 +173,80 @@ local function buildGui(): (ScreenGui, Frame, TextLabel, TextButton, TextButton)
     panel.Parent = gui
     roundCorners(panel, 12)
     local panelLimit = Instance.new("UISizeConstraint")
-    panelLimit.MinSize = Vector2.new(300, 170)
-    panelLimit.MaxSize = Vector2.new(560, 240)
+    panelLimit.MinSize = Vector2.new(320, 240)
+    panelLimit.MaxSize = Vector2.new(560, 340)
     panelLimit.Parent = panel
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(255, 200, 60)
     stroke.Thickness = 2
     stroke.Parent = panel
 
-    local heading = makeLabel("Heading", UDim2.fromScale(0.05, 0.05), UDim2.fromScale(0.9, 0.2), 28, Enum.TextXAlignment.Center)
+    local heading = makeLabel("Heading", UDim2.fromScale(0.05, 0.03), UDim2.fromScale(0.9, 0.12), 28, Enum.TextXAlignment.Center)
     heading.Text = "EVOLUTION READY"
     heading.TextColor3 = Color3.fromRGB(255, 200, 60)
     heading.Parent = panel
 
-    local sub = makeLabel("Subheading", UDim2.fromScale(0.05, 0.25), UDim2.fromScale(0.9, 0.1), 16, Enum.TextXAlignment.Center)
+    local sub = makeLabel("Subheading", UDim2.fromScale(0.05, 0.15), UDim2.fromScale(0.9, 0.07), 15, Enum.TextXAlignment.Center)
     sub.Font = Enum.Font.Gotham
-    sub.Text = "Choose your form. This choice is final."
+    sub.Text = "Pick a form, then confirm. The choice is final this session."
     sub.Parent = panel
 
-    local tank = makeChoiceButton("TANK", "Tough and durable", Color3.fromRGB(70, 110, 160), UDim2.fromScale(0.05, 0.4))
-    tank.Parent = panel
-    local glider = makeChoiceButton("GLIDER", "Light and mobile", Color3.fromRGB(60, 150, 140), UDim2.fromScale(0.525, 0.4))
-    glider.Parent = panel
+    local cards: { [string]: TextButton } = {}
+    local strokes: { [string]: UIStroke } = {}
+    local tankCard, tankStroke = makeFormCard("TANK", UDim2.fromScale(0.04, 0.25))
+    tankCard.Parent = panel
+    cards.TANK = tankCard
+    strokes.TANK = tankStroke
+    local gliderCard, gliderStroke = makeFormCard("GLIDER", UDim2.fromScale(0.52, 0.25))
+    gliderCard.Parent = panel
+    cards.GLIDER = gliderCard
+    strokes.GLIDER = gliderStroke
 
-    local note = makeLabel("Note", UDim2.fromScale(0.05, 0.9), UDim2.fromScale(0.9, 0.08), 13, Enum.TextXAlignment.Center)
-    note.Font = Enum.Font.Gotham
-    note.TextTransparency = 0.3
-    note.Text = "Tank: visual-only shell. Glider: short air glide."
-    note.Parent = panel
+    local confirm = Instance.new("TextButton")
+    confirm.Name = "ConfirmButton"
+    confirm.Position = UDim2.fromScale(0.25, 0.74)
+    confirm.Size = UDim2.fromScale(0.5, 0.14)
+    confirm.BorderSizePixel = 0
+    confirm.Font = Enum.Font.GothamBold
+    confirm.TextColor3 = Color3.fromRGB(255, 255, 255)
+    confirm.TextScaled = true
+    confirm.Text = ""
+    confirm.Parent = panel
+    roundCorners(confirm, 8)
+    local confirmLimit = Instance.new("UITextSizeConstraint")
+    confirmLimit.MinTextSize = 10
+    confirmLimit.MaxTextSize = 20
+    confirmLimit.Parent = confirm
 
-    return gui, panel, formLabel, tank, glider
+    local status = makeLabel("Status", UDim2.fromScale(0.05, 0.9), UDim2.fromScale(0.9, 0.08), 14, Enum.TextXAlignment.Center)
+    status.Font = Enum.Font.Gotham
+    status.Parent = panel
+
+    -- Short confirmation after a successful evolution.
+    local toast = makeLabel("Toast", UDim2.fromScale(0, 0), UDim2.fromScale(1, 1), 22, Enum.TextXAlignment.Center)
+    toast.BackgroundTransparency = 0.2
+    toast.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
+    toast.AnchorPoint = Vector2.new(0.5, 0)
+    toast.Position = UDim2.new(0.5, 0, 0.08, 0)
+    toast.Size = UDim2.new(0.5, 0, 0, 44)
+    toast.Visible = false
+    toast.Parent = gui
+    roundCorners(toast, 10)
+    local toastLimit = Instance.new("UISizeConstraint")
+    toastLimit.MinSize = Vector2.new(260, 36)
+    toastLimit.MaxSize = Vector2.new(520, 52)
+    toastLimit.Parent = toast
+
+    return {
+        gui = gui,
+        formLabel = formLabel,
+        panel = panel,
+        cards = cards,
+        strokes = strokes,
+        confirm = confirm,
+        status = status,
+        toast = toast,
+    }
 end
 
 -- Overhead tag so other clients can see evolved forms (display only).
@@ -240,44 +330,121 @@ function EvolutionUIController.Init()
 
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
-    local gui, panel, formLabel, tankButton, gliderButton = buildGui()
+    local ui = buildGui()
 
     local remote: RemoteEvent? = nil
-    local locked = false
+    local selected: string? = nil -- local highlight only; nothing is sent until Confirm
+    local pending = false
+    local requestId = 0
+    local toastId = 0
+    local lastForm = readForm(player)
 
-    local function render()
-        formLabel.Text = "Form: " .. displayName(readForm(player))
-        panel.Visible = player:GetAttribute("EvolutionAvailable") == true
+    local function setStatus(text: string, isError: boolean)
+        ui.status.Text = text
+        ui.status.TextColor3 = if isError then Color3.fromRGB(255, 130, 120) else Color3.fromRGB(255, 255, 255)
     end
 
-    local function request(form: string)
-        if locked or remote == nil or not panel.Visible then
-            return
+    local function refreshPanel()
+        for form, stroke in ui.strokes do
+            stroke.Thickness = if selected == form then 3 else 0
         end
-        locked = true
-        remote:FireServer(form) -- only the branch name is sent
-        task.delay(CLICK_LOCK_SECONDS, function()
-            locked = false
+        local canConfirm = selected ~= nil and not pending
+        ui.confirm.Active = canConfirm
+        ui.confirm.AutoButtonColor = canConfirm
+        ui.confirm.BackgroundColor3 = if canConfirm then Color3.fromRGB(60, 150, 100) else Color3.fromRGB(70, 74, 86)
+        if pending then
+            ui.confirm.Text = "Evolving..."
+        elseif selected ~= nil then
+            ui.confirm.Text = "Evolve into " .. displayName(selected)
+        else
+            ui.confirm.Text = "Choose a form"
+        end
+    end
+
+    local function showToast(text: string)
+        toastId += 1
+        local id = toastId
+        ui.toast.Text = text
+        ui.toast.Visible = true
+        task.delay(TOAST_SECONDS, function()
+            if toastId == id then
+                ui.toast.Visible = false
+            end
         end)
     end
 
-    tankButton.MouseButton1Click:Connect(function()
-        request("TANK")
-    end)
-    gliderButton.MouseButton1Click:Connect(function()
-        request("GLIDER")
-    end)
+    -- Everything shown comes from the server-owned attributes.
+    local function render()
+        local form = readForm(player)
+        ui.formLabel.Text = "Form: " .. displayName(form)
+        local available = player:GetAttribute("EvolutionAvailable") == true
+        ui.panel.Visible = available
+        if not available then
+            selected = nil
+            pending = false
+            setStatus("", false)
+        end
+        if lastForm == Config.BaseForm and form ~= Config.BaseForm then
+            showToast("You evolved into " .. displayName(form) .. "!")
+        end
+        lastForm = form
+        refreshPanel()
+    end
+
+    local function confirm()
+        if pending or selected == nil or remote == nil or not ui.panel.Visible then
+            return
+        end
+        pending = true
+        requestId += 1
+        local id = requestId
+        setStatus("Sending...", false)
+        refreshPanel()
+        remote:FireServer(selected) -- only the branch name is sent
+        task.delay(RESPONSE_TIMEOUT_SECONDS, function()
+            if pending and requestId == id then
+                pending = false
+                setStatus("No response. Please try again.", true)
+                refreshPanel()
+            end
+        end)
+    end
+
+    for form, card in ui.cards do
+        card.Activated:Connect(function()
+            if pending then
+                return
+            end
+            selected = form
+            setStatus("", false)
+            refreshPanel()
+        end)
+    end
+    ui.confirm.Activated:Connect(confirm)
 
     player:GetAttributeChangedSignal("EvolutionAvailable"):Connect(render)
     player:GetAttributeChangedSignal("EvolutionForm"):Connect(render)
     render()
-    gui.Parent = playerGui
+    ui.gui.Parent = playerGui
 
     setupFormTags()
 
     task.spawn(function()
         local remotes = ReplicatedStorage:WaitForChild("Remotes")
-        remote = remotes:WaitForChild("RequestEvolution") :: RemoteEvent
+        local request = remotes:WaitForChild("RequestEvolution") :: RemoteEvent
+        local result = remotes:WaitForChild("EvolutionResult") :: RemoteEvent
+        result.OnClientEvent:Connect(function(reason: any)
+            -- Only explains the outcome; the panel itself follows the replicated attributes.
+            if type(reason) ~= "string" then
+                return
+            end
+            pending = false
+            if reason ~= "Ok" then
+                setStatus(RESULT_MESSAGES[reason] or "Could not evolve. Please try again.", true)
+            end
+            refreshPanel()
+        end)
+        remote = request
     end)
 end
 

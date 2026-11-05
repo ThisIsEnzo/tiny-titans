@@ -45,4 +45,22 @@ function Evolution.Validate(
     return true, "Ok"
 end
 
+-- Applies a selection to one player's form. Returns (newForm, reason): newForm is the
+-- requested branch only when reason is "Ok"; on any rejection it is currentForm, so a
+-- rejected request can never change state. Each player has their own currentForm.
+function Evolution.Select(
+    form: any,
+    energy: number,
+    threshold: number,
+    currentForm: string,
+    baseForm: string,
+    forms: { string }
+): (string, string)
+    local ok, reason = Evolution.Validate(form, energy, threshold, currentForm, baseForm, forms)
+    if ok then
+        return form :: string, reason
+    end
+    return currentForm, reason
+end
+
 return table.freeze(Evolution)
