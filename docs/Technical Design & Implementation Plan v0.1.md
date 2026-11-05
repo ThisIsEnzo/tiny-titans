@@ -7,6 +7,8 @@
 **Budget:** $0  
 **Implementation constraint:** No persistence, monetization, pets, trading, or large content pipeline.
 
+> **Direction update (after v0.1):** this document is the original prototype specification and still describes the prototype scope and today's behavior. The product direction has since moved to an Evolution Adventure Sandbox built on three layers: Current Life, Evolution and Legacy, where death resets the current life and Legacy (planned persistence) survives it. The non-goals below (for example no persistence) apply to the prototype and are revisited in [Evolution Sandbox Architecture v0.1](Evolution%20Sandbox%20Architecture%20v0.1.md) and the [Implementation Migration Plan](TT-P0-02R%20Implementation%20Migration%20Plan.md).
+
 ## 1. Technical goals
 
 1. The server owns food availability, consumption, evolution energy, evolution choice, and ability cooldowns.

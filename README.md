@@ -2,6 +2,13 @@
 
 Roblox prototype: a multiplayer creature evolution arena.
 
+## Direction and architecture documents
+
+The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death does **not** reset anything: Energy, growth stage and form survive a respawn and are lost only when the player leaves, and there is no persistence.
+
+- [Evolution Sandbox Architecture v0.1](docs/Evolution%20Sandbox%20Architecture%20v0.1.md): audit of the current code and the proposed architecture.
+- [TT-P0-02R Implementation Migration Plan](docs/TT-P0-02R%20Implementation%20Migration%20Plan.md): ordered, incremental plan (P1 to P7).
+
 ## Toolchain
 
 - Roblox Studio
