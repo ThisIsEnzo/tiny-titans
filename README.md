@@ -85,7 +85,7 @@ How it works:
 2. Every 0.1 s the server checks each active food item against every player. A player qualifies if their character is alive, has a `HumanoidRootPart` within `FoodPickupRange` (5 studs) of the food, and is below the energy cap. If several players qualify at once, the closest one wins.
 3. The food is marked inactive and removed before energy is awarded, so it cannot be collected twice. It respawns after `FoodRespawnDelay` (8 s).
 4. Each food gives `FoodEnergy` (10). Energy caps at 100 (`EvolutionEnergyRequired`); a player at the cap does not consume food.
-5. Stages: 0 energy = 0.6 scale, 30 = 0.8, 60 = 1.0. Crossing a threshold rescales the character. Progress is kept across respawns in the same session and lost when the player leaves.
+5. Stages: 0 energy = 0.6 scale, 30 = 0.8, 60 = 1.0. Crossing a threshold on a living character tweens its scale over 0.8 s (`GrowthTweenSeconds`); a new character (spawn or respawn) is set to its stage's scale at once. Progress is kept across respawns in the same session and lost when the player leaves.
 
 Design notes:
 
@@ -370,6 +370,72 @@ Lifecycle:
 12. B leaves during an active glide. Expected: no server errors; A sees no stray wings, force or attachment left on anything (check Explorer on the server).
 13. A respawns while B keeps playing. Expected: B's HUD, cooldown and effects unchanged; A has exactly one HUD, no duplicate button, no stale shell/wings, and A's cooldown and form persist.
 14. Join and leave several players quickly (Test > Start with 3, close and re-run clients). Expected: no errors, no duplicate `Workspace.Food` folder, each new player starts as BABY_BUG with 0 energy.
+
+## Growth smoothing and ground contact (P0 audit)
+
+Based on your Play Solo observations (HUD correct at 40/100, Stage 2/3; abrupt growth at 30 and 60; intermittent partial ground clipping after a jump). **None of the fixes below has been run in Studio.**
+
+Root cause of abrupt growth (confirmed from the code): `GrowthService` wrote the new absolute scale straight into the four R15 scale values (`BodyHeightScale`, `BodyWidthScale`, `BodyDepthScale`, `HeadScale`), so the body jumped from 0.6 to 0.8 (and 0.8 to 1.0) in a single step.
+
+Changes (`GrowthService.lua`, `Growth.ShouldUpdateScale`, two `Config` values):
+
+- Crossing a stage threshold now tweens the four values to the new absolute target over `GrowthTweenSeconds` (0.8 s, `Sine InOut`). Targets are absolute scales from `GrowthStages`, never multipliers, so repeated updates cannot compound.
+- At most one set of tweens exists per player. A new target cancels the previous tweens (tweening from wherever the values currently are), and an identical target is ignored, so collecting food inside a stage creates no tweens.
+- A new character (spawn or respawn) is set to its stage's scale immediately, with no animation, and the per-character state is reset so nothing carries over from the previous character. State and tweens are cleared on `CharacterRemoving` and `PlayerRemoving`; delayed callbacks ignore players who left.
+- Scale values are no longer created at `CharacterAdded` before the avatar appearance has loaded. The service uses the engine's own values and sets them after `CharacterAppearanceLoaded`; it creates missing values only after that event or after `AppearanceFallbackSeconds` (5 s) as a fallback. Reason: creating them early could leave two values with the same name on the Humanoid. Whether that actually happened in your runs is **unconfirmed**.
+- Energy values, thresholds (0 / 30 / 60), food reward, HUD, evolution and abilities are untouched.
+
+Intermittent ground clipping: **root cause NOT confirmed.** I cannot run Studio, and static analysis does not establish it. Nothing in the project's own code sets `HipHeight`, collision groups, `CanCollide` on the character, character positioning, or any custom movement/physics for Baby Bug. Candidate causes, most to least likely:
+
+1. **Fast landing vs a small body.** Jump height is an absolute 7.2 studs, so landing speed (about 53 studs/s) is the same at every scale, but at 0.6 or 0.8 the legs are shorter. Humanoid floor contact is resolved by a raycast and spring, so a fast landing can briefly pull the feet visibly into the floor, intermittently depending on frame timing. This would be worst at stage 1, better at stage 3. Not changed, because changing jump settings would alter jump height.
+2. **Duplicate scale values** (fixed above, if it was happening): two `BodyHeightScale` values on the Humanoid would make the engine and our script disagree about the body size.
+3. **Hip height not following the scale** after a runtime change. The engine normally adjusts it, but this is unverified here.
+4. **A scale change while airborne**, if food was collected mid-jump (now a smooth tween rather than a jump).
+5. **Arena geometry:** `ArenaFloor` (top Y = 0.5) overlaps the Baseplate and the plaza adds a 0.3 step. Both are anchored solid slabs, so this is unlikely to cause it.
+
+Decisive Studio procedure (do this before accepting or reopening the issue). Use Play Solo, then Test > Current: Server, and run in the command bar:
+
+```lua
+local p = game.Players:GetPlayers()[1]
+local c = p.Character
+local h = c.Humanoid
+print("stage", p:GetAttribute("GrowthStage"), "rig", h.RigType, "hip", h.HipHeight, "root", c.HumanoidRootPart.Size)
+for _, n in { "BodyHeightScale", "BodyWidthScale", "BodyDepthScale", "HeadScale" } do
+    local copies = 0
+    for _, ch in h:GetChildren() do
+        if ch.Name == n then copies += 1 end
+    end
+    print(n, h[n].Value, "copies:", copies)
+end
+local foot = c.LeftFoot
+print("foot bottom Y", foot.Position.Y - foot.Size.Y / 2) -- standing on the arena floor this should be about 0.5
+```
+
+1. **Duplicates:** `copies` must be 1 for each value at spawn and after each growth. 2 means cause 2.
+2. **Hip height vs scale:** record `hip` at each stage. It should shrink roughly in proportion to scale (about 0.6x, 0.8x, 1.0x). If it does not change, cause 3.
+3. **Penetration:** jump repeatedly on flat arena floor and run the last line right after landing while standing still; a value well under 0.5 means the feet are sunk. Record at which stage it happens and how often.
+4. **A/B test:** temporarily set all three `Scale` values in `Config.GrowthStages` to 1.0, play, and repeat step 3. If clipping disappears, it is scale-related (causes 1 to 3); if it persists at scale 1.0, it is not caused by growth (look at the arena or the default Roblox character).
+5. **Airborne growth:** collect food mid-jump across a threshold and check the result of the landing.
+
+Report the printed values and I can narrow it down.
+
+Limitations: the smoothness of the tween (server tweens replicate at network rate, so it may look slightly steppy on clients), absence of clipping, and landing behaviour at all three stages are unverified. The character still looks like a standard avatar (out of scope).
+
+### Manual Studio test checklist: growth and ground physics
+
+These are **manual tests; none has been performed**.
+
+1. Fresh spawn at Energy 0: the character spawns at 0.6 scale at once (no visible grow animation), `copies` = 1 for each scale value, HUD shows `Energy  0 / 100`, `Stage 1/3`.
+2. Around Energy 30: collect the third food. Expected: the body grows smoothly over about 0.8 s, with no instant pop, the HUD changes to `Stage 2/3`, the character stays on the ground (no sinking or floating) and keeps moving normally while growing.
+3. Around Energy 60: same for the sixth food (`Stage 3/3`, scale 1.0).
+4. Collect another food inside a stage (for example 30 to 40). Expected: no size change at all.
+5. Collect two foods that cross a threshold in quick succession and mid-jump. Expected: no flicker, one smooth change, final scale equals the stage's target.
+6. Repeated ordinary jumps and landings on flat floor at stage 1, 2 and 3 (about 20 each). Record any partial sinking using the procedure above and its frequency per stage.
+7. Respawn after growth (reset at stage 2, then at stage 3): the new character appears at the stage's scale at once, never at 1.0 first, and a second reset does not shrink or enlarge it incorrectly.
+8. Food collection after respawn works and growth still tweens when the next threshold is crossed.
+9. Reach Energy 100: the evolution panel appears and TANK/GLIDER can be chosen as before.
+10. Abilities regression: as TANK press `Q` (shell appears and follows the scaled body, 3 s, 12 s cooldown); as GLIDER jump and press `Q` (wings, slower fall, landing ends it, 10 s cooldown). Check the shell/wings size after a growth tween (they are sized at activation).
+11. Two players: one growing must not change the other's size; both HUDs stay correct.
 
 ## Validate
 
