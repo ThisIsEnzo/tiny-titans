@@ -377,6 +377,25 @@ local function onPlayerRemoving(player: Player)
     states[player] = nil
 end
 
+-- Clears all ability state of one player for a new life (called by ResetService when a life
+-- ends): ends any active shell or glide (removing their instances and invalidating pending
+-- expiry timers through the token) and clears both cooldowns. Rate-limit timestamps are
+-- anti-spam, not life state, and are kept. Safe to call repeatedly or for an unknown player.
+function AbilityService.ResetLife(player: Player)
+    local state = states[player]
+    if state == nil then
+        return
+    end
+    endShell(player, state)
+    endGlide(player, state)
+    state.readyAt = 0
+    state.glide.readyAt = 0
+    if player.Parent == Players then
+        player:SetAttribute("ShellReadyAt", 0)
+        player:SetAttribute("GliderReadyAt", 0)
+    end
+end
+
 -- evolutionService must already be initialised (provides the server-owned form).
 function AbilityService.Init(evolutionService: any)
     evolution = evolutionService

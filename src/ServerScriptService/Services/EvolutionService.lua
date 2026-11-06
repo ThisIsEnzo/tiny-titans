@@ -100,6 +100,18 @@ function EvolutionService.GetForm(player: Player): string?
     return formByPlayer[player]
 end
 
+-- Puts the player back in the base form for a new life (called by ResetService when a life
+-- ends). Returns false if the player has no record. Rate-limit timestamps are not life state
+-- and are kept.
+function EvolutionService.ResetForm(player: Player): boolean
+    if formByPlayer[player] == nil then
+        return false
+    end
+    formByPlayer[player] = Config.BaseForm
+    refresh(player)
+    return true
+end
+
 -- playerDataService must already be initialised.
 function EvolutionService.Init(playerDataService: any)
     playerData = playerDataService

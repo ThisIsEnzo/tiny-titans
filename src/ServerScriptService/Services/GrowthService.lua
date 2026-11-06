@@ -73,6 +73,9 @@ local function updateScale(player: Player, instant: boolean, createMissing: bool
     if humanoid == nil then
         return
     end
+    if humanoid.Health <= 0 then
+        return -- a dead body is not rescaled (for example after the reset on death)
+    end
     if humanoid.RigType ~= Enum.HumanoidRigType.R15 then
         if not warnedRig then
             warnedRig = true
@@ -145,6 +148,17 @@ local function onPlayerAdded(player: Player)
     end)
     if player.Character ~= nil then
         task.spawn(updateScale, player, true, true)
+    end
+end
+
+-- Forgets the player's growth visuals state for a new life (called by ResetService when a
+-- life ends): cancels running tweens and the applied target. The next character, or the
+-- current one if it is alive, is set to the new life's stage scale at once. Idempotent.
+function GrowthService.ResetLife(player: Player)
+    local state = scaleStates[player]
+    if state ~= nil then
+        cancelTweens(state)
+        state.target = nil
     end
 end
 
