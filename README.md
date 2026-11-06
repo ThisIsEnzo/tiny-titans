@@ -4,7 +4,7 @@ Roblox prototype: a multiplayer creature evolution arena.
 
 ## Direction and architecture documents
 
-The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death does **not** reset anything: Biomass, growth stage and form survive a respawn and are lost only when the player leaves, and there is no persistence.
+The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death ends the life and resets the Current Life (Biomass, growth stage, form and ability state; see *Reset on death (P1-03)*), and the player respawns automatically as Baby Bug. There is no persistence and no Legacy yet.
 
 Current implementation versus target: today there are three forms (`BABY_BUG`, `TANK`, `GLIDER`), with no damage, combat, PvE or PvP. The target (provisional) is the Baby Bug starter, which is not a class, plus four evolved classes (Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller); Striker / Hunter and Support / Controller are not implemented. "Biomass" is the name of the Current Life growth resource (approved by the project owner as the final player-facing name).
 
@@ -90,7 +90,9 @@ Server-only gameplay, wired in `ServerScriptService/Bootstrap.server.lua`:
 | `ServerScriptService/Services/FoodService.lua` | Creates one food ball per `FoodSpawn`-tagged part, detects pickups, awards biomass, respawns food |
 | `ServerScriptService/Services/GrowthService.lua` | Applies the current stage's body scale to the player's R15 character (on stage change, spawn and appearance load) |
 | `ReplicatedStorage/Shared/Growth.lua` | Pure stage/scale/clamp helpers (no Roblox services) |
-| `ServerScriptService/Services/LifeService.lua` | Tracks each player's life (`Alive` / `Ended`) and `lifeId`; detects life start and end; server-only `LifeBegan` / `LifeEnded` events. Resets nothing (see Life tracking) |
+| `ServerScriptService/Services/LifeService.lua` | Tracks each player's life (`Alive` / `Ended`) and `lifeId`; detects life start and end; server-only `LifeBegan` / `LifeEnded` events. Resets nothing itself (see Life tracking) |
+| `ServerScriptService/Services/ResetService.lua` | Subscribes to `LifeEnded` / `LifeBegan` and resets the Current Life exactly once per `lifeId` through each service's own reset function (see Reset on death) |
+| `ReplicatedStorage/Shared/LifeReset.lua` | Pure rules deciding when to reset: exactly once per `lifeId`, duplicate and stale events, removed players |
 | `ReplicatedStorage/Shared/Life.lua` | Pure life transition rules (no Roblox services) |
 | `ReplicatedStorage/Shared/Config.lua` | Tuning: `FoodBiomass`, `FoodRespawnDelay`, `FoodPickupRange`, `FoodHoverHeight`, `FoodCheckInterval`, `GrowthStages` |
 
@@ -121,12 +123,56 @@ Design notes:
 
 ## Life tracking (P1-02)
 
-`LifeService` (started first in `Bootstrap.server.lua`) only detects when a life begins and ends. It does not reset or change anything: Biomass, `GrowthStage`, `EvolutionForm` and ability cooldowns still survive death and respawn, and Roblox's automatic respawn is unchanged. Resetting on death is a later milestone.
+`LifeService` (started first in `Bootstrap.server.lua`) only detects when a life begins and ends. It does not reset or change anything itself, and Roblox's automatic respawn is unchanged. The reset on death is done by `ResetService` (next section).
 
 - A life is one character. It begins on `CharacterAdded` (`lifeId` + 1) and ends on the first of `Humanoid.Died`, `CharacterRemoving`, a replacement character, or the player leaving. A second signal for the same life is ignored, and a late signal from an older character cannot end a newer life.
 - Server-only API: `LifeService.LifeBegan(player, lifeId)`, `LifeService.LifeEnded(player, lifeId, reason)` (reason: `HumanoidDied`, `CharacterRemoving`, `CharacterReplaced`, `PlayerRemoving`), `GetState(player)`, `GetLifeId(player)`, `IsAlive(player)`. The events are BindableEvents inside the module, not remotes.
 - State lives in a server table. The `LifeState` Player attribute (`Alive` / `Ended`) is a debugging mirror only and must never be used for a decision. `lifeId` is not replicated.
 - The transition rules are in `ReplicatedStorage/Shared/Life.lua` and are covered by `tests/Life.test.lua`. That file does not test the Roblox signal wiring, which needs the Studio checklist below.
+
+## Reset on death (P1-03)
+
+When a player's life ends, the Current Life resets exactly once. Server-only; no client request or value is involved, and Roblox's automatic respawn is unchanged.
+
+What resets (per player, whose life ended):
+
+| State | Owner | Reset by |
+|---|---|---|
+| Biomass (and the derived `GrowthStage`, `EvolutionAvailable`) | `PlayerDataService` | `ResetBiomass` sets it to `LifeReset.StartingBiomass` (0) and publishes |
+| `EvolutionForm` | `EvolutionService` | `ResetForm` sets `Config.BaseForm` (`BABY_BUG`) and refreshes the attributes |
+| Active Tank shell and Glider glide, their instances and pending expiry timers, both cooldowns (`ShellReadyAt`, `GliderReadyAt`) | `AbilityService` | `ResetLife` ends both effects (bumping their tokens) and zeroes the cooldowns |
+| Growth visuals (running scale tweens and the applied target) | `GrowthService` | `ResetLife`; the next character, or the current one if alive, gets the stage 1 scale at once. A dead body is not rescaled |
+
+Not reset on purpose: per-player rate-limit timestamps (anti-spam, not life state), food in the world (shared), `LifeState`/`lifeId` (owned by `LifeService`). Biomass cap (100), food reward, thresholds (30 / 60), forms, abilities and respawn behaviour are unchanged. There is no Legacy and no persistence.
+
+Orchestration: `ResetService` (started last in `Bootstrap.server.lua`) subscribes to `LifeService.LifeEnded` and `LifeService.LifeBegan` and calls the four reset functions above in a fixed order (biomass, form, abilities, growth). There is no second death detection. Death is still detected only by `LifeService`.
+
+Exactly once, duplicate and stale events (pure rules in `Shared/LifeReset.lua`, one tracker per player):
+
+- The tracker remembers the highest `lifeId` already reset. A `LifeEnded` for that life or an older one is a **duplicate** and does nothing; the tracker is marked before the reset runs.
+- `LifeService` events can arrive a moment after the change. A `LifeEnded` for a life that is no longer the player's current life is **stale** and does nothing, so a late event can never reset a newer life. The `LifeBegan` handler then performs that missed reset at the start of the new life, before it has any state of its own, so every new life starts clean.
+- A player who left has no current life: the event is ignored, no tracker is created, and the tracker is removed on `PlayerRemoving`.
+- Delayed ability timers are guarded by their per-effect token, which the reset bumps, so a timer from an ended life cannot end or modify a newer one. `AbilityService` does not know `lifeId`; the token is its stale-callback protection. Food collection and evolution requests are synchronous and require a living character, so they have no delayed callback to guard.
+
+Out of scope: controlled respawn, recap UI, Legacy, persistence, combat, new forms or stages, changes to the current temporary progression.
+
+Tests: `tests/LifeReset.test.lua` covers the pure rules and replays event orderings (reset of biomass, form, growth stage and cooldown; exactly once; duplicates; two players; a late event after a new life; a missed reset; player removal; a clean and playable next life; unchanged progression before death). It uses plain tables as players and does **not** test the Roblox wiring. Run: `lune run tests/LifeReset.test.lua`.
+
+### Manual Studio test checklist: reset on death (P1-03)
+
+These are **manual tests; none has been performed**. Use Play Solo, then Test > Clients and Servers with 2 players. Watch the Output for errors and warnings. Use the server view to read Player attributes.
+
+1. Play Solo. Expected: `LifeState = Alive`, `Biomass = 0`, `EvolutionForm = BABY_BUG`.
+2. Collect food to 100 Biomass and evolve to TANK. Use `Q` once (shell and cooldown are active). Reset the character (or die). Expected: `LifeState` goes `Ended` then `Alive`; after respawn `Biomass = 0`, `GrowthStage = 1`, `EvolutionForm = BABY_BUG`, `ShellReadyAt = 0`, no `DefensiveShell` on any character, the ability button is hidden, the character is at the stage 1 size.
+3. Repeat as GLIDER: glide in the air, die during the glide. Expected: wings, `GlideForce` and `GlideAttachment` are gone, `GliderReadyAt = 0`, form is `BABY_BUG`, and a late 3 s timer does nothing to the new life.
+4. Respawn and collect food again. Expected: Biomass rises by 10 per food, stage 2 at 30 and stage 3 at 60 with the normal growth tween, evolution is offered at 100, and TANK and GLIDER can be chosen again.
+5. Die with the evolution panel open. Expected: the panel closes and does not reappear in the new life until Biomass is 100 again.
+6. Two players: reset only one. Expected: the other keeps Biomass, form, cooldowns and effects.
+7. Die twice in quick succession (reset right after respawning). Expected: each life ends once, Biomass is 0 each time, no errors.
+8. Leave during a glide or shell and during the death. Expected: no errors in the server Output, and the other player is unaffected.
+9. Verify duplicate or stale events do not reset a new life: after respawning and collecting a few foods, nothing changes your Biomass or form by itself. (Add a temporary local `print` in `ResetService.onLifeEnded`/`onLifeBegan` if you want to see the events; do not commit it. Expected: one reset per death, none while alive.)
+10. Rapid deaths while another script respawns you: not applicable (respawn is automatic and unchanged).
+11. Confirm no errors or warnings in the Output at any step.
 
 ## Evolution choice
 
@@ -181,7 +227,7 @@ Behaviour (values in `Config.lua`, none hardcoded elsewhere):
 - Key `Q` (`AbilityKey`) or the on-screen **SHELL [Q]** button (mid-right of the screen, tappable on touch devices).
 - Only players whose server-side form is `TANK` (`TankShellForm`) can use it.
 - The shell stays for 3 s (`TankShellDuration`). The cooldown is 12 s (`TankShellCooldown`) and **runs from activation**, so the ability is usable again 9 s after the shell disappears.
-- Repeated input can neither extend the shell nor shorten the cooldown. The cooldown persists across death and respawn within the session and resets when the player leaves.
+- Repeated input can neither extend the shell nor shorten the cooldown. The cooldown is cleared when the life ends (death) and when the player leaves.
 
 | File | Responsibility |
 |---|---|
@@ -216,7 +262,7 @@ Behaviour (values in `Config.lua`):
 - Key `Q` (`AbilityKey`, shared with the Tank shell) or the on-screen **GLIDE [Q]** button (same mid-right position as the Tank's **SHELL** button; only one of the two is ever shown, depending on the form).
 - Only players whose server-side form is `GLIDER` (`GliderForm`) can use it, and only while **airborne** (`Humanoid.FloorMaterial == Air`, read on the server).
 - One press starts an automatic glide for up to 3 s (`GliderDuration`); no holding is needed. **Landing ends it immediately.**
-- Cooldown 10 s (`GliderCooldown`), measured from successful activation; it persists across death and respawn in the session and resets when the player leaves.
+- Cooldown 10 s (`GliderCooldown`), measured from successful activation; it is cleared when the life ends (death) and when the player leaves.
 - While gliding, a server-created `VectorForce` pushes up with `GliderGravityCompensation` (0.65) of the character's weight (`AssemblyMass * Workspace.Gravity`). The compensation is capped below 1 in `Ability.GetGlideForce`, so gravity always wins and the net vertical force is always downward. No horizontal force is applied: steering is the normal Roblox character controls. `WalkSpeed`, jump settings and network ownership are not changed.
 - Visual: two thin neon "wings" welded beside the torso, created on the server so all clients see them. They are massless and have no collision, touch or query. Removed when the glide ends.
 
@@ -242,7 +288,7 @@ Limitations:
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio. `tests/Life.test.lua` covers the pure rules in `Life.lua` (begin/end transitions, `lifeId`, duplicate and stale end requests, invalid input); it does not cover the Roblox signal wiring.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). `tests/LifeReset.test.lua` covers the pure reset-on-death rules (see Reset on death). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio. `tests/Life.test.lua` covers the pure rules in `Life.lua` (begin/end transitions, `lifeId`, duplicate and stale end requests, invalid input); it does not cover the Roblox signal wiring.
 
 ### Manual Studio test checklist
 
@@ -252,7 +298,7 @@ Limitations:
 4. Collect 3 balls total. Expected: `Biomass = 30`, `GrowthStage = 2`, character visibly larger. Collect 6 total: `Biomass = 60`, `GrowthStage = 3`, normal size.
 5. Wait 8 s after collecting. Expected: the ball reappears.
 6. Collect until `Biomass = 100`. Expected: biomass stops at 100 and food is no longer consumed by you.
-7. Reset the character (or die). Expected: you respawn at your current stage's size, with biomass unchanged.
+7. Reset the character (or die). Expected: you respawn as a new life at stage 1 size with Biomass 0 (see the P1-03 checklist).
 8. Test > Clients and Servers, 2 players, both stand near the same ball. Expected: only one player gains biomass; the closer one if distances differ.
 9. Check the platform food: the ball on `HillTier2` is reachable by jumping, and the one on `GliderPlatform2` is not reachable yet (needs the future glide ability).
 10. Check that the smaller character fits routes, jumps normally and the camera behaves at scale 0.6.
@@ -277,7 +323,7 @@ Check `LifeState` on your Player in Explorer (server view while playing). To see
 3. Wait for the automatic respawn. Expected: `LifeState` is `Alive` again.
 4. Repeat the death a few times. Expected: `lifeId` rises by exactly 1 per spawn and never on death.
 5. Log `LifeEnded` for one death. Expected: exactly one event, even though `Humanoid.Died` and `CharacterRemoving` both occur.
-6. Collect food, evolve, then die and respawn. Expected: Biomass and `EvolutionForm` are unchanged across death and respawn.
+6. Collect food, evolve, then die and respawn. Expected: the life ends once and the new life starts with Biomass 0 and `EvolutionForm = BABY_BUG` (see the P1-03 checklist).
 7. Use Tank Shell and Glider before and after a death. Expected: both still work and existing cleanup is not broken.
 8. Test > Clients and Servers with 2 players, reset one. Expected: the other player's `LifeState` and `lifeId` do not change.
 9. Have a player leave during an active life. Expected: no errors; the lifecycle record and connections are cleaned up.
@@ -291,7 +337,7 @@ Solo (Play Solo, Avatar Type R15):
 2. Collect food up to 90 biomass. Expected: still no panel, `EvolutionAvailable = false`.
 3. Collect the next food (100). Expected: the `EVOLUTION READY` panel appears with TANK and GLIDER buttons and `EvolutionAvailable = true`.
 4. Click TANK (or GLIDER). Expected: the panel hides, the badge shows the chosen form, `EvolutionForm` matches, `EvolutionAvailable = false`, and an overhead tag appears above your head.
-5. Reset the character. Expected: the form, badge and tag persist; the panel does not reappear.
+5. Reset the character. Expected (since P1-03): the death ends the life, so the form returns to Baby Bug, the badge and tag follow, and the panel is closed.
 6. Try to choose again (command bar on the client): `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("GLIDER")`. Expected: no change to `EvolutionForm`.
 7. Reject checks, from a fresh server session before reaching 100 biomass, via the client command bar: `...RequestEvolution:FireServer("TANK")` (threshold not reached), then at 100 biomass `FireServer("FLY")`, `FireServer(nil)`, `FireServer("tank")`, `FireServer(123)`. Expected: all ignored, no errors in the server output, form stays `BABY_BUG`, and the panel stays open. Then a valid `FireServer("GLIDER")` works once.
 8. Dead character: at 100 biomass, set the humanoid health to 0 and immediately fire a valid request. Expected: ignored while dead; works after respawn.
@@ -323,7 +369,7 @@ Prepare: Play Solo (R15) and get a TANK quickly, for example by raising biomass 
 8. BABY_BUG player: same as 7.
 9. Spam: while the shell is up, run `for i = 1, 200 do game.ReplicatedStorage.Remotes.RequestAbility:FireServer("SHELL") end` on the client. Expected: duration stays 3 s and the cooldown is not shortened. Also try `FireServer("SHELL", 99)`, `FireServer()` and `FireServer("anything")`: extra arguments change nothing and a missing or unknown identifier does nothing.
 10. Death: activate, then reset the character or set health to 0. Expected: the bubble disappears immediately and the button shows the remaining cooldown (not `Active`).
-11. Respawn during and after activation: no stale bubble on the old or new character, and at most one `DefensiveShell` exists (check the character in Explorer on the server). Cooldown is still counting after respawn.
+11. Respawn during and after activation: no stale bubble on the old or new character, and at most one `DefensiveShell` exists (check the character in Explorer on the server). The cooldown is cleared by the death (new life), so the shell can be used again only after re-evolving to TANK.
 12. Touch: in the Device emulator (phone) or on a real touch device, tap the button. Expected: it activates, is not hidden behind the jump button or thumbstick, and tapping it does not also move the character.
 13. Typing: focus a text box (for example the chat) and press `Q`. Expected: no activation.
 14. Leave and rejoin: no server errors; the new session starts as Baby Bug with no button.
@@ -343,7 +389,7 @@ These are **manual tests; none has been performed**. Use Play Solo (R15) and Tes
 7. Cooldown: after activating, `Q` does nothing for 10 s from the activation. The button shows `Cooldown` and returns to `Ready`. Pressing `Q` repeatedly (or the spam loop `for i = 1, 200 do r:FireServer("GLIDE") end`) never extends the glide or shortens the cooldown.
 8. Landing: activate, then land before 3 s. Expected: wings vanish immediately and the button shows `Cooldown` (not `Gliding`). Check `GliderActiveUntil` returns to 0 on the Player in the server view.
 9. Death during a glide: reset the character mid-glide. Expected: wings and force gone at once, no `GlideForce`/`GlideAttachment` left under the old character, no glide state on the new one. In Explorer (server view) confirm they are removed.
-10. Respawn during cooldown: the cooldown keeps counting after respawn, `Q` is rejected until it ends.
+10. Respawn during cooldown: the death ends the life, so the cooldown is cleared and the form is Baby Bug again; `Q` is rejected until you evolve to GLIDER in the new life.
 11. Leaving during a glide: with 2 clients, one leaves mid-glide. Expected: no server errors, and the remaining client sees no stray wings.
 12. Visual on other clients: with 2 or more clients, the wings and slow fall of the glider are visible to the others and disappear for everyone when the glide ends.
 13. Reachability: from ground level, a Baby Bug cannot reach `GliderPlatform1` (top Y = 16) with ordinary jumps. Then, as GLIDER, jump toward it and activate in the air: record whether you can land on it, how reliably, and how high the apex gets compared with a normal jump. Record the result before tuning `GliderGravityCompensation`.
@@ -413,7 +459,7 @@ Lifecycle:
 
 11. While B is gliding or has a shell up, A dies. Expected: B's effect continues unaffected; A's effects vanish.
 12. B leaves during an active glide. Expected: no server errors; A sees no stray wings, force or attachment left on anything (check Explorer on the server).
-13. A respawns while B keeps playing. Expected: B's HUD, cooldown and effects unchanged; A has exactly one HUD, no duplicate button, no stale shell/wings, and A's cooldown and form persist.
+13. A respawns while B keeps playing. Expected: B's HUD, cooldown and effects unchanged; A has exactly one HUD, no duplicate button, no stale shell/wings, and A starts a new life (form, biomass and cooldowns reset by the death) without affecting B.
 14. Join and leave several players quickly (Test > Start with 3, close and re-run clients). Expected: no errors, no duplicate `Workspace.Food` folder, each new player starts as BABY_BUG with 0 biomass.
 
 ## Growth smoothing and ground contact (P0 audit)
@@ -493,7 +539,7 @@ These are **manual tests; none has been performed**. Use Play Solo, then Test > 
 5. After evolving, run `RequestEvolution:FireServer("GLIDER")` and `FireServer("TANK")`, `FireServer(nil)`, `FireServer(123)`. Expected: `EvolutionForm` is unchanged; no errors.
 6. Rejection feedback: reach 100, then run (client command bar) `game.ReplicatedStorage.Remotes.RequestEvolution:FireServer("FLY")`. Expected: the panel stays, status text shows `That form is not available.`
 7. Dead character: at 100 biomass, set health to 0 and press Confirm quickly. Expected: `Respawn first, then try again.` and no evolution.
-8. Respawn after evolving: reset the character. Expected: form, badge, tag and the matching ability button are unchanged; no panel; never back to Baby Bug.
+8. Respawn after evolving: reset the character. Expected (since P1-03): the death ends the life; form returns to Baby Bug, the badge, tag and ability button follow, and there is no panel. The previous form never carries into the next life.
 9. Correct ability only: as TANK `Q` raises the shell and the button says SHELL; as GLIDER `Q` in the air glides and the button says GLIDE. From the command bar a Tank firing `RequestAbility:FireServer("GLIDE")` or a Glider firing `FireServer("SHELL")` does nothing.
 10. Two players: A reaches 100 and picks TANK, B (below 100) has no panel and cannot evolve. Then B reaches 100 and picks GLIDER. Expected: forms, panels, toasts and ability buttons stay independent, and each sees the other's tag.
 11. Attribute tampering: on a client, `game.Players.LocalPlayer:SetAttribute("EvolutionForm", "TANK")` while Baby Bug. Expected: the local badge may change but the server form does not, and `Q` still does nothing on the server.
@@ -507,6 +553,6 @@ These are **manual tests; none has been performed**. Use Play Solo, then Test > 
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Biomass HUD and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. Form models, damage, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Biomass HUD, life tracking, the reset on death and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. Form models, damage, combat and persistence are not implemented.
 
 See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.

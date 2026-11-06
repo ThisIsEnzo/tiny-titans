@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config") :: ModuleScript)
 local Growth = require(Shared:WaitForChild("Growth") :: ModuleScript)
+local LifeReset = require(Shared:WaitForChild("LifeReset") :: ModuleScript)
 
 local PlayerDataService = {}
 
@@ -72,6 +73,18 @@ function PlayerDataService.AddBiomass(player: Player, amount: number): number
     biomassByPlayer[player] = updated
     publish(player, updated)
     return gained
+end
+
+-- Puts the player's biomass back to the starting value for a new life (called by ResetService
+-- when a life ends). Returns false if the player has no record. Publishes like any change, so
+-- the stage, the attributes and the progress listeners follow.
+function PlayerDataService.ResetBiomass(player: Player): boolean
+    if biomassByPlayer[player] == nil then
+        return false
+    end
+    biomassByPlayer[player] = LifeReset.StartingBiomass
+    publish(player, LifeReset.StartingBiomass)
+    return true
 end
 
 return PlayerDataService
