@@ -187,7 +187,7 @@ Behaviour:
 
 - `Bootstrap.server.lua` sets `Players.CharacterAutoLoads = false` before anything yields.
 - `RespawnService` (initialised last) loads each player's **first** character when they join (decided by the server, not a request). If a character already existed (it spawned before the setting took effect), it is kept and its life recorded.
-- When a life ends, `LifeService` fires `LifeEnded`, `ResetService` resets the Current Life (P1-03), and `RespawnService` sends the recap to that player only through `Remotes.LifeRecap` with `{ durationSeconds, highestForm }`. The dead character stays until the next spawn. There is no countdown and no automatic respawn.
+- When a life ends, `LifeService` fires `LifeEnded`, `ResetService` resets the Current Life (P1-03), and `RespawnService` stores the recap for that player (`durationSeconds`, `highestForm`). The client subscribes to `LifeRecap` and then fires `LifeRecapReady`; the server sends the stored recap after this handshake. This avoids losing the recap if the client controller starts late. The dead character stays until the next spawn. There is no countdown and no automatic respawn.
 - The recap (`LifeRecapController`) shows **Life duration**, **Highest form** and a **BEGIN NEW LIFE** button (at least 56 px high, scaled panel). It appears only when the server sends the recap and hides when the new character spawns. After pressing, the button shows "Starting..." and re-enables after 6 s if nothing happened.
 - The button fires `Remotes.RequestBeginNewLife` with **no values**. The client never sends a duration, form, lifeId or state.
 
@@ -202,7 +202,7 @@ Not included: death rewards or penalties, Legacy or persistent statistics, a dea
 Known limitations and risks:
 
 - **Studio race:** if a character is created before the script sets `CharacterAutoLoads = false` (possible in Play Solo), `RespawnService` keeps that character; the recorded start time is then the moment the service started. Check step 1 below.
-- `LifeRecap` is a single fire-and-forget remote. If the client script was not ready when it arrives, the player would have no button; there is no resend yet.
+- Recap delivery is retained server-side until the next life begins and replayed after the client-ready handshake. The client-ready signal is per player; it does not authorize a respawn or alter life state.
 - The dead character remains in the world until the player presses the button.
 - `Player:LoadCharacter()` behaviour and failure modes could not be tested here.
 
