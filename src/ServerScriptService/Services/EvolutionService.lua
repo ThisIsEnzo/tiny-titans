@@ -19,6 +19,12 @@ local Evolution = require(Shared:WaitForChild("Evolution") :: ModuleScript)
 
 local EvolutionService = {}
 
+local formChanged = Instance.new("BindableEvent")
+
+-- Fires (player: Player, form: string) on the server only, after a valid evolution selection
+-- (not on the reset back to the base form). RespawnService uses it for the life recap.
+EvolutionService.FormChanged = formChanged.Event
+
 local formByPlayer: { [Player]: string } = {}
 local lastRequestAt: { [Player]: number } = {}
 local playerData: any = nil
@@ -92,6 +98,7 @@ local function onRequestEvolution(player: Player, form: any)
     if reason == "Ok" then
         formByPlayer[player] = newForm
         refresh(player)
+        formChanged:Fire(player, newForm)
     end
     reply(player, reason)
 end
