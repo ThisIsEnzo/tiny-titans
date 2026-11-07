@@ -23,13 +23,21 @@ local Respawn = require(Shared:WaitForChild("Respawn") :: ModuleScript)
 local RespawnService = {}
 
 type Stats = { lifeId: number, startedAt: number, highestForm: string }
-type Entry = { record: Respawn.Record, stats: Stats? }
+type Recap = { durationSeconds: number, highestForm: string }
+type Entry = { record: Respawn.Record, stats: Stats?, pendingRecap: Recap?, clientReady: boolean }
 
 local entries: { [Player]: Entry } = {}
 local life: any = nil
 local evolution: any = nil
 local reset: any = nil
 local recapEvent: RemoteEvent? = nil
+local recapReadyEvent: RemoteEvent? = nil
+
+local function sendPendingRecap(player: Player, entry: Entry)
+    if recapEvent ~= nil and entry.clientReady and entry.pendingRecap ~= nil and player.Parent == Players then
+        recapEvent:FireClient(player, entry.pendingRecap)
+    end
+end
 
 -- Loads a character on its own thread (LoadCharacter yields). Never recreates state for a
 -- player who left while it ran. If no life began (an error, or nothing spawned), the spawn
@@ -58,6 +66,7 @@ local function onLifeBegan(player: Player, lifeId: number)
         return
     end
     entry.record = Respawn.OnLifeBegan(entry.record, lifeId)
+    entry.pendingRecap = nil
     startStats(entry, lifeId, Config.BaseForm)
 end
 
@@ -78,7 +87,8 @@ local function onLifeEnded(player: Player, endedLifeId: number, reason: string)
         duration = Respawn.Duration(stats.startedAt, workspace:GetServerTimeNow())
         highestForm = stats.highestForm
     end
-    recapEvent:FireClient(player, { durationSeconds = duration, highestForm = highestForm })
+    entry.pendingRecap = { durationSeconds = duration, highestForm = highestForm }
+    sendPendingRecap(player, entry)
 end
 
 local function onFormChanged(player: Player, form: string)
@@ -112,7 +122,7 @@ local function onPlayerAdded(player: Player)
     if entries[player] ~= nil then
         return
     end
-    local entry: Entry = { record = Respawn.Initial(), stats = nil }
+    local entry: Entry = { record = Respawn.Initial(), stats = nil, pendingRecap = nil, clientReady = false }
     entries[player] = entry
     if life.IsAlive(player) then
         -- A character already existed (it spawned before CharacterAutoLoads was turned off):
@@ -144,6 +154,18 @@ function RespawnService.Init(lifeService: any, evolutionService: any, resetServi
     recap.Name = "LifeRecap"
     recap.Parent = remotes
     recapEvent = recap
+    local ready = Instance.new("RemoteEvent")
+    ready.Name = "LifeRecapReady"
+    ready.Parent = remotes
+    recapReadyEvent = ready
+    ready.OnServerEvent:Connect(function(player)
+        local entry = entries[player]
+        if entry == nil or player.Parent ~= Players then
+            return
+        end
+        entry.clientReady = true
+        sendPendingRecap(player, entry)
+    end)
     local request = Instance.new("RemoteEvent")
     request.Name = "RequestBeginNewLife"
     request.Parent = remotes
