@@ -189,6 +189,8 @@ function LifeRecapController.Init()
             gui.Enabled = true
         end)
         requestRemote = request
+        local ready = remotes:WaitForChild("LifeRecapReady") :: RemoteEvent
+        ready:FireServer() -- handshake: the server replays a recap if one arrived before this listener was ready
     end)
 end
 
