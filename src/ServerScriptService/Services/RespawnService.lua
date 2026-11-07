@@ -31,7 +31,6 @@ local life: any = nil
 local evolution: any = nil
 local reset: any = nil
 local recapEvent: RemoteEvent? = nil
-local recapReadyEvent: RemoteEvent? = nil
 
 local function sendPendingRecap(player: Player, entry: Entry)
     if recapEvent ~= nil and entry.clientReady and entry.pendingRecap ~= nil and player.Parent == Players then
@@ -157,7 +156,6 @@ function RespawnService.Init(lifeService: any, evolutionService: any, resetServi
     local ready = Instance.new("RemoteEvent")
     ready.Name = "LifeRecapReady"
     ready.Parent = remotes
-    recapReadyEvent = ready
     ready.OnServerEvent:Connect(function(player)
         local entry = entries[player]
         if entry == nil or player.Parent ~= Players then
