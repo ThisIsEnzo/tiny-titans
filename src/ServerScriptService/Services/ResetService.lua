@@ -71,6 +71,13 @@ local function onLifeBegan(player: Player, lifeId: number)
     end)
 end
 
+-- True once the reset of lifeId (or a later life) has been applied for this player. Used by
+-- RespawnService so a new life is never started before the previous life's reset has run.
+function ResetService.IsResetDone(player: Player, lifeId: number): boolean
+    local tracker = trackers[player]
+    return tracker ~= nil and tracker.lastResetLifeId >= lifeId
+end
+
 -- Every argument must already be initialised. Call after the other services.
 function ResetService.Init(lifeService: any, playerDataService: any, evolutionService: any, abilityService: any, growthService: any)
     life = lifeService

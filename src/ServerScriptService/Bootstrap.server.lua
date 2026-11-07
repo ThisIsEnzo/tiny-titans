@@ -5,6 +5,10 @@
 local RunService = game:GetService("RunService")
 assert(RunService:IsServer(), "Bootstrap.server.lua must run on the server.")
 
+-- Controlled respawn (P1-04): no automatic character. RespawnService spawns the first character
+-- and a new one only when the player asks after a life ended. Set before anything yields.
+game:GetService("Players").CharacterAutoLoads = false
+
 local Services = (script.Parent :: Instance):WaitForChild("Services")
 local LifeService = require(Services:WaitForChild("LifeService") :: ModuleScript)
 local PlayerDataService = require(Services:WaitForChild("PlayerDataService") :: ModuleScript)
@@ -13,6 +17,7 @@ local FoodService = require(Services:WaitForChild("FoodService") :: ModuleScript
 local EvolutionService = require(Services:WaitForChild("EvolutionService") :: ModuleScript)
 local AbilityService = require(Services:WaitForChild("AbilityService") :: ModuleScript)
 local ResetService = require(Services:WaitForChild("ResetService") :: ModuleScript)
+local RespawnService = require(Services:WaitForChild("RespawnService") :: ModuleScript)
 
 LifeService.Init() -- first: later milestones subscribe other services to its events
 PlayerDataService.Init()
@@ -21,3 +26,4 @@ FoodService.Init(PlayerDataService)
 EvolutionService.Init(PlayerDataService)
 AbilityService.Init(EvolutionService)
 ResetService.Init(LifeService, PlayerDataService, EvolutionService, AbilityService, GrowthService) -- last: resets a life's state when LifeService reports its end
+RespawnService.Init(LifeService, EvolutionService, ResetService) -- very last: spawns characters, so every service above must already listen
