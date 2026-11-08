@@ -1,10 +1,13 @@
 --!strict
--- Minimal life recap (P1-04). Shown only when the server sends LifeRecap after a life ended:
--- life duration, highest form reached, and a BEGIN NEW LIFE button. The numbers and the form
--- come from the server and are display only. The button sends RequestBeginNewLife with NO
--- values; the server decides whether a new life may begin. The recap hides when a new
+-- Minimal life recap (P1-04, hardened in P1-05). Shown only when the server sends LifeRecap after
+-- a life ended: life duration, highest form reached, and a BEGIN NEW LIFE button. The numbers and
+-- the form come from the server and are display only. The button sends RequestBeginNewLife with
+-- NO values; the server decides whether a new life may begin. The recap hides when a new
 -- character spawns (the new life), not when the button is pressed, and the button re-enables
 -- after a timeout if nothing happened, so the player can never get stuck.
+-- Each recap carries the server's lifeId. Older, already dismissed or malformed recaps are
+-- ignored (Respawn.ShouldShowRecap), so a late or replayed recap can neither overwrite a newer
+-- one nor reappear after the new character spawned. lifeId 0 is the "first spawn failed" notice.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -48,7 +51,7 @@ local function roundCorners(instance: Instance, radius: number)
     corner.Parent = instance
 end
 
-local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextButton)
+local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextLabel, TextButton)
     local gui = Instance.new("ScreenGui")
     gui.Name = GUI_NAME
     gui.ResetOnSpawn = false
@@ -118,7 +121,7 @@ local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextButton)
     textLimit.MaxTextSize = 26
     textLimit.Parent = button
 
-    return gui, duration, form, button
+    return gui, title, duration, form, button
 end
 
 function LifeRecapController.Init()
@@ -129,11 +132,13 @@ function LifeRecapController.Init()
 
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
-    local gui, durationLabel, formLabel, button = buildGui()
+    local gui, titleLabel, durationLabel, formLabel, button = buildGui()
 
     local requestRemote: RemoteEvent? = nil
     local pending = false
     local attempt = 0
+    local shownLifeId = -1 -- recap on screen (-1 = none)
+    local dismissedLifeId = -1 -- highest recap already dismissed by a new character
 
     local function setPending(value: boolean)
         pending = value
@@ -145,6 +150,8 @@ function LifeRecapController.Init()
 
     local function hide()
         attempt += 1
+        dismissedLifeId = math.max(dismissedLifeId, shownLifeId)
+        shownLifeId = -1
         gui.Enabled = false
         setPending(false)
     end
@@ -174,18 +181,26 @@ function LifeRecapController.Init()
         local request = remotes:WaitForChild("RequestBeginNewLife") :: RemoteEvent
         local recap = remotes:WaitForChild("LifeRecap") :: RemoteEvent
         recap.OnClientEvent:Connect(function(summary: any)
-            -- Display only; malformed data falls back to safe text instead of being trusted.
-            local seconds: any = nil
-            local highest: any = nil
-            if type(summary) == "table" then
-                seconds = summary.durationSeconds
-                highest = summary.highestForm
+            -- Display only; malformed data is ignored or falls back to safe text.
+            if type(summary) ~= "table" then
+                return
             end
+            local recapLifeId: any = summary.lifeId
+            if not Respawn.ShouldShowRecap(recapLifeId, dismissedLifeId, shownLifeId) then
+                return -- older, already dismissed, or malformed
+            end
+            local seconds: any = summary.durationSeconds
+            local highest: any = summary.highestForm
+            local sameRecap = recapLifeId == shownLifeId
+            shownLifeId = recapLifeId :: number
+            titleLabel.Text = if recapLifeId == 0 then "SPAWN FAILED" else "LIFE ENDED"
             durationLabel.Text = "Life duration: " .. Respawn.FormatDuration(seconds)
             local formName = if type(highest) == "string" then (DISPLAY_NAMES[highest] or highest) else DISPLAY_NAMES.BABY_BUG
             formLabel.Text = "Highest form: " .. formName
-            setPending(false)
-            attempt += 1
+            if not sameRecap then
+                setPending(false) -- a replay of the recap already on screen must not undo a pending press
+                attempt += 1
+            end
             gui.Enabled = true
         end)
         requestRemote = request

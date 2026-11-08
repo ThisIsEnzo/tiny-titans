@@ -435,9 +435,9 @@ This numbering follows **Evolution Adventure Sandbox Roadmap v0.1**. Engineering
 
 Use TT-P0-02R as the detailed engineering plan. Proposed next sequence:
 
-1. **P1-03 — Reset Current Life on Death** (current next PR).
-2. **P1-04 — Respawn / minimal life transition UX** (only after a design decision; preserve Roblox default respawn unless tests justify controlled respawn).
-3. **P1-05 — Lifecycle hardening and regression**.
+1. **P1-03 — Reset Current Life on Death** (implemented; Studio validation outstanding).
+2. **P1-04 — Respawn / minimal life transition UX** (implemented as controlled respawn with a minimal recap; Studio validation outstanding).
+3. **P1-05 — Lifecycle hardening and regression** (implemented; pure tests written, Studio validation outstanding).
 4. **P2-01 — Progression & Evolution Design Gate** (documentation + tuning prototype; no large code rewrite).
 5. **P2-02 — Config-driven evolution definitions**.
 6. **P2-03 — Tank/Glider gameplay validation and redesign**.
@@ -561,7 +561,7 @@ As of the November 2026 planning baseline:
 - Prototype: greybox arena, food pickup, Biomass, three growth stages, evolution choice (Tank/Glider), prototype Shell and Glide abilities.
 - P1.01 Biomass rename: merged.
 - P1.02 LifeService: implementation PR exists; runtime Studio verification is still a separate requirement.
-- P1.03 death reset: next implementation milestone.
+- P1.03 death reset, P1.04 controlled respawn with a minimal life recap, and P1.05 lifecycle hardening: implemented in code, with pure unit tests written but not executed in the authoring environment. No Roblox Studio validation of any P1 step has been recorded; see the README checklists.
 - No damage, combat, PvE, Legacy, DataStore, production habitat, external playtest or public launch readiness.
 - Current progression values (food 10; thresholds 0/30/60; cap 100) are **test tuning**, not final design.
 

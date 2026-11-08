@@ -1,5 +1,5 @@
 --!strict
--- Controlled respawn and the minimal life recap (P1-04).
+-- Controlled respawn and the minimal life recap (P1-04, hardened in P1-05).
 -- Bootstrap sets Players.CharacterAutoLoads = false, so no character appears on its own:
 --   * this service loads each player's FIRST character (the server decides, not a request);
 --   * after a life ends it sends the recap to that player only and waits;
@@ -12,6 +12,17 @@
 --
 -- Recap statistics (kept here, per player): the life's start time (server time) and the highest
 -- form reached, taken from EvolutionService.FormChanged (server-validated selections only).
+--
+-- Spawn guarantees (P1-05): at most ONE LoadCharacter operation per player is in flight. It is
+-- released only when that call returns (not when the character is added, which happens while it
+-- still yields) and only by its own sequence number, so a stale operation can never unlock or
+-- modify a newer one. If the FIRST spawn fails, the player gets a "spawn failed" notice (the
+-- recap with lifeId 0, same button) and may retry. A LoadCharacter that never returns would
+-- keep the player locked: Roblox offers no timeout (known limitation, needs Studio observation).
+--
+-- Recap delivery: the recap carries the server's lifeId. It is stored in entry.pendingRecap
+-- (cleared when a newer life begins) and sent once the client announced it is ready; each
+-- LifeRecapReady message replays the pending recap. The client ignores older or dismissed recaps.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -23,8 +34,11 @@ local Respawn = require(Shared:WaitForChild("Respawn") :: ModuleScript)
 local RespawnService = {}
 
 type Stats = { lifeId: number, startedAt: number, highestForm: string }
-type Recap = { durationSeconds: number, highestForm: string }
-type Entry = { record: Respawn.Record, stats: Stats?, pendingRecap: Recap?, clientReady: boolean }
+-- lifeId 0 is the "first spawn failed" notice.
+type Recap = { lifeId: number, durationSeconds: number, highestForm: string }
+type Entry = { record: Respawn.Record, stats: Stats?, pendingRecap: Recap?, clientReady: boolean, lastReadyAt: number? }
+
+local READY_MIN_INTERVAL = 1 -- seconds: LifeRecapReady messages closer together than this are ignored
 
 local entries: { [Player]: Entry } = {}
 local life: any = nil
@@ -38,10 +52,11 @@ local function sendPendingRecap(player: Player, entry: Entry)
     end
 end
 
--- Loads a character on its own thread (LoadCharacter yields). Never recreates state for a
--- player who left while it ran. If no life began (an error, or nothing spawned), the spawn
--- flag is cleared so the player can try again.
-local function loadCharacter(player: Player, entry: Entry)
+-- Loads a character on its own thread (LoadCharacter yields) for spawn operation `seq`. When the
+-- call returns, ONLY that operation is released (a stale one changes nothing), and nothing is
+-- recreated for a player who left. If the first spawn produced no life, the player is told and
+-- may retry. Errors are logged with warn, never swallowed.
+local function loadCharacter(player: Player, entry: Entry, seq: number)
     task.spawn(function()
         local ok, err = pcall(function()
             player:LoadCharacter()
@@ -49,8 +64,14 @@ local function loadCharacter(player: Player, entry: Entry)
         if not ok then
             warn(string.format("[RespawnService] LoadCharacter failed for %s: %s", player.Name, tostring(err)))
         end
-        if entries[player] == entry and not life.IsAlive(player) then
-            entry.record = Respawn.OnSpawnFailed(entry.record)
+        if entries[player] ~= entry then
+            return
+        end
+        local before = entry.record
+        entry.record = Respawn.EndSpawn(before, seq, life.IsAlive(player), life.GetLifeId(player) or 0)
+        if entry.record.retryInitial and not before.retryInitial then
+            entry.pendingRecap = { lifeId = 0, durationSeconds = 0, highestForm = Config.BaseForm }
+            sendPendingRecap(player, entry)
         end
     end)
 end
@@ -65,7 +86,10 @@ local function onLifeBegan(player: Player, lifeId: number)
         return
     end
     entry.record = Respawn.OnLifeBegan(entry.record, lifeId)
-    entry.pendingRecap = nil
+    local pending = entry.pendingRecap
+    if pending ~= nil and lifeId > pending.lifeId then
+        entry.pendingRecap = nil -- a newer life began: that recap is no longer awaited
+    end
     startStats(entry, lifeId, Config.BaseForm)
 end
 
@@ -86,7 +110,7 @@ local function onLifeEnded(player: Player, endedLifeId: number, reason: string)
         duration = Respawn.Duration(stats.startedAt, workspace:GetServerTimeNow())
         highestForm = stats.highestForm
     end
-    entry.pendingRecap = { durationSeconds = duration, highestForm = highestForm }
+    entry.pendingRecap = { lifeId = endedLifeId, durationSeconds = duration, highestForm = highestForm }
     sendPendingRecap(player, entry)
 end
 
@@ -100,8 +124,8 @@ local function onFormChanged(player: Player, form: string)
 end
 
 -- RequestBeginNewLife: no arguments are used (extra arguments are ignored). Every failure is
--- silent and changes nothing; repeats are rejected because the first valid request sets the
--- spawning flag at once.
+-- silent and changes nothing; repeats and same-frame duplicates are rejected because the first
+-- valid request marks its spawn operation in flight synchronously.
 local function onRequestBeginNewLife(player: Player)
     local entry = entries[player]
     if entry == nil or player.Parent ~= Players then
@@ -114,14 +138,23 @@ local function onRequestBeginNewLife(player: Player)
         return
     end
     entry.record = nextRecord
-    loadCharacter(player, entry)
+    loadCharacter(player, entry, nextRecord.inFlightSeq)
+end
+
+local function startFirstSpawn(player: Player, entry: Entry)
+    local nextRecord, reason = Respawn.StartInitialSpawn(entry.record)
+    if reason ~= "Ok" then
+        return
+    end
+    entry.record = nextRecord
+    loadCharacter(player, entry, nextRecord.inFlightSeq)
 end
 
 local function onPlayerAdded(player: Player)
     if entries[player] ~= nil then
         return
     end
-    local entry: Entry = { record = Respawn.Initial(), stats = nil, pendingRecap = nil, clientReady = false }
+    local entry: Entry = { record = Respawn.Initial(), stats = nil, pendingRecap = nil, clientReady = false, lastReadyAt = nil }
     entries[player] = entry
     if life.IsAlive(player) then
         -- A character already existed (it spawned before CharacterAutoLoads was turned off):
@@ -132,7 +165,7 @@ local function onPlayerAdded(player: Player)
             startStats(entry, lifeId, formNow)
         end
     elseif player.Character == nil then
-        loadCharacter(player, entry) -- the first spawn, decided by the server
+        startFirstSpawn(player, entry) -- the first spawn, decided by the server
     end
 end
 
@@ -161,7 +194,14 @@ function RespawnService.Init(lifeService: any, evolutionService: any, resetServi
         if entry == nil or player.Parent ~= Players then
             return
         end
+        -- Idempotent: a repeated message only replays the same pending recap, at most once a second.
+        local now = os.clock()
+        local last = entry.lastReadyAt
         entry.clientReady = true
+        if last ~= nil and now - last < READY_MIN_INTERVAL then
+            return
+        end
+        entry.lastReadyAt = now
         sendPendingRecap(player, entry)
     end)
     local request = Instance.new("RemoteEvent")
