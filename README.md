@@ -4,7 +4,7 @@ Roblox prototype: a multiplayer creature evolution arena.
 
 ## Direction and architecture documents
 
-The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death ends the life and resets the Current Life (Biomass, growth stage, form and ability state; see *Reset on death (P1-03)*), and the player respawns automatically as Baby Bug. There is no persistence and no Legacy yet.
+The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death ends the life and resets the Current Life (Biomass, growth stage, form and ability state; see *Reset on death (P1-03)*), and the player begins the next life as Baby Bug from the life recap (controlled respawn, see *Controlled respawn and life recap (P1-04)*). There is no persistence and no Legacy yet.
 
 Current implementation versus target: today there are three forms (`BABY_BUG`, `TANK`, `GLIDER`), with no damage, combat, PvE or PvP. The target (provisional) is the Baby Bug starter, which is not a class, plus four evolved classes (Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller); Striker / Hunter and Support / Controller are not implemented. "Biomass" is the name of the Current Life growth resource (approved by the project owner as the final player-facing name).
 
@@ -187,11 +187,11 @@ Behaviour:
 
 - `Bootstrap.server.lua` sets `Players.CharacterAutoLoads = false` before anything yields.
 - `RespawnService` (initialised last) loads each player's **first** character when they join (decided by the server, not a request). If a character already existed (it spawned before the setting took effect), it is kept and its life recorded.
-- When a life ends, `LifeService` fires `LifeEnded`, `ResetService` resets the Current Life (P1-03), and `RespawnService` stores the recap for that player (`durationSeconds`, `highestForm`). The client subscribes to `LifeRecap` and then fires `LifeRecapReady`; the server sends the stored recap after this handshake. This avoids losing the recap if the client controller starts late. The dead character stays until the next spawn. There is no countdown and no automatic respawn.
+- When a life ends, `LifeService` fires `LifeEnded`, `ResetService` resets the Current Life (P1-03), and `RespawnService` stores the recap for that player (`lifeId`, `durationSeconds`, `highestForm`). The client subscribes to `LifeRecap` and then fires `LifeRecapReady`; the server sends the stored recap after this handshake. This avoids losing the recap if the client controller starts late. The dead character stays until the next spawn. There is no countdown and no automatic respawn.
 - The recap (`LifeRecapController`) shows **Life duration**, **Highest form** and a **BEGIN NEW LIFE** button (at least 56 px high, scaled panel). It appears only when the server sends the recap and hides when the new character spawns. After pressing, the button shows "Starting..." and re-enables after 6 s if nothing happened.
 - The button fires `Remotes.RequestBeginNewLife` with **no values**. The client never sends a duration, form, lifeId or state.
 
-Server validation of `RequestBeginNewLife` (pure rules in `Shared/Respawn.lua`, silent rejection, no state change on failure): the player exists and is tracked; `LifeService` says the life is `Ended` (not `Alive`); a recap is awaiting and is for the **current** life; no spawn is already in progress; and `ResetService.IsResetDone` says the ended life's reset has run (so a new life never starts before the P1-03 reset). The first valid request sets the spawning flag at once, so spam and duplicates are rejected until the new character exists. A failed `LoadCharacter` (logged with `warn`) clears the flag so the player can retry. Extra arguments are ignored; there is no separate rate limiter because the spawning flag and state checks reject repeats immediately.
+Server validation of `RequestBeginNewLife` (pure rules in `Shared/Respawn.lua`, silent rejection, no state change on failure): the player exists and is tracked; `LifeService` says the life is `Ended` (not `Alive`); a recap is awaiting and is for the **current** life; no spawn is already in progress; and `ResetService.IsResetDone` says the ended life's reset has run (so a new life never starts before the P1-03 reset). The first valid request marks its spawn operation in flight synchronously, so spam, duplicates and same-frame requests are rejected until that operation's `LoadCharacter` call returns (changed in P1-05; before, the flag cleared when the character was added). A failed `LoadCharacter` (logged with `warn`) releases the operation so the player can retry. Extra arguments are ignored; there is no separate rate limiter because the state checks reject repeats immediately.
 
 Who owns what: `LifeService` stays the only authority on Alive/Ended and detects death; `RespawnService` only spawns characters (via `Player:LoadCharacter()`, never while a life is alive) and sends the recap; a life begins when `LifeService` sees the new character, and the Respawn record is cleared on `LifeBegan`. Recap statistics live in `RespawnService`: the start time (`workspace:GetServerTimeNow()` when the life began) and the highest form, updated from the new server-only `EvolutionService.FormChanged` event, which fires only after a valid selection. One evolution is allowed per life, so the first evolved form reached is the highest (no ranking between forms is invented).
 
@@ -206,7 +206,7 @@ Known limitations and risks:
 - The dead character remains in the world until the player presses the button.
 - `Player:LoadCharacter()` behaviour and failure modes could not be tested here.
 
-Tests: `tests/Respawn.test.lua` covers the pure rules and replays player timelines through the real `Life`, `LifeReset` and `Respawn` rules: valid transition, request while alive, duplicates and spam, stale life id, spawn in progress, reset still pending, a failed spawn and retry, removal during the recap and during a spawn, exactly one new life per valid request over 8 cycles, never more than one living character, independent players, and the recap helpers (highest form, duration, formatting). It uses plain tables as players and does not test `CharacterAutoLoads`, `LoadCharacter`, the remotes, the UI or event delivery. Run: `lune run tests/Respawn.test.lua`.
+Tests: `tests/Respawn.test.lua` covers the pure rules and replays player timelines through the real `Life`, `LifeReset` and `Respawn` rules: valid transition, request while alive, duplicates and spam, stale life id, spawn in progress, reset still pending, a failed spawn and retry, removal during the recap and during a spawn, exactly one new life per valid request over 8 cycles, never more than one living character, independent players, and the recap helpers (highest form, duration, formatting). It uses plain tables as players and does not test `CharacterAutoLoads`, `LoadCharacter`, the remotes, the UI or event delivery. Run: `lune run tests/Respawn.test.lua`. Since P1-05 the pure rules are in `tests/Respawn.test.lua` and the timelines in `tests/Lifecycle.test.lua`.
 
 ### Manual Studio test checklist: controlled respawn and recap (P1-04)
 
@@ -224,6 +224,67 @@ These are **manual tests; none has been performed**. Use Play Solo, then Test > 
 10. Mobile: in the Device emulator (phone) or on a real touch device, the recap is fully on screen and the button is easy to tap; tapping it does not also move the camera or character.
 11. Rejoin: the first spawn works again, and a player who dies immediately (before evolving) still gets a recap with Baby Bug.
 12. Confirm the recap never appears while the player is alive and never covers the Biomass HUD in a way that blocks the button.
+
+## Lifecycle hardening (P1-05)
+
+Hardening of the lifecycle built in P1-02 to P1-04 (including the recap handshake already in master). No gameplay, tuning, forms, abilities, persistence or recap UX changes. **Status: implemented in code; covered by pure tests that have been written but NOT executed (Lune is unavailable where this was written); NOT validated in Roblox Studio.** Nothing below is marked validated.
+
+| Level | What |
+|---|---|
+| Implemented in code | the four fixes below, the `lifeId` on recaps, a local limit on handshake replays |
+| Covered by automated tests (written, not run) | the pure rules and orderings in `tests/Respawn.test.lua` and `tests/Lifecycle.test.lua` |
+| Requires Roblox Studio validation | everything that depends on `LoadCharacter`, event delivery order, remotes, the UI and real disconnects (checklist below) |
+| Actually validated in Studio | **none** |
+
+Defects found in the code of master at the start of P1-05 (each is a real path, not a hypothetical):
+
+1. **A second `LoadCharacter` could start while the first was still yielding.** `Respawn.OnLifeBegan` cleared the spawning flag as soon as the new character was added, but `LoadCharacter` keeps yielding until the appearance loads. A death in that window plus another BEGIN NEW LIFE press started a second call, and the first call's return then cleared the flag of the second (`OnSpawnFailed`). Fix: the flag is a numbered spawn operation (`spawnSeq` / `inFlightSeq`), set when the request is accepted and released only by `Respawn.EndSpawn` when that operation's own call returns. A stale sequence changes nothing; a life beginning or ending never releases it. `OnSpawnFailed` was removed because it could clear the wrong operation.
+2. **A failed first spawn left the player stuck with no character and no way to ask for one.** The first spawn is not a request and a failed one produced no recap. Now `retryInitial` is set when the first spawn ends with no life; the server stores and sends a `lifeId = 0` notice through the existing recap/handshake path (the client titles it "SPAWN FAILED", same button) and accepts one retry that needs no reset.
+3. **Recaps had no ordering.** A recap that arrives late or is replayed by the handshake could appear after the new character spawned (the overlay then blocks clicks) or overwrite a newer one, because remote delivery and character replication are not ordered against each other. Each recap now carries the server's `lifeId`; the client ignores older, already dismissed and malformed ones (`Respawn.ShouldShowRecap`), and a replay of the recap already on screen does not undo a pending button press. The server clears its pending recap only when a newer life begins.
+4. **A late `LifeEnded` of an older life could re-arm the recap wait.** After a newer life began, the pure record accepted the stale event again. It now remembers the newest life that began (`beganLifeId`) and ignores ended ids older than it.
+
+Handshake (already in master, kept): the client subscribes to `LifeRecap`, then fires `LifeRecapReady`; the server holds the pending recap and sends it once the client is ready, replaying it on later ready messages. P1-05 adds only a local policy in `RespawnService`: ready messages closer than one second to the previous one are ignored. This is anti-spam; repeats only ever replay the same pending recap to the same player.
+
+Audited and found correct, left unchanged:
+
+- Per-player records are removed on `PlayerRemoving` (`PlayerDataService`, `EvolutionService`, `AbilityService`, `GrowthService`, `ResetService`, `RespawnService`, `LifeService`), and delayed paths re-check at the time of use: `loadCharacter` checks the entry is still the player's, ability timers use tokens that the reset bumps, `ResetService` creates a tracker only for a present player. Per-player connections die with the Player.
+- `ResetService`: exactly once per `lifeId`, stale `LifeEnded` handled by the `LifeBegan` safety net, the next life gated by `IsResetDone`. Each service resets only its own state.
+- `LifeService` ordering as read in the code: `LifeBegan` before an instant death's `LifeEnded`; the removal of a dead character by `LoadCharacter` is an idempotent no-op; a replaced character ends the old life first.
+- Isolation: all lifecycle state is in tables keyed by Player; no shared mutable per-player state.
+
+Invariants after P1-05 (rules in `Shared/Respawn.lua`, `Shared/Life.lua`, `Shared/LifeReset.lua`):
+
+- At most one active life per player and at most one living character; a request is refused unless `LifeService` reports the life `Ended`.
+- At most one spawn operation in flight per player; it ends only when its own `LoadCharacter` returns; a stale operation cannot release or modify a newer one.
+- Each ended life is reset exactly once, and a new life cannot start before that reset ran.
+- A stale or duplicate lifecycle event changes nothing.
+- A failed spawn never locks the player: a failed later spawn leaves the recap awaiting and re-allows a request; a failed first spawn re-allows one retry.
+- The recap the player waits on is held by the server until a newer life begins; the client shows each recap at most once per life and never an older one.
+- A player who leaves has no state recreated by any late callback or `LoadCharacter` return.
+
+Known limitations (not fixed, need Studio observation):
+
+- A `LoadCharacter` that never returns would keep the player locked; Roblox gives no timeout and no arbitrary timer was added.
+- If a reset function throws, the error is not swallowed and the tracker is already marked, so the next-life request would stay `ResetPending`. Not observed; no change was made.
+- Event delivery order (deferred BindableEvents) is assumed as documented in `LifeReset`; the pure tests replay both orders.
+- The one-second handshake limit is a server-local policy and is not covered by the pure tests.
+
+Tests: `tests/Respawn.test.lua` (pure rules) and `tests/Lifecycle.test.lua` (timelines through the real pure `Life`, `LifeReset` and `Respawn` rules with plain tables). They cover: many requests for one life including the same frame; rapid ends and begins including a death while `LoadCharacter` still yields; an old spawn operation completing after a newer one started; duplicate and stale events; a failed later spawn and a failed first spawn each followed by a valid retry; player removal during a pending operation and during the recap; independent players; old-life callbacks after a new life began; recap delivery, the late-client handshake, repeated ready messages, old recaps never overwriting new ones and clearing across consecutive lives; reset gating the next life; cleanup and idempotency over 10 cycles. They do not test `LoadCharacter`, remotes, attributes, tweens, the UI or event timing. Run: `lune run tests/Respawn.test.lua` and `lune run tests/Lifecycle.test.lua`.
+
+### Manual Studio test checklist: lifecycle hardening (P1-05)
+
+These are **manual tests; none has been performed**. Use Test > Clients and Servers with 2 to 3 players, with Output and the server view open.
+
+1. Die immediately after a new character appears (a few frames after BEGIN NEW LIFE). Expected: a recap, one life, one character, no errors.
+2. While the new character is still loading its appearance (slow avatar or throttled network in the emulator), die and press BEGIN NEW LIFE again. Expected: no second character until the first `LoadCharacter` has finished; afterwards one press works.
+3. Spam BEGIN NEW LIFE from the client and with `for i = 1, 100 do game.ReplicatedStorage.Remotes.RequestBeginNewLife:FireServer() end` on the dead player. Expected: exactly one new character and life.
+4. Make the first spawn fail (for example `LoadCharacter` temporarily erroring on the server). Expected: the "SPAWN FAILED" notice with a working button, and one retry spawns one character.
+5. Delay the recap UI (join, die before the controller connects). Expected: the recap still appears once the client is ready; extra `LifeRecapReady` messages (`game.ReplicatedStorage.Remotes.LifeRecapReady:FireServer()` repeatedly) do not duplicate, flicker or reset a pending button press.
+6. Confirm an old recap never appears after a newer one or after the new character spawned (check right after pressing BEGIN NEW LIFE).
+7. Two players: one dies, one fails to respawn, one leaves. Expected: the others' Biomass, form, ability state, cooldowns, `LifeState`, recap and spawn state are untouched.
+8. Leave while dead, while recapping, and while `LoadCharacter` is running. Expected: no server errors, no new character, no state left behind.
+9. Reset the character 10 or more times in a row. Expected: `lifeId` equals the number of spawns, never two living characters, resets exactly once per ended life, clean Biomass, form, growth, ability effects and cooldowns at every life start.
+10. Output shows no errors or warnings other than the intentional `LoadCharacter` failure in step 4.
 
 ## Evolution choice
 
@@ -339,7 +400,7 @@ Limitations:
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). `tests/LifeReset.test.lua` covers the pure reset-on-death rules (see Reset on death). `tests/Respawn.test.lua` covers the pure controlled-respawn and recap rules (see Controlled respawn). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio. `tests/Life.test.lua` covers the pure rules in `Life.lua` (begin/end transitions, `lifeId`, duplicate and stale end requests, invalid input); it does not cover the Roblox signal wiring.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/Evolution.test.lua` covers the pure rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). `tests/LifeReset.test.lua` covers the pure reset-on-death rules (see Reset on death). `tests/Respawn.test.lua` covers the pure controlled-respawn and recap rules (see Controlled respawn). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio. `tests/Life.test.lua` covers the pure rules in `Life.lua` (begin/end transitions, `lifeId`, duplicate and stale end requests, invalid input); it does not cover the Roblox signal wiring. `tests/Respawn.test.lua` covers the pure respawn/recap rules and `tests/Lifecycle.test.lua` replays lifecycle timelines through the real pure `Life`, `LifeReset` and `Respawn` rules (see Lifecycle hardening (P1-05)); both are optional, Lune-run and not Studio tests.
 
 ### Manual Studio test checklist
 
