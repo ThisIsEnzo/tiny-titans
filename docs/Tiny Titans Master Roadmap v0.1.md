@@ -158,46 +158,58 @@ This numbering follows **Evolution Adventure Sandbox Roadmap v0.1**. Engineering
 
 **Outcome:** Growth becomes a longer, more interesting sequence of decisions; evolution changes the way the player plays.
 
-### P2.01 — Progression design (design gate before code)
-- [ ] Define early/mid/late life pacing and target session length through playtests.
-- [ ] Replace current 3-food/30–60 Biomass test progression with a configurable, multi-step progression curve.
-- [ ] Define resource variety and collection interactions; eliminate identical pickup-only grind as the dominant loop.
-- [ ] Define growth stages, visual feedback and meaningful milestones.
-- [ ] Define evolution requirements, choices, trade-offs and reset semantics.
-- [ ] Decide whether evolution is a branch, specialization, mutation or combination; keep initial implementation understandable.
-- [ ] Define how discoveries, skill and risk influence progress without arbitrary chores.
-- [ ] Set anti-grind and anti-exploit constraints.
+> **P2-01 update.** P2 tasks now use the dash IDs of the engineering plan (`P2-01` to `P2-07`), the same IDs used in PR titles and in `TT-P0-02R Implementation Migration Plan.md`; the earlier dotted IDs `P2.01` to `P2.06` are retired. P2-01 is a **documentation-only design gate**. Boxes below are ticked only after the owner approves the design and the work is merged and, where stated, validated.
 
-### P2.02 — Config-driven form and ability definitions
-- [ ] Formalize form/ability definitions and validation.
-- [ ] Make UI read actual definitions and requirements.
-- [ ] Keep server authoritative for choices and eligibility.
-- [ ] Add clear previews, strengths, limitations and feedback.
+### P2-01 — Progression & Evolution Design Gate (documentation only)
+Design lives in `Combat Progression & Endgame Design v0.1.md`, section 13 (PROPOSED, awaiting owner approval). It defines, without any code:
+- [ ] Current Life / Evolution / Legacy boundaries and what resets on death.
+- [ ] The one-life gameplay loop and why it is not "collect, wait, collect, evolve".
+- [ ] Biomass versus growth versus evolution, a recommended model, and the pacing metrics to measure (hypotheses only; no playtest results).
+- [ ] Tank and Glider roles, strengths, weaknesses and interactions; future roles marked FUTURE.
+- [ ] Resource and activity categories, anti-grind and fair-progression principles, retention and ethical monetization principles.
+- [ ] A playtest and validation plan with ten scenarios.
+- [ ] Evolution requirement, choices, trade-offs and reset semantics; branch (one choice per life), no multi-stage tree in the first release.
+- [ ] Task sequence P2-02 to P2-07 with goal, scope, dependencies, out-of-scope and acceptance criteria (Migration Plan).
 
-### P2.03 — Tank / Guardian gameplay
-- [ ] Replace visual-only shell with a meaningful defensive/control role when damage and threats exist.
-- [ ] Add readable protection, counterplay, movement trade-offs and interaction use cases.
-- [ ] Validate on touch and keyboard/gamepad.
+Moved out of P2-01 (they need playtests or code): target pacing values and session length (P2-07), replacing the 3-food 30/60 test progression with a configurable multi-step curve (data in P2-02, values and behavior in P2-07).
 
-### P2.04 — Glider / Skirmisher gameplay
-- [ ] Refine air movement, landing, momentum and route mastery.
+### P2-02 — Creature Definitions
+- [ ] Forms, per-form requirements and growth milestones as data, with today's values unchanged.
+- [ ] Server stays authoritative for choices and eligibility.
+
+### P2-03 — Ability Definitions
+- [ ] Ability definitions and dispatch with the existing handlers; validation of unknown ids.
+
+### P2-04 — Data-driven Evolution UI
+- [ ] UI reads actual definitions and requirements.
+- [ ] Clear previews, strengths, limitations and feedback.
+
+### P2-05 — Tank gameplay validation and iteration
+- [ ] Validate Tank identity; define a Tank world interaction that needs no combat or record the dependency on P3 and P4.
+- [ ] Replace the visual-only shell with a meaningful defensive or control role only when damage and threats exist (P4-04).
+- [ ] Add readable protection, counterplay, movement trade-offs and use cases; validate on touch and keyboard/gamepad.
+
+### P2-06 — Glider gameplay validation and iteration
+- [ ] Validate platform reachability, air movement, landing and momentum in Studio.
 - [ ] Use vertical traversal, shortcuts, scouting and precision routes in the habitat.
 - [ ] Add risks and counters; avoid universal best mobility.
 
-### P2.05 — Additional initial roles (gated)
+### P2-07 — Progression UX and balance validation
+- [ ] Milestone feedback, evolution preview, readable requirements and next goal.
+- [ ] Measure pacing; implement the approved Biomass model (continue after evolution, ceiling, longer curve) only after owner approval.
+- [ ] Cross-form balance and meaningful trade-offs.
+- [ ] Unit tests, Studio tests and a first-player usability test.
+
+### Gated item (not a numbered P2 task): additional initial roles
 - [ ] Design Striker / Hunter only after encounter and combat foundations are playtested.
 - [ ] Design Support / Controller only after a real cooperative use case exists.
 - [ ] Prototype each role's unique verb and test it before full implementation.
 - [ ] No automatic expansion beyond the four-role target roster without product evidence.
-
-### P2.06 — Progression UX and balance
-- [ ] Milestone feedback, evolution preview, readable requirements and next goal.
-- [ ] Cross-form balance and meaningful trade-offs.
-- [ ] Unit tests + Studio tests + first-player usability test.
+These are scheduled as P4-05 and P4-06 in the Migration Plan, behind P3.5.
 
 **Exit gate:** players can explain their evolution choice; two initial forms have distinct useful play patterns; progression is more than filling one meter.
 
-**Estimated P2 completion: 5–10%.** Current evolution selection and two ability prototypes are foundations, not the redesigned progression.
+**Estimated P2 completion: 5–10%.** Current evolution selection and two ability prototypes are foundations, not the redesigned progression. The P2-01 documentation does not change this estimate; credit follows the exit criteria, not the existence of a design.
 
 ---
 
@@ -438,18 +450,22 @@ Use TT-P0-02R as the detailed engineering plan. Proposed next sequence:
 1. **P1-03 — Reset Current Life on Death** (implemented; Studio validation outstanding).
 2. **P1-04 — Respawn / minimal life transition UX** (implemented as controlled respawn with a minimal recap; Studio validation outstanding).
 3. **P1-05 — Lifecycle hardening and regression** (implemented; pure tests written, Studio validation outstanding).
-4. **P2-01 — Progression & Evolution Design Gate** (documentation + tuning prototype; no large code rewrite).
-5. **P2-02 — Config-driven evolution definitions**.
-6. **P2-03 — Tank/Glider gameplay validation and redesign**.
-7. **P3-01 — First Habitat vertical-slice design + greybox**.
-8. **P3-02 — Habitat traversal/resource activities**.
-9. **P3.5 — Combat & Ecosystem Design Gate**.
-10. **P4-01 — Health/damage foundation**.
-11. **P4-02 — First threat/encounter**.
-12. **P5-01 — Legacy schema and rules (in-memory)**.
-13. **P5-02 — DataStore persistence and recovery**.
-14. **P6 — Multiplayer activity and fairness** (some can run in parallel after system contracts).
-15. **P7 — UX/art/performance/security/playtests/release**.
+4. **P2-01 — Progression & Evolution Design Gate** (documentation only; no code).
+5. **P2-02 — Creature Definitions** (data-driven forms).
+6. **P2-03 — Ability Definitions** (data-driven abilities).
+7. **P2-04 — Data-driven Evolution UI**.
+8. **P2-05 — Tank gameplay validation and iteration**.
+9. **P2-06 — Glider gameplay validation and iteration**.
+10. **P2-07 — Progression UX and balance validation**.
+11. **P3-01 — First Habitat vertical-slice design + greybox**.
+12. **P3-02 — Habitat traversal/resource activities**.
+13. **P3.5 — Combat & Ecosystem Design Gate**.
+14. **P4-01 — Health/damage foundation**.
+15. **P4-02 — First threat/encounter**.
+16. **P5-01 — Legacy schema and rules (in-memory)**.
+17. **P5-02 — DataStore persistence and recovery**.
+18. **P6 — Multiplayer activity and fairness** (some can run in parallel after system contracts).
+19. **P7 — UX/art/performance/security/playtests/release**.
 
 Each PR should:
 - Have one outcome and narrow scope.
