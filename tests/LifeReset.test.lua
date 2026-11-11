@@ -172,7 +172,7 @@ do
     check("2.2: form is BABY_BUG", p.form == Config.BaseForm)
     check("2.2: growth stage is the initial stage 1", Growth.GetStageIndex(p.biomass, stages) == 1)
     check("2.2: growth scale is the stage 1 scale and must be applied afresh", Growth.GetScale(1, stages) == stages[1].Scale and Growth.ShouldUpdateScale(nil, stages[1].Scale))
-    check("2.2: evolution is not available after the reset", not Evolution.IsAvailable(p.biomass, cap, p.form, Config.BaseForm))
+    check("2.2: evolution is not available after the reset", not Evolution.IsAvailable(p.biomass, p.form, CreatureDefinitions))
     check("2.2: the cooldown is cleared", Ability.GetCooldownRemaining(1, p.shellReadyAt) == 0)
     check("2.2: reset ran once", p.resets == 1)
 end
