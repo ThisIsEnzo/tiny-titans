@@ -4,7 +4,7 @@
 **Branch:** `docs/define-evolution-sandbox`
 **Companion document:** `TT-P0-02R Implementation Migration Plan.md`
 **P2-01 update (documentation only):** adds the banner at the start of section 2, section 6.1, the status note and section 7.1, and the decision and question rows in section 12. The player-facing progression design is in `Combat Progression & Endgame Design v0.1.md`, section 13.
-**Audited baseline:** the repository as it stands after the evolution-flow work (the "PR #17" implementation: `Evolution.Select`, `EvolutionResult`, two-step selection UI).
+**Audited baseline:** the repository state after P1-05 lifecycle hardening (merged PR #26, based on master commit `5139da00` at the start of PR #27), including the earlier evolution-flow implementation (`Evolution.Select`, `EvolutionResult`, two-step selection UI). The P1 lifecycle implementation is present in code; automated test execution and Roblox Studio runtime validation are separate and must not be inferred from the merge.
 
 ## 0. Scope, sources and honesty notes
 
