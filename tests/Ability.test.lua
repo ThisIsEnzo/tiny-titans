@@ -1,9 +1,12 @@
 --!strict
--- Optional unit tests for the pure Defensive Shell rules.
+-- Optional unit tests for the pure ability rules (Defensive Shell and Air Glide), tuned from AbilityDefinitions.
 -- Run with Lune from the repository root:  lune run tests/Ability.test.lua
 -- Lune is NOT part of rokit.toml; this file is outside the Rojo project tree.
 
 local Config = require("../src/ReplicatedStorage/Shared/Config")
+local AbilityDefinitions = require("../src/ReplicatedStorage/Shared/AbilityDefinitions")
+local shellDef: any = AbilityDefinitions.GetAbility(AbilityDefinitions.ShellId)
+local glideDef: any = AbilityDefinitions.GetAbility(AbilityDefinitions.GlideId)
 local Ability = require("../src/ReplicatedStorage/Shared/Ability")
 
 local failures = 0
@@ -16,9 +19,9 @@ local function check(name: string, condition: boolean)
     end
 end
 
-local tank = Config.TankShellForm
-local duration = Config.TankShellDuration
-local cooldown = Config.TankShellCooldown
+local tank = shellDef.requiredForm
+local duration = shellDef.durationSeconds
+local cooldown = shellDef.cooldownSeconds
 
 local function validate(form: string, alive: boolean, now: number, activeUntil: number, readyAt: number)
     local ok, reason = Ability.Validate(form, alive, now, activeUntil, readyAt, tank)
@@ -88,9 +91,9 @@ check("spam over 1s processes at most ceil(1/interval) requests", processed <= m
 check("a request is processed again once the interval passes", processed >= 2)
 
 -- Glider: validation rules.
-local glider = Config.GliderForm
-local gDuration = Config.GliderDuration
-local gCooldown = Config.GliderCooldown
+local glider = glideDef.requiredForm
+local gDuration = glideDef.durationSeconds
+local gCooldown = glideDef.cooldownSeconds
 
 local function validateGlide(form: string, alive: boolean, airborne: boolean, now: number, activeUntil: number, readyAt: number)
     local ok2, reason2 = Ability.ValidateGlide(form, alive, airborne, now, activeUntil, readyAt, glider)
@@ -163,7 +166,7 @@ check("force stays below weight even for absurd compensation", Ability.GetGlideF
 check("force is never negative", Ability.GetGlideForce(10, 196.2, -1) == 0)
 check("force is 0 for invalid mass", Ability.GetGlideForce(0, 196.2, 0.65) == 0)
 check("force is 0 for NaN input", Ability.GetGlideForce(0 / 0, 196.2, 0.65) == 0)
-check("configured compensation leaves net downward force", Config.GliderGravityCompensation > 0 and Config.GliderGravityCompensation < 1)
+check("configured compensation leaves net downward force", glideDef.gravityCompensation > 0 and glideDef.gravityCompensation < 1)
 
 -- Config sanity.
 check("duration positive", duration > 0)
@@ -175,7 +178,7 @@ check("glider duration positive", gDuration > 0)
 check("glider cooldown not shorter than duration", gCooldown >= gDuration)
 check("glider form is a real evolution branch", table.find(Config.EvolutionForms, glider) ~= nil)
 check("glider and tank forms differ", glider ~= tank)
-check("ability ids differ", Config.AbilityShellId ~= Config.AbilityGlideId)
+check("ability ids differ", AbilityDefinitions.ShellId ~= AbilityDefinitions.GlideId)
 check("request interval is separate from glider cooldown", interval < gCooldown / 10)
 check("ability key set", #Config.AbilityKey > 0)
 

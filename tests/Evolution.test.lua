@@ -1,6 +1,9 @@
 --!strict
 -- Optional unit tests for pure, definition-driven evolution rules.
 local Config = require("../src/ReplicatedStorage/Shared/Config")
+local AbilityDefinitions = require("../src/ReplicatedStorage/Shared/AbilityDefinitions")
+local shellDef: any = AbilityDefinitions.GetAbility(AbilityDefinitions.ShellId)
+local glideDef: any = AbilityDefinitions.GetAbility(AbilityDefinitions.GlideId)
 local Evolution = require("../src/ReplicatedStorage/Shared/Evolution")
 local Definitions = require("../src/ReplicatedStorage/Shared/CreatureDefinitions")
 local Ability = require("../src/ReplicatedStorage/Shared/Ability")
@@ -66,7 +69,11 @@ check("accepted selection changes form", selected == "TANK" and selectReason == 
 selected, selectReason = Evolution.Select("GLIDER", 100, "TANK", Definitions)
 check("repeat selection unchanged", selected == "TANK" and selectReason == "AlreadyEvolved")
 check("request cooldown unchanged", Evolution.IsRateLimited(10, 10.1, Config.EvolutionRequestCooldown))
-check("ability form restrictions unchanged", not Ability.Validate("GLIDER", true, 100, 0, 0, Config.TankShellForm) and not Ability.ValidateGlide("TANK", true, true, 100, 0, 0, Config.GliderForm))
+check("TANK cannot use the glide", not (Ability.ValidateGlide("TANK", true, true, 100, 0, 0, glideDef.requiredForm)))
+check("GLIDER cannot use the shell", not (Ability.Validate("GLIDER", true, 100, 0, 0, shellDef.requiredForm)))
+check("TANK can use the shell", (Ability.Validate("TANK", true, 100, 0, 0, shellDef.requiredForm)))
+check("GLIDER can glide in the air", (Ability.ValidateGlide("GLIDER", true, true, 100, 0, 0, glideDef.requiredForm)))
+check("BABY_BUG has no ability", not (Ability.Validate(base, true, 100, 0, 0, shellDef.requiredForm)) and not (Ability.ValidateGlide(base, true, true, 100, 0, 0, glideDef.requiredForm)))
 check("cap still reaches every requirement", Config.EvolutionBiomassRequired >= requirement)
 if failures > 0 then error(failures .. " evolution test(s) failed") end
 print("all evolution tests passed")

@@ -15,6 +15,7 @@ local UserInputService = game:GetService("UserInputService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config") :: ModuleScript)
 local Ability = require(Shared:WaitForChild("Ability") :: ModuleScript)
+local AbilityDefinitions = require(Shared:WaitForChild("AbilityDefinitions") :: ModuleScript)
 
 local AbilityController = {}
 
@@ -34,7 +35,7 @@ type AbilityDef = {
 }
 
 local SHELL: AbilityDef = {
-    id = Config.AbilityShellId,
+    id = AbilityDefinitions.ShellId,
     title = "SHELL [" .. Config.AbilityKey .. "]",
     activeText = "Active",
     activeAttribute = "ShellActiveUntil",
@@ -42,7 +43,7 @@ local SHELL: AbilityDef = {
 }
 
 local GLIDE: AbilityDef = {
-    id = Config.AbilityGlideId,
+    id = AbilityDefinitions.GlideId,
     title = "GLIDE [" .. Config.AbilityKey .. "]",
     activeText = "Gliding",
     activeAttribute = "GliderActiveUntil",
@@ -51,10 +52,12 @@ local GLIDE: AbilityDef = {
 
 -- The ability available to a replicated form, or nil.
 local function getAbilityFor(form: any): AbilityDef?
-    if form == Config.TankShellForm then
-        return SHELL
-    elseif form == Config.GliderForm then
-        return GLIDE
+    -- Display only: which ability this replicated form owns. The server decides what is allowed.
+    for _, def in { SHELL, GLIDE } do
+        local ability = AbilityDefinitions.GetAbility(def.id)
+        if ability ~= nil and form == ability.requiredForm then
+            return def
+        end
     end
     return nil
 end

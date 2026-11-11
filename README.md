@@ -335,11 +335,11 @@ Limitations:
 
 First TANK ability. **Visual only**: there is no damage, health, knockback or combat system in the project, so the shell does **not** reduce damage, grant invulnerability, resist knockback or change movement speed. It only shows a protective bubble.
 
-Behaviour (values in `Config.lua`, none hardcoded elsewhere):
+Behaviour (ability id, required form and tuning come from `AbilityDefinitions`, see below; none hardcoded elsewhere):
 
 - Key `Q` (`AbilityKey`) or the on-screen **SHELL [Q]** button (mid-right of the screen, tappable on touch devices).
-- Only players whose server-side form is `TANK` (`TankShellForm`) can use it.
-- The shell stays for 3 s (`TankShellDuration`). The cooldown is 12 s (`TankShellCooldown`) and **runs from activation**, so the ability is usable again 9 s after the shell disappears.
+- Only players whose server-side form is `TANK` (`requiredForm` of the `SHELL` definition) can use it.
+- The shell stays for 3 s (`durationSeconds`). The cooldown is 12 s (`cooldownSeconds`) and **runs from activation**, so the ability is usable again 9 s after the shell disappears.
 - Repeated input can neither extend the shell nor shorten the cooldown. The cooldown is cleared when the life ends (death) and when the player leaves.
 
 | File | Responsibility |
@@ -366,17 +366,34 @@ Limitations:
 - The visual (size, material, readability) and button placement are untested guesses until checked in Studio.
 - Rejections are silent.
 
+## Ability definitions (P2-03)
+
+`ReplicatedStorage/Shared/AbilityDefinitions.lua` is the single, frozen source of truth for ability ids, display names, the form each ability requires and ability-specific tuning. It is pure data (no Roblox services, no requires) and was created by moving the former `Config` values without changing any number or behaviour:
+
+| Ability | `id` | `kind` | `requiredForm` | `durationSeconds` | `cooldownSeconds` | Other |
+|---|---|---|---|---|---|---|
+| Defensive Shell | `SHELL` | `Shell` | `TANK` | 3 | 12 | visual only |
+| Air Glide | `GLIDE` | `Glide` | `GLIDER` | 3 (maximum) | 10 | `gravityCompensation` 0.65 |
+
+API: `GetAbility(id)` (nil for unknown or malformed ids), `Abilities` (ordered), `AbilityIds`, `ShellId`, `GlideId`; the entry types are a narrow union discriminated by `kind`. `AbilityService` resolves every incoming id through `GetAbility`, selects the existing Shell or Glide implementation by `kind`, and checks the player's server-owned form against `requiredForm`. The specialised Shell and Glide code, the airborne check, cooldowns, rate limit and cleanup are unchanged. `Ability.lua` keeps its pure rules and still receives the required form and timings as arguments.
+
+Relationship with `CreatureDefinitions`: a form lists the ability ids it owns (`TANK` -> `SHELL`, `GLIDER` -> `GLIDE`, `BABY_BUG` -> none) and each ability names the form that may use it. Neither module requires the other (no dependency cycle); `tests/AbilityDefinitions.test.lua` checks that the two references agree.
+
+Still global in `Config` (not per-ability): `AbilityKey` (the shared input binding) and `AbilityRequestInterval` (anti-spam, not a gameplay cooldown). The old `TankShell*`, `Glider*`, `AbilityShellId` and `AbilityGlideId` keys were removed, with no aliases.
+
+Shell is **visual only** (it does not mitigate damage) and Glide is a **bounded glide, not flight**. Run: `lune run tests/AbilityDefinitions.test.lua`.
+
 ## Glider Air Glide
 
 Second form ability: a **bounded glide, not flight**. It is server-authorised and uses a simple temporary upward force; it adds no damage, stamina, combat or movement-setting changes.
 
-Behaviour (values in `Config.lua`):
+Behaviour (values in the `GLIDE` entry of `AbilityDefinitions`):
 
 - Key `Q` (`AbilityKey`, shared with the Tank shell) or the on-screen **GLIDE [Q]** button (same mid-right position as the Tank's **SHELL** button; only one of the two is ever shown, depending on the form).
-- Only players whose server-side form is `GLIDER` (`GliderForm`) can use it, and only while **airborne** (`Humanoid.FloorMaterial == Air`, read on the server).
-- One press starts an automatic glide for up to 3 s (`GliderDuration`); no holding is needed. **Landing ends it immediately.**
-- Cooldown 10 s (`GliderCooldown`), measured from successful activation; it is cleared when the life ends (death) and when the player leaves.
-- While gliding, a server-created `VectorForce` pushes up with `GliderGravityCompensation` (0.65) of the character's weight (`AssemblyMass * Workspace.Gravity`). The compensation is capped below 1 in `Ability.GetGlideForce`, so gravity always wins and the net vertical force is always downward. No horizontal force is applied: steering is the normal Roblox character controls. `WalkSpeed`, jump settings and network ownership are not changed.
+- Only players whose server-side form is `GLIDER` (`requiredForm` of the `GLIDE` definition) can use it, and only while **airborne** (`Humanoid.FloorMaterial == Air`, read on the server).
+- One press starts an automatic glide for up to 3 s (`durationSeconds`); no holding is needed. **Landing ends it immediately.**
+- Cooldown 10 s (`cooldownSeconds`), measured from successful activation; it is cleared when the life ends (death) and when the player leaves.
+- While gliding, a server-created `VectorForce` pushes up with `gravityCompensation` (0.65) of the character's weight (`AssemblyMass * Workspace.Gravity`). The compensation is capped below 1 in `Ability.GetGlideForce`, so gravity always wins and the net vertical force is always downward. No horizontal force is applied: steering is the normal Roblox character controls. `WalkSpeed`, jump settings and network ownership are not changed.
 - Visual: two thin neon "wings" welded beside the torso, created on the server so all clients see them. They are massless and have no collision, touch or query. Removed when the glide ends.
 
 How the state is shared:
@@ -401,7 +418,7 @@ Limitations:
 
 ### Tests
 
-`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/CreatureDefinitions.test.lua` covers the creature catalog (IDs, requirements, ability references, immutability, Config aliases and growth milestones). `tests/Evolution.test.lua` covers the pure, definition-driven rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). `tests/LifeReset.test.lua` covers the pure reset-on-death rules (see Reset on death). `tests/Respawn.test.lua` covers the pure controlled-respawn and recap rules (see Controlled respawn). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio. `tests/Life.test.lua` covers the pure rules in `Life.lua` (begin/end transitions, `lifeId`, duplicate and stale end requests, invalid input); it does not cover the Roblox signal wiring. `tests/Respawn.test.lua` covers the pure respawn/recap rules and `tests/Lifecycle.test.lua` replays lifecycle timelines through the real pure `Life`, `LifeReset` and `Respawn` rules (see Lifecycle hardening (P1-05)); both are optional, Lune-run and not Studio tests.
+`tests/Growth.test.lua` covers the pure helpers in `Growth.lua` (stages, scale, clamp, progress ratio) and sanity-checks `Config`. `tests/AbilityDefinitions.test.lua` covers the ability catalog, immutability and the cross-reference with creature forms. `tests/CreatureDefinitions.test.lua` covers the creature catalog (IDs, requirements, ability references, immutability, Config aliases and growth milestones). `tests/Evolution.test.lua` covers the pure, definition-driven rules in `Evolution.lua` (valid and invalid branches, threshold, repeat requests, `Select` state transitions, two-player isolation, readiness at 99/100 biomass, cross-form ability checks, nil/NaN input, and the rate-limit check including a simulated 1000-request spam). The server wiring of the limiter and the tag lifecycle guard use Roblox APIs and are checked manually. `tests/Ability.test.lua` covers the pure shell and glide rules, the glide force bound, and the request rate-limit helper (only TANK may activate; BABY_BUG, GLIDER and bad input are rejected; dead character, already active, cooldown, available again after cooldown, early end keeps the cooldown). `tests/Multiplayer.test.lua` covers the pure multiplayer rules (see the next section). `tests/LifeReset.test.lua` covers the pure reset-on-death rules (see Reset on death). `tests/Respawn.test.lua` covers the pure controlled-respawn and recap rules (see Controlled respawn). Run each with `lune run tests/<name>.test.lua`. Server and client behaviour of the shell uses Roblox APIs and cannot be run in this test setup; it is checked manually. It is optional and outside the Rojo tree. Run it with [Lune](https://lune-org.github.io/docs): `lune run tests/Growth.test.lua`. Lune is not part of `rokit.toml`. The service modules depend on Roblox APIs and are tested manually in Studio. `tests/Life.test.lua` covers the pure rules in `Life.lua` (begin/end transitions, `lifeId`, duplicate and stale end requests, invalid input); it does not cover the Roblox signal wiring. `tests/Respawn.test.lua` covers the pure respawn/recap rules and `tests/Lifecycle.test.lua` replays lifecycle timelines through the real pure `Life`, `LifeReset` and `Respawn` rules (see Lifecycle hardening (P1-05)); both are optional, Lune-run and not Studio tests.
 
 ### Manual Studio test checklist
 

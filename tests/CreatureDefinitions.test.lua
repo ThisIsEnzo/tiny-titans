@@ -2,6 +2,9 @@
 -- Optional Lune tests for the P2-02 creature catalog and its Config compatibility aliases.
 
 local Config = require("../src/ReplicatedStorage/Shared/Config")
+local AbilityDefinitions = require("../src/ReplicatedStorage/Shared/AbilityDefinitions")
+local shellDef: any = AbilityDefinitions.GetAbility(AbilityDefinitions.ShellId)
+local glideDef: any = AbilityDefinitions.GetAbility(AbilityDefinitions.GlideId)
 local Definitions = require("../src/ReplicatedStorage/Shared/CreatureDefinitions")
 local failures = 0
 local function check(name: string, ok: boolean)
@@ -25,8 +28,9 @@ local tank = Definitions.GetForm("TANK") :: any
 local glider = Definitions.GetForm("GLIDER") :: any
 check("Tank requires 100 Biomass", tank.requirement.resource == "Biomass" and tank.requirement.amount == 100)
 check("Glider requires 100 Biomass", glider.requirement.resource == "Biomass" and glider.requirement.amount == 100)
-check("Tank ability reference", #tank.abilities == 1 and tank.abilities[1] == Config.AbilityShellId and Config.AbilityShellId == "SHELL")
-check("Glider ability reference", #glider.abilities == 1 and glider.abilities[1] == Config.AbilityGlideId and Config.AbilityGlideId == "GLIDE")
+check("Tank ability reference", #tank.abilities == 1 and tank.abilities[1] == AbilityDefinitions.ShellId and AbilityDefinitions.ShellId == "SHELL")
+check("Glider ability reference", #glider.abilities == 1 and glider.abilities[1] == AbilityDefinitions.GlideId and AbilityDefinitions.GlideId == "GLIDE")
+check("form ids match the forms the abilities require", tank.id == shellDef.requiredForm and glider.id == glideDef.requiredForm)
 check("honest Tank description", string.find(string.lower(tank.description), "visual") ~= nil)
 check("honest Glider description", string.find(string.lower(glider.description), "not flight") ~= nil)
 check("Config aliases", Config.BaseForm == Definitions.StarterFormId and #Config.EvolutionForms == 2 and Config.EvolutionForms[1] == "TANK" and Config.EvolutionForms[2] == "GLIDER")
