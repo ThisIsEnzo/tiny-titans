@@ -13,6 +13,7 @@ local Config = require("../src/ReplicatedStorage/Shared/Config")
 local Food = require("../src/ReplicatedStorage/Shared/Food")
 local Growth = require("../src/ReplicatedStorage/Shared/Growth")
 local Evolution = require("../src/ReplicatedStorage/Shared/Evolution")
+local CreatureDefinitions = require("../src/ReplicatedStorage/Shared/CreatureDefinitions")
 local Ability = require("../src/ReplicatedStorage/Shared/Ability")
 
 local failures = 0
@@ -80,21 +81,21 @@ check("4: negative amount adds nothing", negGain == 0)
 -- 5/6. Evolution isolation and eligibility.
 local forms: { [string]: string } = { A = Config.BaseForm, B = Config.BaseForm }
 local biomassEvo: { [string]: number } = { A = cap, B = cap - 1 }
-local okB, reasonB = Evolution.Validate("TANK", biomassEvo.B, cap, forms.B, Config.BaseForm, Config.EvolutionForms)
+local okB, reasonB = Evolution.Validate("TANK", biomassEvo.B, forms.B, CreatureDefinitions)
 check("6: B cannot evolve before the threshold", not okB and reasonB == "ThresholdNotReached")
-local okA = Evolution.Validate("TANK", biomassEvo.A, cap, forms.A, Config.BaseForm, Config.EvolutionForms)
+local okA = Evolution.Validate("TANK", biomassEvo.A, forms.A, CreatureDefinitions)
 if okA then
     forms.A = "TANK"
 end
 check("5: A evolved to TANK", forms.A == "TANK")
 check("5: B's form is unchanged by A's choice", forms.B == Config.BaseForm)
 biomassEvo.B = cap
-local okB2 = Evolution.Validate("GLIDER", biomassEvo.B, cap, forms.B, Config.BaseForm, Config.EvolutionForms)
+local okB2 = Evolution.Validate("GLIDER", biomassEvo.B, forms.B, CreatureDefinitions)
 if okB2 then
     forms.B = "GLIDER"
 end
 check("5: B can still choose GLIDER", forms.B == "GLIDER" and forms.A == "TANK")
-local okRepeat, reasonRepeat = Evolution.Validate("GLIDER", cap, cap, forms.A, Config.BaseForm, Config.EvolutionForms)
+local okRepeat, reasonRepeat = Evolution.Validate("GLIDER", cap, forms.A, CreatureDefinitions)
 check("5: A cannot re-select to change form", not okRepeat and reasonRepeat == "AlreadyEvolved")
 
 -- 7. A form cannot use another form's ability.
@@ -144,18 +145,18 @@ check("11: shell id accepted", Ability.IsKnownAbilityId(Config.AbilityShellId, a
 check("11: glide id accepted", Ability.IsKnownAbilityId(Config.AbilityGlideId, abilityIds))
 local badValues: { any } = { false, true, 0, 1, 1.5, "", "shell", "SHELL ", "FLY", {}, { "SHELL" }, function() end }
 local abilityRejected = not Ability.IsKnownAbilityId(nil, abilityIds)
-local evolutionRejected = not Evolution.IsValidForm(nil, Config.EvolutionForms)
+local evolutionRejected = not Evolution.IsValidForm(nil, CreatureDefinitions)
 for _, value in badValues do
     if Ability.IsKnownAbilityId(value, abilityIds) then
         abilityRejected = false
     end
-    if Evolution.IsValidForm(value, Config.EvolutionForms) then
+    if Evolution.IsValidForm(value, CreatureDefinitions) then
         evolutionRejected = false
     end
 end
 check("11: malformed ability ids are rejected", abilityRejected)
 check("11: malformed evolution forms are rejected", evolutionRejected)
-check("11: base form is not a selectable branch", not Evolution.IsValidForm(Config.BaseForm, Config.EvolutionForms))
+check("11: base form is not a selectable branch", not Evolution.IsValidForm(Config.BaseForm, CreatureDefinitions))
 
 if failures > 0 then
     error(failures .. " test(s) failed")

@@ -1,7 +1,7 @@
 --!strict
 -- Server-owned evolution state (session only, no persistence).
--- Each player starts as Config.BaseForm. When biomass reaches the threshold the server
--- marks evolution available; the client may then request one branch via the
+-- Each player starts as the starter form from CreatureDefinitions. The server marks evolution
+-- available when at least one evolved form requirement is met; the client may request one branch via the
 -- RequestEvolution RemoteEvent. The server validates every request and records the
 -- choice exactly once. Clients only ever send a branch name, never state.
 -- Requests are also rate limited per player on the server (Config.EvolutionRequestCooldown).
@@ -16,6 +16,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config") :: ModuleScript)
 local Evolution = require(Shared:WaitForChild("Evolution") :: ModuleScript)
+local CreatureDefinitions = require(Shared:WaitForChild("CreatureDefinitions") :: ModuleScript)
 
 local EvolutionService = {}
 
@@ -39,7 +40,7 @@ local function refresh(player: Player)
     player:SetAttribute("EvolutionForm", form)
     player:SetAttribute(
         "EvolutionAvailable",
-        Evolution.IsAvailable(biomass, Config.EvolutionBiomassRequired, form, Config.BaseForm)
+        Evolution.IsAvailable(biomass, form, CreatureDefinitions)
     )
 end
 
@@ -56,7 +57,7 @@ local function onPlayerAdded(player: Player)
     if formByPlayer[player] ~= nil then
         return
     end
-    formByPlayer[player] = Config.BaseForm
+    formByPlayer[player] = CreatureDefinitions.StarterFormId
     refresh(player)
 end
 
@@ -87,14 +88,7 @@ local function onRequestEvolution(player: Player, form: any)
         reply(player, "NoLivingCharacter")
         return
     end
-    local newForm, reason = Evolution.Select(
-        form,
-        biomass,
-        Config.EvolutionBiomassRequired,
-        currentForm,
-        Config.BaseForm,
-        Config.EvolutionForms
-    )
+    local newForm, reason = Evolution.Select(form, biomass, currentForm, CreatureDefinitions)
     if reason == "Ok" then
         formByPlayer[player] = newForm
         refresh(player)

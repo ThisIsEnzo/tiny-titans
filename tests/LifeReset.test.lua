@@ -13,6 +13,7 @@
 local Config = require("../src/ReplicatedStorage/Shared/Config")
 local Growth = require("../src/ReplicatedStorage/Shared/Growth")
 local Evolution = require("../src/ReplicatedStorage/Shared/Evolution")
+local CreatureDefinitions = require("../src/ReplicatedStorage/Shared/CreatureDefinitions")
 local Ability = require("../src/ReplicatedStorage/Shared/Ability")
 local LifeReset = require("../src/ReplicatedStorage/Shared/LifeReset")
 
@@ -125,7 +126,7 @@ local function eat(p: Sim)
 end
 
 local function tryEvolve(p: Sim, form: string): string
-    local newForm, reason = Evolution.Select(form, p.biomass, cap, p.form, Config.BaseForm, Config.EvolutionForms)
+    local newForm, reason = Evolution.Select(form, p.biomass, p.form, CreatureDefinitions)
     p.form = newForm
     return reason
 end
@@ -153,7 +154,7 @@ do
         eat(p)
     end
     check("2.1: biomass stops at the cap", p.biomass == cap)
-    check("2.1: evolution is available at the cap", Evolution.IsAvailable(p.biomass, cap, p.form, Config.BaseForm))
+    check("2.1: evolution is available at the cap", Evolution.IsAvailable(p.biomass, p.form, CreatureDefinitions))
     check("2.1: evolving works", tryEvolve(p, "TANK") == "Ok" and p.form == "TANK")
     check("2.1: nothing was reset during the life", p.resets == 0)
     check("2.1: thresholds, cap and reward are unchanged", stages[1].MinBiomass == 0 and stages[2].MinBiomass == 30 and stages[3].MinBiomass == 60 and cap == 100 and Config.FoodBiomass == 10)
@@ -171,7 +172,7 @@ do
     check("2.2: form is BABY_BUG", p.form == Config.BaseForm)
     check("2.2: growth stage is the initial stage 1", Growth.GetStageIndex(p.biomass, stages) == 1)
     check("2.2: growth scale is the stage 1 scale and must be applied afresh", Growth.GetScale(1, stages) == stages[1].Scale and Growth.ShouldUpdateScale(nil, stages[1].Scale))
-    check("2.2: evolution is not available after the reset", not Evolution.IsAvailable(p.biomass, cap, p.form, Config.BaseForm))
+    check("2.2: evolution is not available after the reset", not Evolution.IsAvailable(p.biomass, p.form, CreatureDefinitions))
     check("2.2: the cooldown is cleared", Ability.GetCooldownRemaining(1, p.shellReadyAt) == 0)
     check("2.2: reset ran once", p.resets == 1)
 end

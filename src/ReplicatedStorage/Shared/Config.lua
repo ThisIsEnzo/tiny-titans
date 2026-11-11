@@ -2,12 +2,26 @@
 -- Shared, non-authoritative tuning/configuration.
 -- Keep gameplay decisions and validation on the server.
 
+-- CreatureDefinitions is the single source of truth for forms. This loader supports both
+-- Roblox sibling ModuleScripts and Lune's relative file paths.
+local function loadSibling(name: string): any
+    local here: any = script
+    if here ~= nil then
+        return require(here.Parent:WaitForChild(name) :: ModuleScript)
+    end
+    return (require :: any)("./" .. name)
+end
+
+local CreatureDefinitions = loadSibling("CreatureDefinitions")
+
 local Config = {
+    -- TEMPORARY: this is the Biomass cap, not the evolution eligibility rule.
     EvolutionBiomassRequired = 100,
 
     -- Evolution (server-authoritative; see ServerScriptService/Services/EvolutionService).
-    BaseForm = "BABY_BUG", -- form every player starts in
-    EvolutionForms = table.freeze({ "TANK", "GLIDER" }), -- valid branches
+    -- Compatibility aliases only; definitions live in CreatureDefinitions.
+    BaseForm = CreatureDefinitions.StarterFormId :: string,
+    EvolutionForms = CreatureDefinitions.EvolvedFormIds :: { string },
     EvolutionRequestCooldown = 0.5, -- min seconds between processed requests per player (keep below the UI click lock)
 
     -- Tank Defensive Shell (server-authoritative, visual only; see AbilityService).
