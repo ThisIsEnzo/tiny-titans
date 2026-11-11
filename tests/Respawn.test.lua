@@ -38,6 +38,7 @@ do
     check("malformed ids are ignored", ignored and Respawn.OnLifeEnded(initial, nil) == initial)
     check("a newer life begin clears the wait and records the newest life", Respawn.OnLifeBegan(ended, 2).awaitingLifeId == 0 and Respawn.OnLifeBegan(ended, 2).beganLifeId == 2)
     local began2 = Respawn.OnLifeBegan(Respawn.Initial(), 2)
+    check("a duplicate LifeBegan is ignored (same table)", Respawn.OnLifeBegan(began2, 2) == began2)
     check("a late LifeEnded of an older life cannot re-arm a recap", Respawn.OnLifeEnded(began2, 1) == began2)
     check("the ending of the newest life is accepted", Respawn.OnLifeEnded(began2, 2).awaitingLifeId == 2)
     check("a stale life begin does not clear a newer wait", Respawn.OnLifeBegan(Respawn.OnLifeEnded(initial, 3), 2).awaitingLifeId == 3)
