@@ -65,7 +65,7 @@ end
 -- A life began: the recap wait is over (only if the new life is newer than the awaiting one,
 -- so a stale LifeBegan cannot clear a newer recap). An in-flight spawn is NOT released here.
 function Respawn.OnLifeBegan(record: Record, lifeId: any): Record
-    if not isLifeId(lifeId) or lifeId <= record.awaitingLifeId then
+    if not isLifeId(lifeId) or lifeId <= record.awaitingLifeId or lifeId <= record.beganLifeId then
         return record
     end
     return make(0, false, math.max(record.beganLifeId, lifeId), record.spawnSeq, record.inFlightSeq)

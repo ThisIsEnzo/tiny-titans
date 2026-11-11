@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Luau tests and Rojo build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Rokit and project tools
+        uses: CompeyDev/setup-rokit@v0.1.2
+
+      - name: Show tool versions
+        run: |
+          lune --version
+          rojo --version
+
+      - name: Run all Luau unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          test_files=(tests/*.test.lua)
+          if (( ${#test_files[@]} == 0 )); then
+            echo "No tests/*.test.lua files found."
+            exit 1
+          fi
+          for test_file in "${test_files[@]}"; do
+            echo "::group::${test_file}"
+            lune run "${test_file}"
+            echo "::endgroup::"
+          done
+
+      - name: Build Roblox place with Rojo
+        run: rojo build default.project.json -o build.rbxlx
