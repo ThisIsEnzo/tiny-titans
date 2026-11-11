@@ -117,6 +117,8 @@ This numbering follows **Evolution Adventure Sandbox Roadmap v0.1**. Engineering
 
 **Outcome:** A complete Current Life can begin, progress, end and restart without stale state or cross-player effects.
 
+**Status note (after PR #26):** P1.03, P1.04 and P1.05 implementation is present in the repository. Automated test files/coverage were added, but the test suite has not been confirmed as executed in this review. Roblox Studio validation remains outstanding. Do not interpret implementation checkmarks as runtime validation or proof of a fun player experience.
+
 ### P1.01 — Biomass naming
 - [x] Rename Energy → Biomass and related identifiers.
 - [x] Preserve existing values and behavior (cap 100, food reward 10, stages 0/30/60).
@@ -126,52 +128,55 @@ This numbering follows **Evolution Adventure Sandbox Roadmap v0.1**. Engineering
 - [x] Shared life transition rules.
 - [x] LifeService, lifeId and idempotent LifeEnded.
 - [x] Character/death/removal/replacement handling.
-- [x] Unit tests for pure life-state rules.
+- [x] Unit tests for pure life-state rules (authored; execution not confirmed here).
 - [ ] Roblox Studio signal wiring checklist verified.
 
 ### P1.03 — Reset Current Life on death
-- [ ] Biomass resets to 0.
-- [ ] Form returns to BABY_BUG.
-- [ ] Growth and current-life ability state/cooldowns/effects reset.
-- [ ] Duplicate/stale life events cannot reset a newer life.
-- [ ] Old-life delayed callbacks cannot mutate new-life state.
-- [ ] Tests + Studio death/respawn + two-player isolation.
+- [x] Biomass resets to 0.
+- [x] Form returns to BABY_BUG.
+- [x] Growth and current-life ability state/cooldowns/effects reset.
+- [x] Duplicate/stale life events cannot reset a newer life.
+- [x] Old-life delayed callbacks cannot mutate new-life state.
+- [x] Automated tests for reset/lifecycle and multiplayer isolation are present (execution not confirmed).
+- [ ] Studio death/respawn, effects during death, rapid-death and two-player isolation checks recorded.
 
 ### P1.04 — Respawn / life transition experience
-- [ ] Decide automatic versus player-controlled respawn based on playtest and pacing.
-- [ ] Implement minimal life recap only if it improves clarity/reward.
-- [ ] Safe spawn and new-life initialization.
-- [ ] Avoid death-screen friction or forced waiting without a gameplay reason.
+- [x] Controlled, player-requested new-life flow implemented.
+- [x] Minimal life recap implemented (duration and highest form).
+- [x] Fresh BABY_BUG initialization and server-side request validation implemented.
+- [x] Automated transition/request-validity test coverage is present (execution not confirmed).
+- [ ] Studio first-join, recap, begin-new-life, mobile button, respawn timing and two-player checks recorded.
 
 ### P1.05 — Lifecycle hardening
-- [ ] Rapid death/respawn, leave/rejoin and simultaneous events.
-- [ ] Verify state cleanup and no duplicate connections/effects.
-- [ ] Regression suite and Studio evidence recorded.
+- [x] Spawn operation sequencing and stale/in-flight callback protection implemented.
+- [x] Initial spawn failure handling and retry path implemented.
+- [x] Pending recap replay/ready handshake and request throttling implemented.
+- [x] Client-side recap validation against stale, malformed and replayed life data implemented.
+- [x] Lifecycle regression tests are present (execution not confirmed; Lune test run not evidenced).
+- [ ] Studio rapid death/respawn, failed initial spawn/retry, leave/rejoin and simultaneous-event checks recorded.
+- [ ] Studio evidence and regression results recorded in the project documentation.
 
-**Exit gate:** repeated lives start cleanly, death is readable, current-life state is isolated, and no unintended carry-over occurs.
+**Exit gate:** implementation is substantially present, but the phase is **not closed** until automated tests are executed and the essential Studio scenarios are recorded. Repeated lives must start cleanly, death must be readable, current-life state must be isolated, and no unintended carry-over may occur.
 
-**Estimated P1 completion: 40–45%** (P1.01 and P1.02 implementation exist; runtime evidence and reset remain).
-
----
-
+**Estimated P1 implementation completion: 90–95%.** This is implementation progress only. Automated test execution and Roblox Studio validation are tracked separately and remain unconfirmed/outstanding.
+ 
 ## P2 — Evolution & Progression (the first major gameplay redesign)
 
 **Outcome:** Growth becomes a longer, more interesting sequence of decisions; evolution changes the way the player plays.
 
-> **P2-01 update.** P2 tasks now use the dash IDs of the engineering plan (`P2-01` to `P2-07`), the same IDs used in PR titles and in `TT-P0-02R Implementation Migration Plan.md`; the earlier dotted IDs `P2.01` to `P2.06` are retired. P2-01 is a **documentation-only design gate**. Boxes below are ticked only after the owner approves the design and the work is merged and, where stated, validated.
+> **P2-01 alignment.** P2 uses the engineering IDs P2-01 to P2-07, matching the Evolution Adventure Sandbox Roadmap and TT-P0-02R. P2-01 is a documentation-only design gate. Its design remains PROPOSED and awaits owner approval; documenting it does not mean the decisions are approved or implemented.
 
 ### P2-01 — Progression & Evolution Design Gate (documentation only)
-Design lives in `Combat Progression & Endgame Design v0.1.md`, section 13 (PROPOSED, awaiting owner approval). It defines, without any code:
+Design lives in `Combat Progression & Endgame Design v0.1.md`, section 13. It defines, without any code:
 - [ ] Current Life / Evolution / Legacy boundaries and what resets on death.
 - [ ] The one-life gameplay loop and why it is not "collect, wait, collect, evolve".
-- [ ] Biomass versus growth versus evolution, a recommended model, and the pacing metrics to measure (hypotheses only; no playtest results).
+- [ ] Biomass versus growth versus evolution, a recommended model, and pacing metrics (hypotheses only; no playtest results).
 - [ ] Tank and Glider roles, strengths, weaknesses and interactions; future roles marked FUTURE.
-- [ ] Resource and activity categories, anti-grind and fair-progression principles, retention and ethical monetization principles.
+- [ ] Resource/activity categories, anti-grind and fair-progression principles, retention and ethical monetization principles.
 - [ ] A playtest and validation plan with ten scenarios.
-- [ ] Evolution requirement, choices, trade-offs and reset semantics; branch (one choice per life), no multi-stage tree in the first release.
-- [ ] Task sequence P2-02 to P2-07 with goal, scope, dependencies, out-of-scope and acceptance criteria (Migration Plan).
+- [ ] P2-02 to P2-07 task sequence with goal, scope, dependencies, out-of-scope and acceptance criteria.
 
-Moved out of P2-01 (they need playtests or code): target pacing values and session length (P2-07), replacing the 3-food 30/60 test progression with a configurable multi-step curve (data in P2-02, values and behavior in P2-07).
+Moved out of P2-01 (they need playtests or code): target pacing values and session length (P2-07); replacing the current test progression with a configurable multi-step curve (data in P2-02, values and behavior in P2-07).
 
 ### P2-02 — Creature Definitions
 - [ ] Forms, per-form requirements and growth milestones as data, with today's values unchanged.
@@ -185,9 +190,9 @@ Moved out of P2-01 (they need playtests or code): target pacing values and sessi
 - [ ] Clear previews, strengths, limitations and feedback.
 
 ### P2-05 — Tank gameplay validation and iteration
-- [ ] Validate Tank identity; define a Tank world interaction that needs no combat or record the dependency on P3 and P4.
-- [ ] Replace the visual-only shell with a meaningful defensive or control role only when damage and threats exist (P4-04).
-- [ ] Add readable protection, counterplay, movement trade-offs and use cases; validate on touch and keyboard/gamepad.
+- [ ] Validate Tank identity; define a Tank world interaction that needs no combat or record the dependency on P3/P4.
+- [ ] Replace the visual-only shell with a meaningful defensive/control role only when damage and threats exist (later combat implementation).
+- [ ] Add readable protection, counterplay and movement trade-offs; validate on supported inputs.
 
 ### P2-06 — Glider gameplay validation and iteration
 - [ ] Validate platform reachability, air movement, landing and momentum in Studio.
@@ -196,22 +201,20 @@ Moved out of P2-01 (they need playtests or code): target pacing values and sessi
 
 ### P2-07 — Progression UX and balance validation
 - [ ] Milestone feedback, evolution preview, readable requirements and next goal.
-- [ ] Measure pacing; implement the approved Biomass model (continue after evolution, ceiling, longer curve) only after owner approval.
+- [ ] Measure pacing; implement the approved Biomass model only after owner approval.
 - [ ] Cross-form balance and meaningful trade-offs.
-- [ ] Unit tests, Studio tests and a first-player usability test.
+- [ ] Automated tests, Studio tests and first-player usability test.
 
 ### Gated item (not a numbered P2 task): additional initial roles
 - [ ] Design Striker / Hunter only after encounter and combat foundations are playtested.
 - [ ] Design Support / Controller only after a real cooperative use case exists.
 - [ ] Prototype each role's unique verb and test it before full implementation.
 - [ ] No automatic expansion beyond the four-role target roster without product evidence.
-These are scheduled as P4-05 and P4-06 in the Migration Plan, behind P3.5.
+These roles remain gated by P3.5 and the first validated PvE loop; they are not P2 implementation tasks.
 
 **Exit gate:** players can explain their evolution choice; two initial forms have distinct useful play patterns; progression is more than filling one meter.
 
-**Estimated P2 completion: 5–10%.** Current evolution selection and two ability prototypes are foundations, not the redesigned progression. The P2-01 documentation does not change this estimate; credit follows the exit criteria, not the existence of a design.
-
----
+**Estimated P2 completion: 5–10%.** Current evolution selection and two ability prototypes are foundations, not the redesigned progression. P2-01 documentation does not change this estimate; credit follows the exit criteria, not the existence of a design.
 
 ## P3 — First Habitat & Exploration
 
