@@ -8,9 +8,11 @@
 --   Glider: "GliderActiveUntil", "GliderReadyAt"
 -- Cooldowns run from activation and persist across death and respawn (session only).
 -- Requests are rate limited per player (Config.AbilityRequestInterval) before any other work.
+-- Ability ids, required forms and tuning come from AbilityDefinitions (the single source of
+-- truth); the Shell and Glide implementations below are selected by the definition's kind.
 --
 -- Glide physics: a server-created VectorForce (+ Attachment) on HumanoidRootPart cancels
--- Config.GliderGravityCompensation of the character's weight, so gravity still wins.
+-- the Glide definition's gravityCompensation (AbilityDefinitions) of the character's weight, so gravity still wins.
 -- Network ownership is NOT changed: the player's client keeps simulating its character
 -- and the replicated force acts on it. The server therefore cannot fully prevent a
 -- modified client from ignoring the force or moving freely; it only owns when the
@@ -22,6 +24,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config") :: ModuleScript)
 local Ability = require(Shared:WaitForChild("Ability") :: ModuleScript)
+local AbilityDefinitions = require(Shared:WaitForChild("AbilityDefinitions") :: ModuleScript)
+
+-- The fields each implementation reads from its AbilityDefinitions entry (structural, because a
+-- require through WaitForChild is untyped in Studio).
+type ShellDefinition = { requiredForm: string, durationSeconds: number, cooldownSeconds: number }
+type GlideDefinition = {
+    requiredForm: string,
+    durationSeconds: number,
+    cooldownSeconds: number,
+    gravityCompensation: number,
+}
 
 local AbilityService = {}
 
@@ -45,7 +58,14 @@ type State = {
     connections: { RBXScriptConnection },
 }
 
-local KNOWN_ABILITY_IDS: { string } = { Config.AbilityShellId, Config.AbilityGlideId }
+
+-- The form an ability requires, read from its definition (never from the client).
+local function requiredFormOf(abilityId: string): string
+    local definition = AbilityDefinitions.GetAbility(abilityId)
+    assert(definition ~= nil, "missing ability definition: " .. abilityId)
+    return definition.requiredForm
+end
+
 local SHELL_NAME = "DefensiveShell"
 local SHELL_SIZE_FACTOR = 1.3
 
@@ -107,6 +127,7 @@ local function createShell(character: Model, root: BasePart): Part
 end
 
 local function activateShell(
+    definition: ShellDefinition,
     player: Player,
     state: State,
     form: string,
@@ -116,14 +137,14 @@ local function activateShell(
     rootInstance: Instance?,
     now: number
 )
-    local ok = Ability.Validate(form, alive, now, state.activeUntil, state.readyAt, Config.TankShellForm)
+    local ok = Ability.Validate(form, alive, now, state.activeUntil, state.readyAt, definition.requiredForm)
     if not ok or character == nil or humanoid == nil or rootInstance == nil or not rootInstance:IsA("BasePart") then
         return
     end
 
     endShell(player, state) -- defensive: guarantees at most one shell and a fresh token
-    state.activeUntil = now + Config.TankShellDuration
-    state.readyAt = now + Config.TankShellCooldown
+    state.activeUntil = now + definition.durationSeconds
+    state.readyAt = now + definition.cooldownSeconds
     player:SetAttribute("ShellActiveUntil", state.activeUntil)
     player:SetAttribute("ShellReadyAt", state.readyAt)
     state.shell = createShell(character, rootInstance)
@@ -132,7 +153,7 @@ local function activateShell(
     end)
 
     local token = state.token
-    task.delay(Config.TankShellDuration, function()
+    task.delay(definition.durationSeconds, function()
         if state.token == token then
             endShell(player, state)
         end
@@ -200,6 +221,7 @@ local function createWing(character: Model, root: BasePart, side: number, height
 end
 
 local function activateGlide(
+    definition: GlideDefinition,
     player: Player,
     state: State,
     form: string,
@@ -211,14 +233,14 @@ local function activateGlide(
 )
     local glide = state.glide
     local airborne = humanoid ~= nil and humanoid.FloorMaterial == Enum.Material.Air
-    local ok = Ability.ValidateGlide(form, alive, airborne, now, glide.activeUntil, glide.readyAt, Config.GliderForm)
+    local ok = Ability.ValidateGlide(form, alive, airborne, now, glide.activeUntil, glide.readyAt, definition.requiredForm)
     if not ok or character == nil or humanoid == nil or rootInstance == nil or not rootInstance:IsA("BasePart") then
         return
     end
 
     endGlide(player, state) -- defensive: fresh token and no leftover objects
-    glide.activeUntil = now + Config.GliderDuration
-    glide.readyAt = now + Config.GliderCooldown
+    glide.activeUntil = now + definition.durationSeconds
+    glide.readyAt = now + definition.cooldownSeconds
     player:SetAttribute("GliderActiveUntil", glide.activeUntil)
     player:SetAttribute("GliderReadyAt", glide.readyAt)
 
@@ -233,7 +255,7 @@ local function activateGlide(
     force.ApplyAtCenterOfMass = true
     force.Force = Vector3.new(
         0,
-        Ability.GetGlideForce(rootInstance.AssemblyMass, workspace.Gravity, Config.GliderGravityCompensation),
+        Ability.GetGlideForce(rootInstance.AssemblyMass, workspace.Gravity, definition.gravityCompensation),
         0
     )
     force.Parent = rootInstance
@@ -269,7 +291,7 @@ local function activateGlide(
     )
 
     local token = glide.token
-    task.delay(Config.GliderDuration, function()
+    task.delay(definition.durationSeconds, function()
         if glide.token == token then
             endGlide(player, state)
         end
@@ -293,7 +315,8 @@ local function onRequestAbility(player: Player, abilityId: any)
     lastRequestAt[player] = clock
 
     local state = states[player]
-    if state == nil or not Ability.IsKnownAbilityId(abilityId, KNOWN_ABILITY_IDS) then
+    local definition = AbilityDefinitions.GetAbility(abilityId) -- nil for unknown or malformed ids
+    if state == nil or definition == nil then
         return
     end
     local form = evolution.GetForm(player)
@@ -311,11 +334,12 @@ local function onRequestAbility(player: Player, abilityId: any)
         and rootInstance:IsA("BasePart")
     local now = workspace:GetServerTimeNow()
 
-    -- The identifier selects a rule set; each one still requires the matching server-owned form.
-    if abilityId == Config.AbilityShellId then
-        activateShell(player, state, form, alive, character, humanoid, rootInstance, now)
-    elseif abilityId == Config.AbilityGlideId then
-        activateGlide(player, state, form, alive, character, humanoid, rootInstance, now)
+    -- The definition selects the implementation; each one still requires the matching
+    -- server-owned form (definition.requiredForm), never a client-provided one.
+    if definition.kind == "Shell" then
+        activateShell(definition, player, state, form, alive, character, humanoid, rootInstance, now)
+    elseif definition.kind == "Glide" then
+        activateGlide(definition, player, state, form, alive, character, humanoid, rootInstance, now)
     end
 end
 
@@ -354,10 +378,10 @@ local function onPlayerAdded(player: Player)
     -- Leaving a form (not possible today) also drops that form's ability effects.
     table.insert(state.connections, player:GetAttributeChangedSignal("EvolutionForm"):Connect(function()
         local form = player:GetAttribute("EvolutionForm")
-        if form ~= Config.TankShellForm then
+        if form ~= requiredFormOf(AbilityDefinitions.ShellId) then
             endShell(player, state)
         end
-        if form ~= Config.GliderForm then
+        if form ~= requiredFormOf(AbilityDefinitions.GlideId) then
             endGlide(player, state)
         end
     end))

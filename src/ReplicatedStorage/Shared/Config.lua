@@ -24,22 +24,10 @@ local Config = {
     EvolutionForms = CreatureDefinitions.EvolvedFormIds :: { string },
     EvolutionRequestCooldown = 0.5, -- min seconds between processed requests per player (keep below the UI click lock)
 
-    -- Tank Defensive Shell (server-authoritative, visual only; see AbilityService).
-    AbilityKey = "Q", -- client activation key (KeyCode name)
-    TankShellForm = "TANK", -- only this form may activate the shell
-    TankShellDuration = 3, -- seconds the shell stays up
-    TankShellCooldown = 12, -- seconds from activation until it can be used again
-    AbilityRequestInterval = 0.25, -- min seconds between processed RequestAbility calls per player (anti-spam; not gameplay)
-
-    -- RequestAbility identifiers (the only thing a client sends; the server checks it against the player's form).
-    AbilityShellId = "SHELL",
-    AbilityGlideId = "GLIDE",
-
-    -- Glider Air Glide (server-authoritative; see AbilityService). A bounded glide, not flight.
-    GliderForm = "GLIDER", -- only this form may glide
-    GliderDuration = 3, -- max seconds of glide per activation (landing ends it earlier)
-    GliderCooldown = 10, -- seconds from activation until it can be used again
-    GliderGravityCompensation = 0.65, -- fraction of gravity cancelled while gliding (always capped below 1)
+    -- Global ability settings. Ability ids, required forms and per-ability tuning (durations,
+    -- cooldowns, gravity compensation) live in AbilityDefinitions.
+    AbilityKey = "Q", -- client activation key (KeyCode name), shared by all abilities
+    AbilityRequestInterval = 0.25, -- min seconds between processed RequestAbility calls per player (anti-spam; not a gameplay cooldown)
 
     -- Food (server-authoritative; see ServerScriptService/Services/FoodService).
     FoodBiomass = 10, -- evolution biomass awarded per food item

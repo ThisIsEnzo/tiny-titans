@@ -10,6 +10,9 @@
 -- and 12 (respawn duplicates) depend on Roblox objects and are manual-only.
 
 local Config = require("../src/ReplicatedStorage/Shared/Config")
+local AbilityDefinitions = require("../src/ReplicatedStorage/Shared/AbilityDefinitions")
+local shellDef: any = AbilityDefinitions.GetAbility(AbilityDefinitions.ShellId)
+local glideDef: any = AbilityDefinitions.GetAbility(AbilityDefinitions.GlideId)
 local Food = require("../src/ReplicatedStorage/Shared/Food")
 local Growth = require("../src/ReplicatedStorage/Shared/Growth")
 local Evolution = require("../src/ReplicatedStorage/Shared/Evolution")
@@ -99,11 +102,11 @@ local okRepeat, reasonRepeat = Evolution.Validate("GLIDER", cap, forms.A, Creatu
 check("5: A cannot re-select to change form", not okRepeat and reasonRepeat == "AlreadyEvolved")
 
 -- 7. A form cannot use another form's ability.
-local shellForGlider = Ability.Validate("GLIDER", true, 100, 0, 0, Config.TankShellForm)
+local shellForGlider = Ability.Validate("GLIDER", true, 100, 0, 0, shellDef.requiredForm)
 check("7: GLIDER cannot use the shell", not shellForGlider)
-local glideForTank = Ability.ValidateGlide("TANK", true, true, 100, 0, 0, Config.GliderForm)
+local glideForTank = Ability.ValidateGlide("TANK", true, true, 100, 0, 0, glideDef.requiredForm)
 check("7: TANK cannot glide", not glideForTank)
-local shellForBug = Ability.Validate(Config.BaseForm, true, 100, 0, 0, Config.TankShellForm)
+local shellForBug = Ability.Validate(Config.BaseForm, true, 100, 0, 0, shellDef.requiredForm)
 check("7: BABY_BUG cannot use the shell", not shellForBug)
 
 -- 8. Cooldowns are per player.
@@ -113,36 +116,36 @@ local glideState: { [string]: { activeUntil: number, readyAt: number } } = {
 }
 local function tryGlide(who: string, now: number): boolean
     local s = glideState[who]
-    local accepted = Ability.ValidateGlide("GLIDER", true, true, now, s.activeUntil, s.readyAt, Config.GliderForm)
+    local accepted = Ability.ValidateGlide("GLIDER", true, true, now, s.activeUntil, s.readyAt, glideDef.requiredForm)
     if accepted then
-        s.activeUntil = now + Config.GliderDuration
-        s.readyAt = now + Config.GliderCooldown
+        s.activeUntil = now + glideDef.durationSeconds
+        s.readyAt = now + glideDef.cooldownSeconds
     end
     return accepted
 end
 check("8: A glides", tryGlide("A", 100))
 check("8: A is on cooldown", not tryGlide("A", 105))
 check("8: B is unaffected by A's cooldown", tryGlide("B", 105))
-check("8: A's timestamps unchanged by B", glideState.A.readyAt == 100 + Config.GliderCooldown)
+check("8: A's timestamps unchanged by B", glideState.A.readyAt == 100 + glideDef.cooldownSeconds)
 
 -- 9. Duplicate requests cannot bypass the cooldown.
 local shellActive, shellReady = 0, 0
 local shellAccepted = 0
 for i = 0, 199 do
     local now = 100 + i * 0.05 -- 100 .. 109.95, inside the 12 s cooldown
-    if Ability.Validate("TANK", true, now, shellActive, shellReady, Config.TankShellForm) then
-        shellActive = now + Config.TankShellDuration
-        shellReady = now + Config.TankShellCooldown
+    if Ability.Validate("TANK", true, now, shellActive, shellReady, shellDef.requiredForm) then
+        shellActive = now + shellDef.durationSeconds
+        shellReady = now + shellDef.cooldownSeconds
         shellAccepted += 1
     end
 end
 check("9: 200 shell requests inside the cooldown activate once", shellAccepted == 1)
-check("9: the duration was not extended", shellActive == 100 + Config.TankShellDuration)
+check("9: the duration was not extended", shellActive == 100 + shellDef.durationSeconds)
 
 -- 11. Invalid remote arguments are rejected.
-local abilityIds = { Config.AbilityShellId, Config.AbilityGlideId }
-check("11: shell id accepted", Ability.IsKnownAbilityId(Config.AbilityShellId, abilityIds))
-check("11: glide id accepted", Ability.IsKnownAbilityId(Config.AbilityGlideId, abilityIds))
+local abilityIds = { AbilityDefinitions.ShellId, AbilityDefinitions.GlideId }
+check("11: shell id accepted", Ability.IsKnownAbilityId(AbilityDefinitions.ShellId, abilityIds))
+check("11: glide id accepted", Ability.IsKnownAbilityId(AbilityDefinitions.GlideId, abilityIds))
 local badValues: { any } = { false, true, 0, 1, 1.5, "", "shell", "SHELL ", "FLY", {}, { "SHELL" }, function() end }
 local abilityRejected = not Ability.IsKnownAbilityId(nil, abilityIds)
 local evolutionRejected = not Evolution.IsValidForm(nil, CreatureDefinitions)

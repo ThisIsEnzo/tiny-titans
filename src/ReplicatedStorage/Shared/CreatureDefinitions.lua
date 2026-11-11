@@ -1,7 +1,7 @@
 --!strict
 -- Authoritative, immutable definitions of the creature forms (P2-02).
 -- Pure data: no Roblox services and no requires, so it loads in Studio and Lune.
--- Ability behavior/tuning belongs to P2-03; generated evolution UI belongs to P2-04.
+-- Ability behavior/tuning belongs to AbilityDefinitions (P2-03); generated evolution UI belongs to P2-04.
 -- Growth milestones and the Biomass cap remain in Config.
 -- Form IDs are stable identifiers and must never be reused or renamed once shipped.
 
@@ -17,7 +17,7 @@ export type FormDefinition = {
     description: string,
     isStarter: boolean,
     requirement: Requirement?,
-    abilities: { string },
+    abilities: { string }, -- ability ids; AbilityDefinitions holds their definitions
 }
 
 local STARTER_FORM_ID = "BABY_BUG"
