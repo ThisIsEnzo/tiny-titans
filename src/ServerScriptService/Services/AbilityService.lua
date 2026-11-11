@@ -211,8 +211,40 @@ local function activateGlide(
 )
     local glide = state.glide
     local airborne = humanoid ~= nil and humanoid.FloorMaterial == Enum.Material.Air
-    local ok = Ability.ValidateGlide(form, alive, airborne, now, glide.activeUntil, glide.readyAt, Config.GliderForm)
-    if not ok or character == nil or humanoid == nil or rootInstance == nil or not rootInstance:IsA("BasePart") then
+    local ok, reason = Ability.ValidateGlide(
+        form,
+        alive,
+        airborne,
+        now,
+        glide.activeUntil,
+        glide.readyAt,
+        Config.GliderForm
+    )
+    if not ok then
+        local floorMaterial = if humanoid ~= nil then tostring(humanoid.FloorMaterial) else "NoHumanoid"
+        local humanoidState = if humanoid ~= nil then tostring(humanoid:GetState()) else "NoHumanoid"
+        warn(string.format(
+            "[AbilityService] GLIDE rejected for %s: %s (form=%s, alive=%s, floor=%s, state=%s, activeUntil=%.3f, readyAt=%.3f, now=%.3f)",
+            player.Name,
+            reason,
+            form,
+            tostring(alive),
+            floorMaterial,
+            humanoidState,
+            glide.activeUntil,
+            glide.readyAt,
+            now
+        ))
+        return
+    end
+    if character == nil or humanoid == nil or rootInstance == nil or not rootInstance:IsA("BasePart") then
+        warn(string.format(
+            "[AbilityService] GLIDE rejected for %s: MissingCharacterParts (character=%s, humanoid=%s, root=%s)",
+            player.Name,
+            tostring(character ~= nil),
+            tostring(humanoid ~= nil),
+            tostring(rootInstance ~= nil and rootInstance:IsA("BasePart"))
+        ))
         return
     end
 
@@ -239,6 +271,16 @@ local function activateGlide(
     force.Parent = rootInstance
     glide.attachment = attachment
     glide.force = force
+
+    print(string.format(
+        "[AbilityService] GLIDE activated for %s (mass=%.3f, gravity=%.3f, compensation=%.2f, forceY=%.3f, duration=%.1f)",
+        player.Name,
+        rootInstance.AssemblyMass,
+        workspace.Gravity,
+        Config.GliderGravityCompensation,
+        force.Force.Y,
+        Config.GliderDuration
+    ))
 
     local height = character:GetExtentsSize().Y
     table.insert(glide.wings, createWing(character, rootInstance, 1, height))
@@ -280,7 +322,8 @@ end
 -- Request handling and lifecycle
 -- ---------------------------------------------------------------------------
 
--- Client input is only a request. Every failure is silent and changes nothing.
+-- Client input is only a request. Rejected GLIDE activations are logged with the
+-- validation reason and physics state to make live Studio diagnosis possible.
 -- The rate limit runs first, so rejected requests count against it too.
 local function onRequestAbility(player: Player, abilityId: any)
     local clock = os.clock()
