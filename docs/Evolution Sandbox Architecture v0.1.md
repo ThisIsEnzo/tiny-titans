@@ -3,7 +3,8 @@
 **Status:** Proposal for review. Documentation only; no runtime code is changed by this document.
 **Branch:** `docs/define-evolution-sandbox`
 **Companion document:** `TT-P0-02R Implementation Migration Plan.md`
-**Audited baseline:** the repository as it stands after the evolution-flow work (the "PR #17" implementation: `Evolution.Select`, `EvolutionResult`, two-step selection UI).
+**P2-01 update (documentation only):** adds the banner at the start of section 2, section 6.1, the status note and section 7.1, and the decision and question rows in section 12. The player-facing progression design is in `Combat Progression & Endgame Design v0.1.md`, section 13.
+**Audited baseline:** the repository state after P1-05 lifecycle hardening (merged PR #26, based on master commit `5139da00` at the start of PR #27), including the earlier evolution-flow implementation (`Evolution.Select`, `EvolutionResult`, two-step selection UI). The P1 lifecycle implementation is present in code; automated test execution and Roblox Studio runtime validation are separate and must not be inferred from the merge.
 
 ## 0. Scope, sources and honesty notes
 
@@ -72,6 +73,8 @@ These guardrails are grounded in the reviewed Evolution Adventure Sandbox Roadma
 - Today: there is no damage, health, combat, PvE, PvP or PvPvE system, and no persistence or DataStore code.
 
 ## 2. Implementation inventory (what exists today)
+
+> **Historical baseline (P2-01 note).** Sections 2.1 to 2.10 describe the code as audited for TT-P0-02R, before several merged changes: the Energy to Biomass rename (PR #21), `LifeService` (PR #22), the reset on death (P1-03), controlled respawn with a recap (P1-04) and lifecycle hardening (P1-05). Rows that say `Energy`, "death changes nothing" or "respawn is automatic" are superseded. The current verified behavior is tabulated in `Combat Progression & Endgame Design v0.1.md`, section 13.2. Nothing here was re-validated in Studio.
 
 ### 2.1 Runtime structure
 
@@ -157,7 +160,7 @@ Evolution UI layout and confirm flow; glide feel, landing detection and wing vis
 | 1 | Death changes nothing; progress survives it | Death ends the life and resets Current Life |
 | 2 | Form is never reset | Form resets to `BABY_BUG` each life |
 | 3 | Ability cooldowns persist across death | Temporary ability state is cleared at life end |
-| 4 | Energy caps at 100 and equals the evolution threshold; after evolving there is no further progression | Growth resource drives a longer adventure (details open, section 7) |
+| 4 | Biomass (then called Energy) caps at 100 and equals the evolution threshold; after evolving there is no further progression. **Still true in code** | Growth resource drives a longer adventure (PROPOSED model in section 7.1) |
 | 5 | Forms and abilities are hardcoded in `Config`, `AbilityService` branches and `FORM_INFO` in the UI | Definition-driven forms and abilities |
 | 6 | No persistence (explicit non-goal of the v0.1 Technical Design) | Legacy persists across lives and sessions |
 | 7 | One arena, no discovery concept | Habitat with discoverable species, territories, secrets |
@@ -350,7 +353,24 @@ Abilities = {
 
 **Replicated attribute names** (`EvolutionForm`, per-ability timestamp pairs) stay compatible; if abilities become data-driven, timestamp attributes can later be keyed by ability id (a decision for P2, Q8).
 
+### 6.1 Alignment with the P2-01 design gate (PROPOSED)
+
+P2-01 is a documentation-only gate. It fixes what the engineering tasks must build; it builds nothing. Statuses are PROPOSED unless stated.
+
+| Design decision (Combat doc, section 13) | Technical consequence | Task |
+|---|---|---|
+| Forms and their requirements are data, not branches | `CreatureDefinitions` with id, display text, role, requirement, abilities, unlock (`Always` for the first release) and visual references; `Evolution` takes forms and requirements from it. Behavior and remotes unchanged | P2-02 |
+| Abilities are data with existing handlers | Ability definitions (id, form, duration, cooldown, parameters, handler name) read by `AbilityService`; `activateShell` and `activateGlide` stay | P2-03 |
+| The selection UI shows what the definitions say | Cards generated from the available forms; honest descriptions come from data | P2-04 |
+| Growth milestones are independent of the evolution requirement | Milestones and requirements are separate data. P2-02 may only move them into data, with **today's values unchanged** | P2-02 (data), P2-07 (values) |
+| Biomass keeps accumulating after evolution, with a ceiling at the final milestone (REQUIRES PLAYTEST, needs approval) | A behavior change: the cap currently equals `EvolutionBiomassRequired` (see 7.1). Touches `PlayerDataService.CanGainBiomass`, `Growth.AddBiomass`, the food eligibility check in `FoodService` and the HUD ratio | P2-07, only after approval |
+| Tank must gain a real world interaction | May depend on hazards or threats (P3, P4); P2-05 either defines one that needs no combat or records the dependency | P2-05 |
+| Form mastery, discoveries, Legacy | Not P2 | P5 |
+| No new forms, no persistence, no monetization | OUT OF SCOPE for all of P2 | n/a |
+
 ## 7. Energy versus Biomass
+
+> **Status (P2-01 note):** option B below was **implemented** in PR #21 (the Biomass rename). The analysis is kept as the decision record, and its identifiers (`Energy`, `AddEnergy`, `EvolutionEnergyRequired`) are the pre-rename names. In the current code the names are `Biomass`, `AddBiomass`, `EvolutionBiomassRequired`, `FoodBiomass`. The statement that the cap equals the evolution requirement is **still true in code**.
 
 Today: `Energy` is one number (0 to 100) that is both the growth resource and the evolution gate; `GrowthStage` is derived from it; the cap equals the evolution threshold, so after evolving there is nothing left to earn.
 
@@ -366,6 +386,16 @@ Today: `Energy` is one number (0 to 100) that is both the growth resource and th
 **Recommendation: B, combined with C (already true), and not D.** Rename the concept and the identifiers to Biomass in one mechanical, behavior-neutral change early in P1, before new lifecycle code is written, so the reset logic and the Legacy schema use the final name. Keep `GrowthStage` as a derived value. Decouple two ideas that are currently one constant: the **evolution requirement** (`EvolutionBiomassRequired`, now part of a form's `requirement`) and the **resource cap**; what happens at the cap (continue growing, or stop) is Q5. Do not introduce a second resource until a design needs one.
 
 Impact if adopted: attribute `Energy` becomes `Biomass` (all readers are in this repository and ship together, no persisted data exists, so no dual-write is needed); HUD text changes; `FoodEnergy` becomes `FoodBiomass`; test names and expectations are renamed, values unchanged (cap 100, food 10, stages 0/30/60); no gameplay change. Biomass is Current Life state and is never stored in Legacy. If the team prefers to keep the word Energy for players, option A with a UI-only label is acceptable; the architecture does not depend on the word.
+
+### 7.1 Resource model recommended by the P2-01 gate (PROPOSED, REQUIRES PLAYTEST)
+
+The design reasoning is in `Combat Progression & Endgame Design v0.1.md`, section 13.5; only the technical shape is recorded here.
+
+- **Three separate systems:** Biomass (a server-owned quantity), growth (a stage derived from Biomass, today `Config.GrowthStages` with `MinBiomass` and `Scale`), and evolution (an explicit selection once a requirement is met). They stay separate in code and in data.
+- **Two constants are currently one:** `EvolutionBiomassRequired` is both the evolution requirement and the Biomass cap. The recommendation separates them: the requirement belongs to each form's definition (P2-02), and a per-life **ceiling** equal to the final growth milestone is a distinct value (its name is a P2-07 decision).
+- **No spending:** Biomass is not consumed by abilities or purchases in the first release, so no second resource or ledger is needed.
+- **Server authority is unchanged:** every Biomass source stays server-validated; a rare-resource or discovery source (FUTURE) must follow the `FoodService` pattern.
+- **Nothing here changes today's values.** Cap 100, food 10, stages 0/30/60 stay until P2-07 and an approved playtest.
 
 ## 8. Persistence architecture (future; nothing here is implemented)
 
@@ -426,7 +456,7 @@ Additions proposed:
 | `FORM_INFO` and hardcoded descriptions in the UI | **Replace later (P2)** | Move into form definitions. |
 | `Config.EvolutionForms`, `BaseForm`, `TankShellForm`, `GliderForm` and per-ability constants | **Replace later (P2)** | Keep during migration for compatibility. |
 | `AbilityService` shell/glide handlers, tokens, cleanup | **Keep as-is** (handlers); **adapt later** (dispatch by id) | Reuse the existing, reviewed code as handlers. |
-| Energy cap equal to the evolution threshold | **Keep for now, revisit (P1/P2)** | See section 7 and Q5. |
+| Biomass cap equal to the evolution requirement | **Keep for now; revisit in P2-07** (PROPOSED change) | See sections 7.1 and 12 (Q5). |
 | Session-only form ("rejoin resets") | **Keep, extended**: death now also resets | Legacy persistence does not persist the selected form. |
 | Existing tests | **Keep and extend** | Rename with Biomass; add life-cycle tests. |
 | Nothing is recommended for removal | n/a | No second evolution-selection implementation should be created. |
@@ -466,6 +496,8 @@ Decisions this document proposes (need owner approval):
 | D6 | Legacy never grants raw power; discoveries do not bypass traversal | Yes |
 | D7 | Legacy persistence via `UpdateAsync` with mergeable data and no session lock in v1 | Yes |
 | D8 | Initial launch roster is the Baby Bug starter plus exactly four evolved classes; no fifth or sixth class before validation | Yes (from the brief) |
+| D9 | P2-01 is a documentation-only design gate; creature-definition engineering is P2-02 | APPROVED DESIGN (from the P2-01 brief) |
+| D10 | Biomass keeps accumulating after evolution with a ceiling at the final growth milestone; growth milestones independent of the evolution requirement | PROPOSED; REQUIRES PLAYTEST; engineering in P2-07 after approval |
 
 Open questions:
 
@@ -475,7 +507,7 @@ Open questions:
 | Q2 | Is the Roblox reset button a death (it sets health to 0)? | Abuse and recap spam |
 | Q3 | Do ability cooldowns reset on a new life? | Section 3.1 |
 | Q4 | Should there be a minimum life length before history/recap counts? | History noise |
-| Q5 | What happens at the Biomass cap: stop, keep growing past 100, or multi-stage evolution lines? | Longer adventure; evolution threshold |
+| Q5 | What happens at the Biomass cap: stop, keep growing past 100, or multi-stage evolution lines? **P2-01 recommendation (PROPOSED, needs approval and playtest):** keep growing in the chosen form up to a ceiling at the final growth milestone; no multi-stage evolution tree in the first release (Combat doc, sections 13.3 and 13.5) | Longer adventure; evolution threshold |
 | Q6 | Which discoveries exist in the first habitat (species, landmarks, secrets) and what triggers them? | P3/P5 scope |
 | Q7 | Does the recap time out and auto-begin a new life, or wait for the button? | Idle players |
 | Q8 | Ability timestamp attributes: keep per-ability names or key by ability id? | Replication naming |

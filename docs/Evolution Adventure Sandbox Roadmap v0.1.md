@@ -186,6 +186,20 @@ The roadmap is outcome-driven. The sequence may change when audits and playtests
 
 **Exit gate:** Players can explain why they chose a form and demonstrate a meaningful difference in play.
 
+**Task sequence (P2-01 update).** Design precedes implementation:
+
+| Task | Title | Scope |
+|---|---|---|
+| P2-01 | Progression & Evolution Design Gate | **Documentation only.** Defines the progression layers, the one-life loop, Biomass versus growth versus evolution, Tank and Glider roles, activities, anti-grind and retention principles and the playtest plan (design in `Combat Progression & Endgame Design v0.1.md`, section 13). No code, remotes, services, DataStore, forms, abilities or monetization |
+| P2-02 | Creature Definitions | Data-driven forms and per-form requirements; today's behavior and values unchanged |
+| P2-03 | Ability Definitions | Data-driven abilities with the existing handlers |
+| P2-04 | Data-driven Evolution UI | Selection cards generated from definitions |
+| P2-05 | Tank gameplay validation and iteration | Playtests, a Tank world interaction or a recorded dependency |
+| P2-06 | Glider gameplay validation and iteration | Playtests, platform reachability, glide tuning through data |
+| P2-07 | Progression UX and balance validation | Measure pacing; implement the approved Biomass model only after owner approval |
+
+**P2-01 completion criteria:** the roadmap, the master roadmap, the architecture, the combat and progression design and the migration plan agree on this scope and sequence; implemented behavior and proposed design are labelled apart; the owner approves, changes or rejects the decisions in section 13.11 of the combat design document. The additional initial roles (Striker / Hunter, Support / Controller) are not P2 tasks; they stay gated by P3.5 and a validated PvE loop.
+
 ### P3 — First Habitat vertical slice
 
 **Outcome:** One compact area feels like a place worth exploring.
@@ -295,6 +309,8 @@ Known starting point before the architecture pivot:
 - The current character presentation relies on standard Roblox avatars rather than a complete creature identity system.
 
 Treat this list as an audit starting point. Confirm the current state against the repository and Roblox Studio before making implementation claims. The architecture milestone must update this section if the merged implementation has changed any detail.
+
+> **Status note (P2-01):** sections 10 and 11 describe the starting point and the first milestone of the architecture pivot and are kept as history. TT-P0-02R and P1 (Biomass naming, life state, reset on death, controlled respawn with a recap, lifecycle hardening) have since been implemented in code, with Studio validation outstanding. The current next milestone is **P2-01 — Progression & Evolution Design Gate** (documentation only). The current verified behavior is tabulated in `Combat Progression & Endgame Design v0.1.md`, section 13.2.
 
 ## 11. Immediate next milestone
 
