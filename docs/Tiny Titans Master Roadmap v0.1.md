@@ -39,7 +39,7 @@ A feature is only counted as complete when its stated acceptance gate is met. Fo
 | Measure | Estimated completion | Why |
 |---|---:|---|
 | Existing prototype mechanics | 25–35% of a *small MVP's* mechanic scope | Food/biomass, three growth stages, Tank/Glider choice and prototype abilities exist; world/activity/feedback are thin |
-| Engineering foundation / P1 | 35–45% | Biomass rename and life tracking implemented; death reset and full life transition remain unfinished/unvalidated |
+| Engineering foundation / P1 | 90–95% implementation | Biomass rename, life-state handling, death reset, controlled respawn/recap and lifecycle hardening are implemented; automated test execution and Roblox Studio runtime validation remain outstanding |
 | MVP overall | **10%** | Playable greybox exists, but compelling evolution, habitat, survival loop, Legacy, onboarding and playtest evidence are largely missing |
 | Public launch overall | **5%** | MVP itself is not ready; production, cross-platform, release and operations gates remain |
 | Post-launch | 0% | No live MVP cohort or validated post-launch cadence yet |
