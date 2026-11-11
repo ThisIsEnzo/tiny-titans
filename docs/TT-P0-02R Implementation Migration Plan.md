@@ -45,6 +45,7 @@ flowchart LR
     P2_2 --> P2_4[P2-04 Data-driven evolution UI]
     P2_3 --> P2_4
     P2_3 --> P2_5[P2-05 Tank validation]
+    P2_4 --> P2_5
     P2_3 --> P2_6[P2-06 Glider validation]
     P2_5 --> P2_7[P2-07 Progression UX and balance]
     P2_6 --> P2_7
