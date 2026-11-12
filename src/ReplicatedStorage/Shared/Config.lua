@@ -16,6 +16,7 @@ local CreatureDefinitions = loadSibling("CreatureDefinitions")
 
 local Config = {
     -- TEMPORARY: this is the Biomass cap, not the evolution eligibility rule.
+    -- P2-09 decides the cap's final name and value.
     EvolutionBiomassRequired = 100,
 
     -- Evolution (server-authoritative; see ServerScriptService/Services/EvolutionService).

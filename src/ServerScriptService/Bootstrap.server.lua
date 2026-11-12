@@ -17,6 +17,7 @@ local FoodService = require(Services:WaitForChild("FoodService") :: ModuleScript
 local EvolutionService = require(Services:WaitForChild("EvolutionService") :: ModuleScript)
 local AbilityService = require(Services:WaitForChild("AbilityService") :: ModuleScript)
 local ResetService = require(Services:WaitForChild("ResetService") :: ModuleScript)
+local CreatureAppearanceService = require(Services:WaitForChild("CreatureAppearanceService") :: ModuleScript)
 local RespawnService = require(Services:WaitForChild("RespawnService") :: ModuleScript)
 
 LifeService.Init() -- first: later milestones subscribe other services to its events
@@ -26,4 +27,5 @@ FoodService.Init(PlayerDataService)
 EvolutionService.Init(PlayerDataService)
 AbilityService.Init(EvolutionService)
 ResetService.Init(LifeService, PlayerDataService, EvolutionService, AbilityService, GrowthService) -- last: resets a life's state when LifeService reports its end
+CreatureAppearanceService.Init(PlayerDataService, GrowthService) -- before RespawnService: the first character must already be covered
 RespawnService.Init(LifeService, EvolutionService, ResetService) -- very last: spawns characters, so every service above must already listen

@@ -678,12 +678,49 @@ These are **manual tests; none has been performed**. Use Play Solo, then Test > 
 13. Layout: Device emulator (phone portrait, phone landscape, tablet, 1080p). Expected: the panel is fully on screen, text readable, cards and the button tappable, nothing overlaps the Biomass HUD or toast.
 14. Reduced regression: collecting food, stage growth tweens, the Biomass HUD, and Tank and Glider cooldowns behave as before.
 
+## Baby Bug visual character (P2-05)
+
+Players in the `BABY_BUG` form look like a small custom insect instead of a Roblox avatar. **None of this has been run in Studio yet** (checklist below); only the pure spec and pose logic has Lune tests.
+
+Approach: the R15 Humanoid stays the movement, physics, camera and lifecycle controller (`CharacterAutoLoads`, `RespawnService`, `LifeService` and `ResetService` are unchanged). The default avatar is made invisible and a cosmetic model is welded to the `HumanoidRootPart`. Food pickups measure distance from the `HumanoidRootPart`, so the visual cannot affect them.
+
+| File | Responsibility |
+|---|---|
+| `Shared/BabyBugSpec.lua` | Pure data: every part (primitives only, no asset ids), its joint and colour; six legs, head with two eyes, rounded shell with seam and spots, two antennae; which joints are animated; `RootOffsetY` |
+| `Shared/CreatureModelBuilder.lua` | Roblox-only, spec-driven: builds the Model (unanchored, massless, `CanCollide`/`CanTouch`/`CanQuery` off, one Motor6D per part) and the root joint. Reusable for future forms |
+| `ServerScriptService/Services/CreatureAppearanceService.lua` | Server: per player and per character it hides the default avatar and attaches or removes the visual according to the server-owned `EvolutionForm`. A form-to-spec table holds only `BABY_BUG` |
+| `Shared/BabyBugPose.lua` | Pure procedural pose maths (idle, walk with an alternating tripod gait, jump, fall) with blend weights |
+| `StarterPlayerScripts/Controllers/BabyBugAnimationController.lua` | Client: one shared `RenderStepped` loop animates every tagged creature model (tag `TT_CreatureVisual`) through `Motor6D.Transform`, so each client sees everyone's animation. No remotes |
+
+Lifecycle and rules:
+
+- **One visual per character.** `evaluate` is idempotent; repeated `CharacterAppearanceLoaded` or attribute events cannot create a second model. State is per player and per character and checked after every yield, so an old character cannot modify a newer one. `CharacterRemoving` and `PlayerRemoving` clean up connections, the model and state.
+- **Hiding.** All `BasePart`s and `Decal`s of the character get `Transparency = 1`; originals are remembered and restored if the form changes to one without a model. Parts added later by appearance loading are hidden as they arrive and again on `CharacterAppearanceLoaded`. Nothing is destroyed.
+- **Growth.** The model follows the `BodyHeightScale` value that `GrowthService` already tweens (new `GrowthService.SubscribeScale` hook), so thresholds (`Config.GrowthStages`), `GrowthTweenSeconds` and the absolute-scale rule stay in one place. `Model:ScaleTo` is absolute, so it cannot compound. A new character starts at its stage's scale from `Growth.GetScale`. If `GrowthService` applied the scale before the visual existed, the visual catches up through `GrowthService.GetAppliedScaleValue`, so event order cannot make it miss the tween.
+- **Death.** When the Humanoid dies the visual is destroyed (death breaks joints anyway) and the body stays hidden until `RespawnService` replaces the character. No death effect exists yet. `LifeService` remains the only death authority.
+- **Tank and Glider** still use the normal avatar: their models do not exist yet. The service is structured so a spec can be added per form.
+- Only R15 is supported (R6 keeps the default avatar and logs one warning).
+
+Known limitations (all unverified until Studio): the legs and antennae use `Part` cylinders mapped from Y to X, and the angles and proportions were designed on paper; gait speed matching, how the Humanoid hip height of other avatar types lines up with the ground, and remote Humanoid state replication for the jump/fall pose need observation. The default Roblox animations still play on the invisible body. There is no death or evolve effect, and no sound. Collision still uses the scaled R15 body box, not the insect's shape.
+
+Manual Studio checklist (all **pending**):
+
+1. Play Solo: Baby Bug appears immediately.
+2. No default avatar body, clothes, face or accessories are visible (also try an account with many accessories).
+3. Walk, turn, jump and fall; the creature follows and animates.
+4. Collect food and check all three visual growth stages (0.6, 0.8, 1.0) and the smooth growth.
+5. Die and begin a new life.
+6. The old model is gone and exactly one new Baby Bug appears (inspect the character in the Explorer: one `BabyBugVisual`).
+7. With two players, each sees the other's creature and animation; one player's growth does not change the other's.
+8. Evolve to Tank or Glider: the normal avatar returns and the shell and glide behave as before.
+9. Check Output for errors and warnings (no asset warnings expected: no asset ids are used).
+
 ## Validate
 
 ```powershell
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. Form models, damage, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. The Baby Bug has a custom visual model (P2-05, Studio validation pending). Tank and Glider models, damage, combat and persistence are not implemented.
 
 See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.
