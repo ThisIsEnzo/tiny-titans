@@ -25,9 +25,9 @@ Not implemented (everything below that is not P1 is future work): definition-dri
 1. **Energy to Biomass rename is the first step of P1**, before lifecycle code, so the reset logic, tests and later Legacy schema use the final name once (architecture section 7).
 2. **A damage/health step is placed in P4**, but P1 does not depend on it: lifecycle work is verified with the Roblox reset (Humanoid health set to 0). Natural death causes arrive in P4.
 3. **Controlled respawn comes after the reset logic** (P1-03 before P1-04): resetting state on death is testable with default respawn; changing `CharacterAutoLoads` is the riskiest part and is isolated in its own step.
-4. **P3.5 Combat & Ecosystem Design is inserted between P3 and P4**, as proposed by the combat design. It defines and prototypes the combat foundation, first PvE encounter, damage/defence/cooldown model, telegraphs, counterplay, reward economy, PvP boundaries and balance test plan before P4 scales into a polished PvE loop.
+4. **P3.5 Combat & Ecosystem Design is a gate before P4**, as proposed by the combat design. Its limited prototypes are the engineering tasks P2-06 and P2-07 (greybox arena), validated in P2-08, where the gate is evaluated, so it now precedes P3 habitat production. It defines and prototypes the combat foundation, first PvE encounter, damage/defence/cooldown model, telegraphs, counterplay, reward economy, PvP boundaries and balance test plan before P4 scales into a polished PvE loop.
 5. **Striker / Hunter and Support / Controller are gated by P3.5 and PvE validation.** Their roles and kits are not invented in this plan; they require explicit design and playtest evidence before implementation. The proposed Support / Controller role combines two candidate directions from the combat source and remains provisional.
-7. **P2-01 is a documentation-only design gate** (Master Roadmap and Evolution Adventure Roadmap wording); the form-definitions engineering that an earlier draft of this plan called P2-01 is now **P2-02**, and the later P2 tasks were renumbered. Mapping: old P2-01 to P2-02, old P2-02 to P2-03, old P2-03 to P2-04, old P2-04 (availability and requirements) folded into P2-02 and P2-04, old P2-05 (visual identity hooks) deferred (see P2-05 and P2-06). Tank, Glider validation and progression balance (P2-05 to P2-07) are new tasks taken from the Master Roadmap.
+7. **P2-01 is a documentation-only design gate** (Master Roadmap and Evolution Adventure Roadmap wording); the form-definitions engineering that an earlier draft of this plan called P2-01 is now **P2-02**, and the later P2 tasks were renumbered. Mapping: old P2-01 to P2-02, old P2-02 to P2-03, old P2-03 to P2-04, old P2-04 (availability and requirements) folded into P2-02 and P2-04, old P2-05 (visual identity hooks) is delivered in part by the Baby Bug visual character, now P2-05 (Tank and Glider visuals remain deferred). The first creatures (P2-06) and combat prototype (P2-07) are the limited P3.5 prototypes; Tank and Glider validation (the Master Roadmap's earlier P2-05 and P2-06) is merged into P2-08 and extended to the Baby Bug and to mobs; progression balance (the earlier P2-07) is now P2-09.
 6. **Persistence (P5) is split** into an in-memory Legacy model first and the DataStore layer second, so discovery gameplay can be built and tested before any DataStore code exists.
 
 This engineering sequence follows the product roadmap's intent while retaining its exit gates; it does not make the proposed P3.5 milestone final or authorize full combat implementation before the design review.
@@ -45,17 +45,16 @@ flowchart LR
     P2_2 --> P2_3[P2-03 Ability definitions]
     P2_2 --> P2_4[P2-04 Data-driven evolution UI]
     P2_3 --> P2_4
-    P2_3 --> P2_5[P2-05 Tank validation]
-    P2_4 --> P2_5
-    P2_3 --> P2_6[P2-06 Glider validation]
-    P2_5 --> P2_7[P2-07 Progression UX and balance]
-    P2_6 --> P2_7
-    P2_4 --> P2_7
+    P2_4 --> P2_5[P2-05 Baby Bug visual character]
+    P2_5 --> P2_6[P2-06 First creatures and AI]
+    P2_6 --> P2_7[P2-07 Combat and interaction]
+    P2_7 --> P2_8[P2-08 Baby Bug, Tank, Glider validation vs mobs]
+    P2_8 --> P2_9[P2-09 Progression UX and balance]
+    P2_8 --> P3_5[P3.5 exit gate evaluated]
     P1_4 --> P3[P3 First Habitat]
-    P2_4 --> P3
-    P3 -. only if a Tank interaction needs the habitat .-> P2_5
-    P3 --> P3_5[P3.5 Combat & Ecosystem Design]
+    P2_9 --> P3
     P3_5 --> P4[P4 Adventure and Survival]
+    P3 --> P4
     P3 --> P5_1[P5-01 In-memory Legacy]
     P5_1 --> P5_2[P5-02 DataStore layer]
     P4 --> P6[P6 Multiplayer experiences]
@@ -113,7 +112,7 @@ Goal of the phase: a life can end and a new one begins from a clean `BABY_BUG` s
 
 ## P2 — Evolution System
 
-Goal of the phase: fix the progression and evolution design first (P2-01), then make forms and abilities data, with Tank and Glider behaving exactly as before (P2-02 to P2-04), then validate and iterate (P2-05 to P2-07). **No new forms are added in P2.**
+Goal of the phase: fix the progression and evolution design first (P2-01), then make forms and abilities data, with Tank and Glider behaving exactly as before (P2-02 to P2-04), then add the Baby Bug visual (P2-05), prototype the first creatures and combat (P2-06, P2-07), validate and iterate (P2-08) and tune progression (P2-09). **No new forms are added in P2.**
 
 P2 adds **no new classes**. Striker / Hunter and the proposed Support / Controller hybrid remain future roles; their mechanics are not designed here. They are gated by the P3.5 combat design and the first validated PvE loop, then may be implemented as conditional P4 follow-ups (P4-05 and P4-06). The Master Roadmap's gated "additional initial roles" item is therefore **not** a P2 task.
 
@@ -125,9 +124,11 @@ This is a proposed engineering sequence, not an approved roadmap, and approving 
 | P2-02 | Creature Definitions (data-driven forms) | Engineering | FUTURE |
 | P2-03 | Ability Definitions (data-driven abilities) | Engineering | FUTURE |
 | P2-04 | Data-driven Evolution UI | Engineering | FUTURE |
-| P2-05 | Tank gameplay validation and iteration | Playtest plus small changes | FUTURE |
-| P2-06 | Glider gameplay validation and iteration | Playtest plus small changes | FUTURE |
-| P2-07 | Progression UX and balance validation | Playtest plus approved changes | FUTURE |
+| P2-05 | Baby Bug Visual Character | Engineering | IMPLEMENTED in PR #33; Studio validation pending |
+| P2-06 | First Creatures & AI | Engineering (limited P3.5 prototype) | FUTURE |
+| P2-07 | Combat & Interaction | Engineering (limited P3.5 prototype) | FUTURE |
+| P2-08 | Gameplay validation of Baby Bug, Tank and Glider against mobs | Playtest plus small changes | FUTURE |
+| P2-09 | Progression UX and balance validation | Playtest plus approved changes | FUTURE |
 
 ### P2-01 — Progression & Evolution Design Gate
 
@@ -135,7 +136,7 @@ This is a proposed engineering sequence, not an approved roadmap, and approving 
 - **Scope:** documentation only. Updates the Evolution Adventure Sandbox Roadmap, the Master Roadmap, the Evolution Sandbox Architecture, the Combat Progression & Endgame Design (new section 13) and this plan. No new document.
 - **Dependencies:** P1-05 merged.
 - **Out of scope:** any `.lua` or project configuration change, new remotes or services, DataStore, new forms or abilities, monetization products, playtests, and any P2-02 implementation.
-- **Acceptance criteria:** the documents agree on P2-01 scope and the P2-02 to P2-07 sequence; current implementation (IMPLEMENTED) and proposed design (PROPOSED) are labelled apart; the decisions in the Combat doc, section 13.11, are approved, changed or rejected by the owner; no code file changed. The Master Roadmap checkboxes are ticked only after that approval.
+- **Acceptance criteria:** the documents agree on P2-01 scope and the P2-02 to P2-09 sequence; current implementation (IMPLEMENTED) and proposed design (PROPOSED) are labelled apart; the decisions in the Combat doc, section 13.11, are approved, changed or rejected by the owner; no code file changed. The Master Roadmap checkboxes are ticked only after that approval.
 - **Tests:** none. Verified by a consistency review of the documents.
 - **Studio:** not applicable.
 
@@ -144,7 +145,7 @@ This is a proposed engineering sequence, not an approved roadmap, and approving 
 - **Goal:** `BABY_BUG`, `TANK`, `GLIDER` described in one data module with each form's requirement and ability references; evolution validation and availability read it. Growth milestones become data with **today's values unchanged**.
 - **Scope:** existing `Config.lua`, `Evolution.lua`, `EvolutionService.lua`, `EvolutionUIController.lua` (read-only use); new `Shared/CreatureDefinitions.lua` (anticipated by the v0.1 Technical Design) and `tests/CreatureDefinitions.test.lua`.
 - **Dependencies:** P2-01 approved; P1-03 (life reset uses the starter form id).
-- **Out of scope:** ability data (P2-03), generated UI (P2-04), changing Biomass values, the cap or the curve (P2-07), new forms, persistence.
+- **Out of scope:** ability data (P2-03), generated UI (P2-04), changing Biomass values, the cap or the curve (P2-09), new forms, persistence.
 - **Acceptance criteria:** `Evolution.Select`, `IsValidForm` and `IsAvailable` use definitions; `Config.EvolutionForms` and `BaseForm` are thin aliases or removed; availability comes from one server function and is identical to today for the two forms; `RequestEvolution` and `EvolutionResult` contracts unchanged.
 - **Tests:** definitions are well-formed (unique ids, starter exists, ability ids refer to real abilities); all existing evolution tests pass; availability matrix (requirement met or not, already selected).
 - **Studio:** yes (evolution flow smoke test).
@@ -169,31 +170,57 @@ This is a proposed engineering sequence, not an approved roadmap, and approving 
 - **Tests:** none for UI; pure ordering or label helpers if extracted.
 - **Studio:** yes (layout at several sizes, selection, confirm, rejection messages).
 
-### P2-05 — Tank gameplay validation and iteration
+### P2-05 — Baby Bug Visual Character
 
-- **Goal:** find out whether the Tank has a validated identity. Define and prototype at least one Tank world interaction that does not need combat, or record that the Tank's role depends on P3 and P4.
+- **Goal:** the first real creature visual: players in the Baby Bug form look like a small custom insect instead of a Roblox avatar.
+- **Scope:** `BabyBugSpec`, `CreatureModelBuilder`, `CreatureAppearanceService`, `BabyBugPose`, `BabyBugAnimationController`, a small `GrowthService.SubscribeScale` hook; README section and tests for the pure data and pose logic.
+- **Dependencies:** P2-02, P2-04.
+- **Out of scope:** Tank and Glider models, mobs, combat, new forms, external assets or animations, a custom movement controller.
+- **Acceptance criteria:** see the README section "Baby Bug visual character (P2-05)"; Studio checklist pending.
+- **Tests:** pure tests for the spec and the pose maths.
+- **Studio:** yes.
+
+### P2-06 — First Creatures & AI
+
+- **Goal:** the first server-authoritative creature with simple readable behavior states, as the encounter half of the limited P3.5 prototype.
+- **Scope:** to be defined from the P3.5 design decisions once the owner approves them; runs in the existing greybox arena; no damage.
+- **Dependencies:** P2-05, owner approval of the P3.5 creature and combat design.
+- **Out of scope:** production encounters (P4), damage (P2-07), new forms, persistence.
+- **Acceptance criteria and tests:** defined when the task starts; must not require client authority and must clean up on character replacement and player departure. **Studio:** yes.
+
+### P2-07 — Combat & Interaction
+
+- **Goal:** the interaction half of the limited P3.5 prototype: server-owned health and damage and form-versus-creature interaction.
+- **Scope:** to be defined from the approved P3.5 design decisions; the production health and damage foundation remains P4-01.
+- **Dependencies:** P2-06, approved P3.5 combat rules.
+- **Out of scope:** new forms, PvP unless the P3.5 boundaries allow it, persistence, monetization.
+- **Acceptance criteria and tests:** defined when the task starts; damage only on the server, death through `LifeService`, no client-reported damage. **Studio:** yes.
+
+### P2-08 — Gameplay validation of Baby Bug, Tank and Glider against mobs
+
+- **Goal:** find out, against the first creatures and combat of P2-06 and P2-07, whether the Tank has a validated identity, whether the Glider is not a universally best mobility option, and how the Baby Bug baseline compares. For the Tank: Define and prototype at least one Tank world interaction that does not need combat, or record that the Tank's role depends on P3 and P4.
 - **Scope:** playtest scenarios 4 and 7 of the Combat doc (section 13.10); small parameter changes through definitions; written findings.
-- **Dependencies:** P2-03, P2-04; P3-01 if an interaction needs the habitat.
-- **Out of scope:** the damage and health system (P4-01), making the shell mechanical (P4-04), any new form, any combat.
+- **Dependencies:** P2-03, P2-04, P2-05, P2-06, P2-07.
+- **Out of scope:** the production damage and health system (P4-01), making the shell mechanical (P4-04), any new form, any combat.
 - **Acceptance criteria:** observed results are recorded separately from targets; the Tank's identity statement is either validated or its dependency recorded; decisions are logged for the owner.
 - **Tests:** pure tests for any rule that changes.
 - **Studio:** yes.
 
-### P2-06 — Glider gameplay validation and iteration
+#### Glider part (formerly the separate Glider validation task)
 
 - **Goal:** validate the glide and its arena use: reachability of the glider-only platforms for Baby Bug versus Glider (currently an analytic estimate), glide feel and landing, and that the Glider is not a universally best mobility option.
 - **Scope:** playtest scenarios 5 and 10 of the Combat doc; small parameter changes through definitions; written findings.
-- **Dependencies:** P2-03.
+- **Dependencies:** P2-03, P2-06, P2-07.
 - **Out of scope:** flight or hovering, new traversal systems, habitat production (P3), new forms.
 - **Acceptance criteria:** Studio reachability results are recorded; the 0.65 gravity compensation and its effect on jump apex are confirmed or changed through data; findings are logged.
 - **Tests:** pure tests for any rule that changes.
 - **Studio:** yes.
 
-### P2-07 — Progression UX and balance validation
+### P2-09 — Progression UX and balance validation (further UI and balance work)
 
 - **Goal:** measure pacing and, only after owner approval of D-P2-6, implement the approved Biomass model (keep accumulating after evolution, a per-life ceiling at the final growth milestone, a longer milestone curve), plus milestone feedback, a visible next goal and cross-form balance.
 - **Scope:** `Config.lua` or the definitions, `PlayerDataService.lua`, `FoodService.lua`, `GrowthService.lua`, HUD controllers; tests; the measurements in Combat doc section 13.5.
-- **Dependencies:** P2-02 to P2-06; owner approval of the progression decisions.
+- **Dependencies:** P2-02 to P2-08; owner approval of the progression decisions.
 - **Out of scope:** spending Biomass, a second resource, new forms, Legacy persistence, a telemetry system (P7), combat.
 - **Acceptance criteria:** pacing metrics are measured and recorded, not invented; values live in data; unit tests cover the curve and the ceiling; a first-player usability test result is recorded; the P2 exit gate in the Master Roadmap is evaluated honestly.
 - **Tests:** pure tests for the curve, ceiling and eligibility.

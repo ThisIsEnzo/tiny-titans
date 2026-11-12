@@ -174,6 +174,25 @@ function GrowthService.SubscribeScale(listener: (Player, Model, NumberValue) -> 
     table.insert(scaleListeners, listener)
 end
 
+-- The scale value carrying this character's scale, but only once GrowthService has applied this
+-- character's scale (nil before that, or for another character). Lets a subscriber that was not
+-- ready when its callback fired catch up, without ever reading the engine's default value of 1.
+function GrowthService.GetAppliedScaleValue(player: Player, character: Model): NumberValue?
+    local state = scaleStates[player]
+    if state == nil or state.character ~= character or state.target == nil then
+        return nil
+    end
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid == nil then
+        return nil
+    end
+    local values = getScaleValues(humanoid, false)
+    if values == nil then
+        return nil
+    end
+    return values[1]
+end
+
 -- playerDataService must already be initialised.
 function GrowthService.Init(playerDataService: any)
     playerData = playerDataService

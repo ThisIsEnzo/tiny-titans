@@ -295,7 +295,7 @@ This document extends the existing roadmap; it does not replace its milestones.
 |---|---|
 | **P0 — Product & architecture** | Record the 4–6 form target, combat design principles, progression tracks, server-authority requirements, Current Life/Legacy boundaries and future endgame intent. No combat implementation. |
 | **P1 — Core life cycle** | Ensure growth, death and rebirth can support multiple activity sources and cleanly separate temporary and persistent progress. |
-| **P2 — Evolution system** | Make the initial forms distinct and configurable. Prepare extension points for 4–6 forms without implementing the full roster. Task sequence: P2-01 design gate (documentation only; section 13 of this document), then P2-02 creature definitions, P2-03 ability definitions, P2-04 data-driven evolution UI, P2-05 Tank and P2-06 Glider gameplay validation, P2-07 progression UX and balance validation (see the Migration Plan). |
+| **P2 — Evolution system** | Make the initial forms distinct and configurable. Prepare extension points for 4–6 forms without implementing the full roster. Task sequence: P2-01 design gate (documentation only; section 13 of this document), then P2-02 creature definitions, P2-03 ability definitions, P2-04 data-driven evolution UI, P2-05 Baby Bug visual character, P2-06 first creatures and AI, P2-07 combat and interaction (P2-06 and P2-07 are the limited prototypes of the P3.5 design gate, run in the greybox arena), P2-08 Baby Bug, Tank and Glider gameplay validation against mobs, then P2-09 progression UX and balance validation (see the Migration Plan). |
 | **P3 — First Habitat** | Build safe and risky spaces, readable routes, NPC encounter locations and traversal opportunities for the first forms. |
 | **P3.5 — Combat & Ecosystem Design** | Dedicated design and prototype milestone: combat rules, first PvE encounter, damage/defence/cooldown model, telegraphs, counterplay, reward economy, PvP boundaries and balance test plan. |
 | **P4 — Adventure & Survival** | Implement the first polished PvE loop: a small number of NPC behaviours, hunt/defence encounters, survival threats and rewards. Validate fun before scaling. |
@@ -477,7 +477,7 @@ Recommended conceptual model (**PROPOSED**; values are illustrations only):
 
 | Question | Recommendation | Trade-off |
 |---|---|---|
-| Does Biomass keep accumulating after evolution? | **Yes.** The life's progression continues in the chosen form | Today's code stops at the cap; changing it is a gameplay change that must be approved and tuned (scheduled for P2-07, not P2-02) |
+| Does Biomass keep accumulating after evolution? | **Yes.** The life's progression continues in the chosen form | Today's code stops at the cap; changing it is a gameplay change that must be approved and tuned (scheduled for P2-09, not P2-02) |
 | Is there a cap? | A per-life **ceiling at the final growth milestone**, not at the evolution requirement | Without any ceiling, long lives snowball. With the ceiling at the evolution requirement (today), progress ends at evolution |
 | Can growth continue after evolution? | **Yes.** Growth milestones are independent of the evolution requirement; the requirement may sit in the middle of the curve | Needs a longer curve than today's three stages (a Master Roadmap P2 goal) |
 | Are milestones independent from evolution requirements? | **Yes.** Two separate sets of data | Slightly more configuration; avoids the "one meter" problem |
@@ -516,7 +516,7 @@ Current scope: `BABY_BUG`, `TANK`, `GLIDER`. The "intended" rows are PROPOSED de
 | Prefer the other form when | Always evolve when ready | Terrain requires vertical traversal or escape | The fight or hazard must be endured, not avoided |
 | Current implementation | Starter form, no ability | Shell: visual bubble, 3 s, 12 s cooldown, no effect | Glide: real, bounded, 3 s, 10 s cooldown |
 
-Neither evolved form may be universally superior: the Tank trades mobility and access for resilience that only matters when something can hurt it, the Glider trades resilience for reach. Because no damage system exists yet, the Tank's trade-off cannot be tested today; P2-05 must therefore either define and validate a Tank world interaction that does not need combat, or record that the Tank's identity depends on P3 and P4.
+Neither evolved form may be universally superior: the Tank trades mobility and access for resilience that only matters when something can hurt it, the Glider trades resilience for reach. Because no damage system exists yet, the Tank's trade-off cannot be tested today; P2-08 must therefore either define and validate a Tank world interaction that does not need combat, or record that the Tank's identity depends on P3 and P4.
 
 **FUTURE role directions (not committed):** Striker / Hunter and a combined Support / Controller. They are gated by the P3.5 combat design and a validated PvE loop; the target is four roles in the first combat-ready roster, and a fifth or sixth form needs a new tactical role plus design, PvE, PvP and accessibility review (section 3.2).
 
@@ -529,7 +529,7 @@ Prefer a few high-quality activities over many shallow ones.
 | Basic food collection | The baseline loop and the first growth | Biomass | **IMPLEMENTED**; stays in the first release |
 | Rare resources | Risk-for-reward choices and variety | Biomass (larger steps) and a discovery record | **PROPOSED** for the first habitat (P3), one or two types at most |
 | Exploration and discovery | Reward curiosity; fill the recap | Legacy (primarily) | **PROPOSED**, first habitat (P3); first-time rewards, not repeatable |
-| Environmental interactions | Make each form matter in the world | Access to resources and routes (indirect Biomass) | **PROPOSED**, at least one per initial form (P3 and P2-05/06) |
+| Environmental interactions | Make each form matter in the world | Access to resources and routes (indirect Biomass) | **PROPOSED**, at least one per initial form (P3 and P2-08) |
 | Challenges | Skill-based goals (for example a traversal route) | Legacy; optionally Biomass | **PROPOSED**, one traversal challenge in the first habitat (matches the roadmap) |
 | Cooperative activities | Playing together | Biomass and Legacy (to be designed) | **FUTURE** (P6); OUT OF SCOPE for the first release |
 
@@ -590,11 +590,11 @@ Signals: qualitative (think-aloud, can the player explain their choice, did they
 | D-P2-3 | No monetization of combat advantage, death protection, resurrection or mandatory progression skips | APPROVED DESIGN |
 | D-P2-4 | Evolution is explicit, server-validated and once per life | IMPLEMENTED; PROPOSED to keep for the first release |
 | D-P2-5 | No multi-stage evolution tree in the first release; depth later through mastery sidegrades | PROPOSED |
-| D-P2-6 | Biomass keeps accumulating after evolution, with a per-life ceiling at the final growth milestone; growth milestones are independent from the evolution requirement | PROPOSED; REQUIRES PLAYTEST; engineering in P2-07 only after approval |
+| D-P2-6 | Biomass keeps accumulating after evolution, with a per-life ceiling at the final growth milestone; growth milestones are independent from the evolution requirement | PROPOSED; REQUIRES PLAYTEST; engineering in P2-09 only after approval |
 | D-P2-7 | Biomass is not spent or consumed in the first release | PROPOSED |
 | D-P2-8 | Biomass comes from several sources of different risk; no single farming source | PROPOSED |
 | D-P2-9 | First-release Legacy is small: encyclopedia, territories, life history, a few achievements | PROPOSED |
-| D-P2-10 | Tank must gain a real world interaction before it counts as a validated role | PROPOSED (P2-05) |
+| D-P2-10 | Tank must gain a real world interaction before it counts as a validated role | PROPOSED (P2-08) |
 
 Open questions needing owner approval or playtest data:
 

@@ -194,9 +194,11 @@ The roadmap is outcome-driven. The sequence may change when audits and playtests
 | P2-02 | Creature Definitions | Data-driven forms and per-form requirements; today's behavior and values unchanged |
 | P2-03 | Ability Definitions | Data-driven abilities with the existing handlers |
 | P2-04 | Data-driven Evolution UI | Selection cards generated from definitions |
-| P2-05 | Tank gameplay validation and iteration | Playtests, a Tank world interaction or a recorded dependency |
-| P2-06 | Glider gameplay validation and iteration | Playtests, platform reachability, glide tuning through data |
-| P2-07 | Progression UX and balance validation | Measure pacing; implement the approved Biomass model only after owner approval |
+| P2-05 | Baby Bug Visual Character | A custom, procedurally animated Baby Bug appearance on top of the existing Humanoid; no new gameplay |
+| P2-06 | First Creatures & AI | First server-authoritative creature and simple behavior; limited P3.5 prototype in the greybox arena |
+| P2-07 | Combat & Interaction | Health, damage and form-versus-creature interaction as a limited P3.5 prototype; production foundation stays P4 |
+| P2-08 | Gameplay validation of Baby Bug, Tank and Glider against mobs | Playtests: Tank identity and world interaction, Glider reachability and glide tuning through data, Baby Bug baseline |
+| P2-09 | Progression UX and balance validation | Measure pacing; implement the approved Biomass model only after owner approval |
 
 **P2-01 completion criteria:** the roadmap, the master roadmap, the architecture, the combat and progression design and the migration plan agree on this scope and sequence; implemented behavior and proposed design are labelled apart; the owner approves, changes or rejects the decisions in section 13.11 of the combat design document. The additional initial roles (Striker / Hunter, Support / Controller) are not P2 tasks; they stay gated by P3.5 and a validated PvE loop.
 

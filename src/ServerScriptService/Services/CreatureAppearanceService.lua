@@ -63,6 +63,7 @@ type State = {
 }
 
 local playerData: any = nil
+local growth: any = nil
 local states: { [Player]: State } = {}
 local playerConnections: { [Player]: { RBXScriptConnection } } = {}
 local warnedRig = false
@@ -187,6 +188,12 @@ local function applyVisual(player: Player, state: State, formId: string, spec: a
         return
     end
     removeVisual(state, false)
+
+    -- GrowthService may have applied this character's scale before this state existed (its callback
+    -- then found nothing to update): catch up now instead of missing the growth tween.
+    if state.scaleSource == nil and growth ~= nil then
+        state.scaleSource = growth.GetAppliedScaleValue(player, state.character)
+    end
 
     hideCharacter(state)
     if state.hideConnection == nil then
@@ -331,6 +338,7 @@ end
 -- before RespawnService, so the first character is already covered.
 function CreatureAppearanceService.Init(playerDataService: any, growthService: any)
     playerData = playerDataService
+    growth = growthService
     growthService.SubscribeScale(function(player: Player, character: Model, scaleValue: NumberValue)
         local state = states[player]
         if state == nil or state.character ~= character then

@@ -362,9 +362,9 @@ P2-01 is a documentation-only gate. It fixes what the engineering tasks must bui
 | Forms and their requirements are data, not branches | `CreatureDefinitions` with id, display text, role, requirement, abilities, unlock (`Always` for the first release) and visual references; `Evolution` takes forms and requirements from it. Behavior and remotes unchanged | P2-02 |
 | Abilities are data with existing handlers | Ability definitions (id, form, duration, cooldown, parameters, handler name) read by `AbilityService`; `activateShell` and `activateGlide` stay | P2-03 |
 | The selection UI shows what the definitions say | Cards generated from the available forms; honest descriptions come from data | P2-04 |
-| Growth milestones are independent of the evolution requirement | Milestones and requirements are separate data. P2-02 may only move them into data, with **today's values unchanged** | P2-02 (data), P2-07 (values) |
-| Biomass keeps accumulating after evolution, with a ceiling at the final milestone (REQUIRES PLAYTEST, needs approval) | A behavior change: the cap currently equals `EvolutionBiomassRequired` (see 7.1). Touches `PlayerDataService.CanGainBiomass`, `Growth.AddBiomass`, the food eligibility check in `FoodService` and the HUD ratio | P2-07, only after approval |
-| Tank must gain a real world interaction | May depend on hazards or threats (P3, P4); P2-05 either defines one that needs no combat or records the dependency | P2-05 |
+| Growth milestones are independent of the evolution requirement | Milestones and requirements are separate data. P2-02 may only move them into data, with **today's values unchanged** | P2-02 (data), P2-09 (values) |
+| Biomass keeps accumulating after evolution, with a ceiling at the final milestone (REQUIRES PLAYTEST, needs approval) | A behavior change: the cap currently equals `EvolutionBiomassRequired` (see 7.1). Touches `PlayerDataService.CanGainBiomass`, `Growth.AddBiomass`, the food eligibility check in `FoodService` and the HUD ratio | P2-09, only after approval |
+| Tank must gain a real world interaction | May depend on hazards or threats (P3, P4); P2-08 either defines one that needs no combat or records the dependency | P2-08 |
 | Form mastery, discoveries, Legacy | Not P2 | P5 |
 | No new forms, no persistence, no monetization | OUT OF SCOPE for all of P2 | n/a |
 
@@ -392,10 +392,10 @@ Impact if adopted: attribute `Energy` becomes `Biomass` (all readers are in this
 The design reasoning is in `Combat Progression & Endgame Design v0.1.md`, section 13.5; only the technical shape is recorded here.
 
 - **Three separate systems:** Biomass (a server-owned quantity), growth (a stage derived from Biomass, today `Config.GrowthStages` with `MinBiomass` and `Scale`), and evolution (an explicit selection once a requirement is met). They stay separate in code and in data.
-- **Two constants are currently one:** `EvolutionBiomassRequired` is both the evolution requirement and the Biomass cap. The recommendation separates them: the requirement belongs to each form's definition (P2-02), and a per-life **ceiling** equal to the final growth milestone is a distinct value (its name is a P2-07 decision).
+- **Two constants are currently one:** `EvolutionBiomassRequired` is both the evolution requirement and the Biomass cap. The recommendation separates them: the requirement belongs to each form's definition (P2-02), and a per-life **ceiling** equal to the final growth milestone is a distinct value (its name is a P2-09 decision).
 - **No spending:** Biomass is not consumed by abilities or purchases in the first release, so no second resource or ledger is needed.
 - **Server authority is unchanged:** every Biomass source stays server-validated; a rare-resource or discovery source (FUTURE) must follow the `FoodService` pattern.
-- **Nothing here changes today's values.** Cap 100, food 10, stages 0/30/60 stay until P2-07 and an approved playtest.
+- **Nothing here changes today's values.** Cap 100, food 10, stages 0/30/60 stay until P2-09 and an approved playtest.
 
 ## 8. Persistence architecture (future; nothing here is implemented)
 
@@ -456,7 +456,7 @@ Additions proposed:
 | `FORM_INFO` and hardcoded descriptions in the UI | **Replace later (P2)** | Move into form definitions. |
 | `Config.EvolutionForms`, `BaseForm`, `TankShellForm`, `GliderForm` and per-ability constants | **Replace later (P2)** | Keep during migration for compatibility. |
 | `AbilityService` shell/glide handlers, tokens, cleanup | **Keep as-is** (handlers); **adapt later** (dispatch by id) | Reuse the existing, reviewed code as handlers. |
-| Biomass cap equal to the evolution requirement | **Keep for now; revisit in P2-07** (PROPOSED change) | See sections 7.1 and 12 (Q5). |
+| Biomass cap equal to the evolution requirement | **Keep for now; revisit in P2-09** (PROPOSED change) | See sections 7.1 and 12 (Q5). |
 | Session-only form ("rejoin resets") | **Keep, extended**: death now also resets | Legacy persistence does not persist the selected form. |
 | Existing tests | **Keep and extend** | Rename with Biomass; add life-cycle tests. |
 | Nothing is recommended for removal | n/a | No second evolution-selection implementation should be created. |
@@ -497,7 +497,7 @@ Decisions this document proposes (need owner approval):
 | D7 | Legacy persistence via `UpdateAsync` with mergeable data and no session lock in v1 | Yes |
 | D8 | Initial launch roster is the Baby Bug starter plus exactly four evolved classes; no fifth or sixth class before validation | Yes (from the brief) |
 | D9 | P2-01 is a documentation-only design gate; creature-definition engineering is P2-02 | APPROVED DESIGN (from the P2-01 brief) |
-| D10 | Biomass keeps accumulating after evolution with a ceiling at the final growth milestone; growth milestones independent of the evolution requirement | PROPOSED; REQUIRES PLAYTEST; engineering in P2-07 after approval |
+| D10 | Biomass keeps accumulating after evolution with a ceiling at the final growth milestone; growth milestones independent of the evolution requirement | PROPOSED; REQUIRES PLAYTEST; engineering in P2-09 after approval |
 
 Open questions:
 
