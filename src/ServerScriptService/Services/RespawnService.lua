@@ -40,6 +40,9 @@ type Entry = { record: Respawn.Record, stats: Stats?, pendingRecap: Recap?, clie
 
 local READY_MIN_INTERVAL = 1 -- seconds: LifeRecapReady messages closer together than this are ignored
 
+local SPAWN_CONFIRM_TIMEOUT = 10 -- allow LifeService's CharacterAdded listener to observe the new character
+local SPAWN_CONFIRM_POLL_INTERVAL = 0.05
+
 local entries: { [Player]: Entry } = {}
 local life: any = nil
 local evolution: any = nil
@@ -52,23 +55,57 @@ local function sendPendingRecap(player: Player, entry: Entry)
     end
 end
 
--- Loads a character on its own thread (LoadCharacter yields) for spawn operation `seq`. When the
--- call returns, ONLY that operation is released (a stale one changes nothing), and nothing is
--- recreated for a player who left. If the first spawn produced no life, the player is told and
--- may retry. Errors are logged with warn, never swallowed.
+-- LoadCharacter can return before LifeService's CharacterAdded listener has run. Confirm
+-- that a newer life was actually observed before classifying the operation as a failed spawn.
+-- This bounded wait closes that event-ordering race without releasing the in-flight lock early.
+local function waitForNewLife(player: Player, previousLifeId: number): boolean
+    local deadline = os.clock() + SPAWN_CONFIRM_TIMEOUT
+    repeat
+        if player.Parent ~= Players then
+            return false
+        end
+        local currentLifeId = life.GetLifeId(player)
+        if currentLifeId ~= nil and currentLifeId > previousLifeId then
+            return true
+        end
+        task.wait(SPAWN_CONFIRM_POLL_INTERVAL)
+    until os.clock() >= deadline
+    return false
+end
+
+-- Loads a character on its own thread (LoadCharacter yields) for spawn operation `seq`. The
+-- operation stays in flight until LoadCharacter returns AND LifeService has had time to observe
+-- the new life. Only that operation is released; stale operations and players who left do nothing.
+-- If no newer life is observed within the bounded confirmation window, the first spawn may retry.
 local function loadCharacter(player: Player, entry: Entry, seq: number)
     task.spawn(function()
+        local previousLifeId = life.GetLifeId(player) or 0
         local ok, err = pcall(function()
             player:LoadCharacter()
         end)
         if not ok then
             warn(string.format("[RespawnService] LoadCharacter failed for %s: %s", player.Name, tostring(err)))
         end
-        if entries[player] ~= entry then
+        if entries[player] ~= entry or player.Parent ~= Players then
             return
         end
+
+        local observedNewLife = waitForNewLife(player, previousLifeId)
+        if not observedNewLife then
+            warn(string.format(
+                "[RespawnService] No new life observed for %s within %.1fs after LoadCharacter returned.",
+                player.Name,
+                SPAWN_CONFIRM_TIMEOUT
+            ))
+        end
+        if entries[player] ~= entry or player.Parent ~= Players then
+            return
+        end
+
         local before = entry.record
-        entry.record = Respawn.EndSpawn(before, seq, life.IsAlive(player), life.GetLifeId(player) or 0)
+        local currentLifeId = life.GetLifeId(player) or 0
+        local lifeAlive = observedNewLife and life.IsAlive(player) and currentLifeId > previousLifeId
+        entry.record = Respawn.EndSpawn(before, seq, lifeAlive, currentLifeId)
         if entry.record.retryInitial and not before.retryInitial then
             entry.pendingRecap = { lifeId = 0, durationSeconds = 0, highestForm = Config.BaseForm }
             sendPendingRecap(player, entry)
