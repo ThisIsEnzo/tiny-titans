@@ -10,8 +10,10 @@ local BiomassUIController = require(Controllers:WaitForChild("BiomassUIControlle
 local EvolutionUIController = require(Controllers:WaitForChild("EvolutionUIController") :: ModuleScript)
 local AbilityController = require(Controllers:WaitForChild("AbilityController") :: ModuleScript)
 local LifeRecapController = require(Controllers:WaitForChild("LifeRecapController") :: ModuleScript)
+local BabyBugAnimationController = require(Controllers:WaitForChild("BabyBugAnimationController") :: ModuleScript)
 
 BiomassUIController.Init()
 EvolutionUIController.Init()
 AbilityController.Init()
 LifeRecapController.Init()
+BabyBugAnimationController.Init()

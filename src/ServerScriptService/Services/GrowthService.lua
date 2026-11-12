@@ -30,6 +30,7 @@ type ScaleState = {
 local playerData: any = nil
 local warnedRig = false
 local scaleStates: { [Player]: ScaleState } = {}
+local scaleListeners: { (Player, Model, NumberValue) -> () } = {}
 
 local function cancelTweens(state: ScaleState)
     for _, tween in state.tweens do
@@ -120,6 +121,11 @@ local function updateScale(player: Player, instant: boolean, createMissing: bool
         end
     end
     state.target = target
+    -- Tell visual listeners which value carries this character's scale (BodyHeightScale; all four
+    -- values move together). They follow the value, so they share the tween and never compound.
+    for _, listener in scaleListeners do
+        task.spawn(listener, player, character, values[1])
+    end
 end
 
 local function onPlayerAdded(player: Player)
@@ -160,6 +166,12 @@ function GrowthService.ResetLife(player: Player)
         cancelTweens(state)
         state.target = nil
     end
+end
+
+-- Registers a callback (player, character, scaleValue) run whenever a character's scale has been
+-- applied or retargeted (P2-05: custom creature visuals follow the same scale value).
+function GrowthService.SubscribeScale(listener: (Player, Model, NumberValue) -> ())
+    table.insert(scaleListeners, listener)
 end
 
 -- playerDataService must already be initialised.

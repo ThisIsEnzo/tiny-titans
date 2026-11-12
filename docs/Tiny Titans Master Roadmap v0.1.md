@@ -190,6 +190,7 @@ Moved out of P2-01 (they need playtests or code): target pacing values and sessi
 - [ ] Clear previews, strengths, limitations and feedback.
 
 ### P2-05 — Tank gameplay validation and iteration
+- Numbering note: a Baby Bug visual character task was delivered under the label "P2-05" (README: "Baby Bug visual character"); it is not this roadmap item, which is unchanged. Baby Bug has a custom model (implemented, Studio validation pending); Tank and Glider still use the standard avatar. Whether to renumber is an owner decision.
 - [ ] Validate Tank identity; define a Tank world interaction that needs no combat or record the dependency on P3/P4.
 - [ ] Replace the visual-only shell with a meaningful defensive/control role only when damage and threats exist (later combat implementation).
 - [ ] Add readable protection, counterplay and movement trade-offs; validate on supported inputs.
