@@ -380,7 +380,7 @@ Verified against the repository source at the start of P2-01 (the merged baselin
 | Food | 8 fixed markers, one pickup type, respawn 8 s after collection, pickup range 5 studs | `FoodService`, `Config`, `Workspace/Arena/FoodSpawns` |
 | Evolution | Explicit two-step choice, offered when Biomass reaches the requirement; the server accepts a request only while the character is alive; one-time per life; server-validated and rate-limited | `EvolutionService`, `Evolution.lua`, `EvolutionUIController` |
 | Tank | Defensive Shell: key Q, 3 s, cooldown 12 s from activation. **Visual only**: no damage reduction, no effect on anything | `AbilityService`, `Config` |
-| Glider | Air Glide: key Q, only while airborne, up to 3 s, cooldown 10 s, cancels 65% of gravity, landing ends it. Real movement effect | `AbilityService`, `Config` |
+| Glider | Air Glide: key Q, only while airborne, up to 3 s, cooldown 10 s, cancels 65% of gravity while rising and 90% while descending (TT-P2-05B), landing ends it. Real movement effect | `AbilityService`, `Config` |
 | Death and reset | Death ends the life; Biomass, form, ability state and cooldowns, growth visuals reset exactly once; the player begins the next life from a recap | `LifeService`, `ResetService`, `RespawnService` |
 | Recap | Shows life duration and highest form only | `LifeRecapController` |
 | Environment | One greybox arena; 3 glider-only platforms (tops at Y 16 and 20) | `Workspace/Arena` |

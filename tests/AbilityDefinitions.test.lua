@@ -59,14 +59,21 @@ check("ids are not display names", shell.id ~= shell.displayName and glide.id ~=
 check("SHELL requires TANK", shell.requiredForm == "TANK")
 check("GLIDE requires GLIDER", glide.requiredForm == "GLIDER")
 
--- Tuning equals the values that used to live in Config.
+-- Tuning: shell and glide timings are unchanged from the Config values; the glide compensation was
+-- deliberately retuned from 0.65 (see AbilityDefinitions and tests/Ability.test.lua kinematics).
 check("SHELL duration is 3 s", shell.durationSeconds == 3)
 check("SHELL cooldown is 12 s", shell.cooldownSeconds == 12)
 check("GLIDE max duration is 3 s", glide.durationSeconds == 3)
 check("GLIDE cooldown is 10 s", glide.cooldownSeconds == 10)
-check("GLIDE gravity compensation is 0.65", glide.gravityCompensation == 0.65)
+check("GLIDE gravity compensation is 0.9 (retuned from 0.65)", glide.gravityCompensation == 0.9)
+check("GLIDE compensation is strong enough to be felt (at least half of gravity)", glide.gravityCompensation >= 0.5)
 check("gravity compensation is below 1", glide.gravityCompensation > 0 and glide.gravityCompensation < 1)
 check("gravity compensation is below the Ability clamp", glide.gravityCompensation < Ability.MaxGravityCompensation)
+check("GLIDE compensation is not silently clamped", Ability.GetGlideForce(1, 1, glide.gravityCompensation) == glide.gravityCompensation)
+check("GLIDE keeps its designed ascent compensation of 0.65", glide.ascentCompensation == 0.65)
+check("ascent compensation is valid: positive, below 1 and below the clamp", glide.ascentCompensation > 0 and glide.ascentCompensation < 1 and glide.ascentCompensation < Ability.MaxGravityCompensation)
+check("the ascent share is not stronger than the descent share", glide.ascentCompensation <= glide.gravityCompensation)
+check("SHELL has no ascent compensation", shell.ascentCompensation == nil)
 check("SHELL has no gravity compensation", shell.gravityCompensation == nil)
 check("durations are positive and cooldowns not shorter", (function()
     for _, ability in Abilities.Abilities do
@@ -101,6 +108,8 @@ check("cannot change a cooldown", throws(function()
 end))
 check("cannot change gravity compensation", throws(function()
     glide.gravityCompensation = 1
+end) and throws(function()
+    glide.ascentCompensation = 1
 end))
 check("cannot change a required form", throws(function()
     shell.requiredForm = "GLIDER"
@@ -117,7 +126,7 @@ check("cannot replace the lookup", throws(function()
     end
 end))
 check("catalog unchanged after the mutation attempts",
-    shell.durationSeconds == 3 and glide.cooldownSeconds == 10 and glide.gravityCompensation == 0.65
+    shell.durationSeconds == 3 and glide.cooldownSeconds == 10 and glide.gravityCompensation == 0.9
         and shell.requiredForm == "TANK" and #Abilities.Abilities == 2 and Abilities.GetAbility("EXTRA") == nil)
 
 -- CreatureDefinitions <-> AbilityDefinitions agree.
@@ -213,7 +222,7 @@ check("glide is usable again exactly when the cooldown ends", ok and reason == "
 
 local mass, gravity = 10, 196.2
 local force = Ability.GetGlideForce(mass, gravity, glide.gravityCompensation)
-check("glide force cancels 65% of the weight", math.abs(force - mass * gravity * 0.65) < 1e-9)
+check("glide force cancels the configured share of the weight", math.abs(force - mass * gravity * glide.gravityCompensation) < 1e-9)
 check("glide force stays below the weight", force < mass * gravity)
 check("an absurd compensation is still clamped below the weight", Ability.GetGlideForce(mass, gravity, 5) < mass * gravity)
 

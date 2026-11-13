@@ -374,13 +374,13 @@ Limitations:
 | Ability | `id` | `kind` | `requiredForm` | `durationSeconds` | `cooldownSeconds` | Other |
 |---|---|---|---|---|---|---|
 | Defensive Shell | `SHELL` | `Shell` | `TANK` | 3 | 12 | visual only |
-| Air Glide | `GLIDE` | `Glide` | `GLIDER` | 3 (maximum) | 10 | `gravityCompensation` 0.65 |
+| Air Glide | `GLIDE` | `Glide` | `GLIDER` | 3 (maximum) | 10 | `gravityCompensation` 0.9 (descending), `ascentCompensation` 0.65 (rising) |
 
 API: `GetAbility(id)` (nil for unknown or malformed ids), `Abilities` (ordered), `AbilityIds`, `ShellId`, `GlideId`; the entry types are a narrow union discriminated by `kind`. `AbilityService` resolves every incoming id through `GetAbility`, selects the existing Shell or Glide implementation by `kind`, and checks the player's server-owned form against `requiredForm`. The specialised Shell and Glide code, the airborne check, cooldowns, rate limit and cleanup are unchanged. `Ability.lua` keeps its pure rules and still receives the required form and timings as arguments.
 
 Relationship with `CreatureDefinitions`: a form lists the ability ids it owns (`TANK` -> `SHELL`, `GLIDER` -> `GLIDE`, `BABY_BUG` -> none) and each ability names the form that may use it. Neither module requires the other (no dependency cycle); `tests/AbilityDefinitions.test.lua` checks that the two references agree.
 
-Still global in `Config` (not per-ability): `AbilityKey` (the shared input binding) and `AbilityRequestInterval` (anti-spam, not a gameplay cooldown). The old `TankShell*`, `Glider*`, `AbilityShellId` and `AbilityGlideId` keys were removed, with no aliases.
+Still global in `Config` (not per-ability): `AbilityKey` (the shared input binding), `AbilityRequestInterval` (anti-spam, not a gameplay cooldown) and `AbilityDebugLogging` (diagnostics switch, default off). The old `TankShell*`, `Glider*`, `AbilityShellId` and `AbilityGlideId` keys were removed, with no aliases.
 
 Shell is **visual only** (it does not mitigate damage) and Glide is a **bounded glide, not flight**. Run: `lune run tests/AbilityDefinitions.test.lua`.
 
@@ -394,14 +394,14 @@ Behaviour (values in the `GLIDE` entry of `AbilityDefinitions`):
 - Only players whose server-side form is `GLIDER` (`requiredForm` of the `GLIDE` definition) can use it, and only while **airborne** (`Humanoid.FloorMaterial == Air`, read on the server).
 - One press starts an automatic glide for up to 3 s (`durationSeconds`); no holding is needed. **Landing ends it immediately.**
 - Cooldown 10 s (`cooldownSeconds`), measured from successful activation; it is cleared when the life ends (death) and when the player leaves.
-- While gliding, a server-created `VectorForce` pushes up with `gravityCompensation` (0.65) of the character's weight (`AssemblyMass * Workspace.Gravity`). The compensation is capped below 1 in `Ability.GetGlideForce`, so gravity always wins and the net vertical force is always downward. No horizontal force is applied: steering is the normal Roblox character controls. `WalkSpeed`, jump settings and network ownership are not changed.
+- While gliding, a server-created `VectorForce` pushes up with a share of the character's weight (`AssemblyMass * Workspace.Gravity`): `ascentCompensation` (0.65) while the character is rising and the stronger `gravityCompensation` (0.9) otherwise, so the fall is slowed a lot but a glided jump keeps its designed apex. `AbilityService` re-evaluates the share from the vertical velocity on one bounded `Heartbeat` connection per active glide (removed when the glide ends); the force object only changes when rising turns into falling. Both shares are capped below 1 in `Ability.GetGlideForce`, so gravity always wins and the net vertical acceleration is always downward: it is not flight. No horizontal force is applied: steering is the normal Roblox character controls. `WalkSpeed`, jump settings and network ownership are not changed.
 - Visual: two thin neon "wings" welded beside the torso, created on the server so all clients see them. They are massless and have no collision, touch or query. Removed when the glide ends.
 
 How the state is shared:
 
 | Piece | Responsibility |
 |---|---|
-| `Shared/Ability.lua` | Pure rules: `ValidateGlide`, `GetGlideForce`, shared `IsActive` / `GetCooldownRemaining` / `IsRateLimited` |
+| `Shared/Ability.lua` | Pure rules: `ValidateGlide`, `GetGlideForce` (ascent/descent share), `IsGlideLanding`, the glide session helpers, shared `IsActive` / `GetCooldownRemaining` / `IsRateLimited` |
 | `Services/AbilityService.lua` | Same `RequestAbility` remote as Tank. Validates, owns timestamps and cooldown, creates and removes the force, attachment and wings, ends the glide on landing, death, character removal, form change and player leave |
 | `Controllers/AbilityController.lua` | One shared controller: picks SHELL or GLIDE from the replicated `EvolutionForm`, sends only the identifier, shows `Ready`, `Gliding` or `Cooldown` from `GliderActiveUntil` / `GliderReadyAt` (server-time timestamps). It never shows `Gliding` before the server sets the attribute and ticks per frame only while a countdown is showing |
 
@@ -409,7 +409,22 @@ Server validation for `"GLIDE"`, after the existing per-player rate limit (`Abil
 
 Trust boundary (important): Roblox gives the player's client physics ownership of their own character, and this feature does not change that. The server decides when a glide may start and end and when the cooldown allows another, and the force object replicates to the owning client, but the server **cannot prevent a modified client from ignoring the force or moving the character however it likes**. That is true of all player movement in this game; no server-side movement validation (speed, height checks) was added. Landing detection uses the server's copy of `FloorMaterial` and `Humanoid.StateChanged`; the 3 s timer ends the glide regardless.
 
-Jump height and arena (analytic estimate, **not a Studio test**): with default `Workspace.Gravity` (196.2) and `JumpHeight` 7.2, a normal jump rises about 7.2 studs. Activating the glide near the start of a jump leaves 35% of gravity, so the same jump would rise to roughly 20 studs, and activating later gives less. This is a direct consequence of the specified 65% compensation: it does not provide upward acceleration, but it does raise the jump apex. The existing `GliderPlatform1/3` tops are at Y = 16 and `GliderPlatform2` at Y = 20, while a Baby Bug jumping from the highest jumpable surface (`HillTier2`/`LedgeB`, top 6.5) reaches about 13.7, so by calculation they are out of an ordinary jump's reach. No arena geometry was changed. Whether the glide actually reaches them reliably must be tested in Studio; if the apex gain is too large or too small, tune `GliderGravityCompensation` (or later add a rule about when the glide may start).
+Jump height and arena (analytic estimate, **not a Studio test**): with default `Workspace.Gravity` (196.2) and `JumpHeight` 7.2, a normal jump rises about 7.2 studs and lasts only about **0.54 s** (0.27 s down from the apex). Activating the glide near the start of a jump leaves 35% of gravity while rising (`ascentCompensation` 0.65, unchanged), so the same jump rises to roughly 20 studs: it does not provide upward acceleration, but it does raise the jump apex, which is how the glider-only platforms are meant to be reached. The existing `GliderPlatform1/3` tops are at Y = 16 and `GliderPlatform2` at Y = 20, while a Baby Bug jumping from the highest jumpable surface (`HillTier2`/`LedgeB`, top 6.5) reaches about 13.7. No arena geometry was changed. Whether the glide reaches them reliably must be tested in Studio.
+
+### Glide tuning and the "wings for half a second" report (TT-P2-05B)
+
+Observed in Studio: after activating, the wings appeared for about 0.5 s and the glide ended, with the 10 s cooldown running. Root cause from the code and kinematics (the exact event that ended each glide still has to be confirmed in Studio with the new logging, see below): the previous single compensation of 0.65 applied to the whole glide, so from the apex of an ordinary jump the fall lasted 0.45 s (versus 0.27 s without a glide), about as long as the airtime of an ordinary jump. The wings vanished because the character really landed, and nothing could have kept it up longer: 3 s is only a maximum. It was a tuning problem, not a cleanup bug; the cooldown correctly runs from activation even when landing ends the glide early. A secondary risk was that three unconfirmed signals (`FloorMaterial`, the `Landed` and `Running` states, read from the server's copy of a client-owned Humanoid) each ended the glide immediately.
+
+Changes:
+
+| Change | Why |
+|---|---|
+| `gravityCompensation` 0.65 to 0.9, applied while descending; `ascentCompensation` 0.65 keeps the rising behavior | At 0.9 a fall from the apex of a normal jump lasts about 0.85 s (3.1x), a 20-stud drop 1.4 s (3.2x) and the landing speed is about 17 studs/s instead of 52. A jump glided from take-off lasts about 2.2 s, under the 3 s limit, with the same apex as before. Net acceleration is still downward at every step. |
+| Landing needs confirmation (`Ability.IsGlideLanding`) | A `Landed`, `Running` or `FloorMaterial` event only ends the glide if the Humanoid reports a floor or a downward raycast (`HipHeight` + half the root height + 1 stud, ignoring the character) finds ground. A transient event in the air is ignored and logged. |
+| Glide state rules moved into `Ability.lua` (`StartGlide`, `TryStartGlide`, `EndGlide`, `IsCurrentGlide`, `ResetGlide`) | They are shared by `AbilityService` and unit-tested: a rejected request never starts the cooldown, ending never changes the cooldown, and a stale expiry timer or event cannot end a newer activation (token check). |
+| Diagnostics: `Config.AbilityDebugLogging` (default `false`) | Set it to `true` in Studio to print `[Glide]` lines: start (state, floor material, vertical velocity, height), the end `reason` (`Expired`, `Died`, `Landing:Landed`, `Landing:Running`, `Landing:FloorMaterial`, `CharacterRemoving`, `FormChanged`, `Reset`, `PlayerRemoving`, `Reactivate`), the elapsed time, and any ignored transient event. |
+
+The simulated numbers use a 60 Hz integration of the same force rule (`tests/Ability.test.lua`); real Studio physics may differ, so the 0.9 value is a calculated starting point, configurable in `AbilityDefinitions`, not a validated feel. A glider-only platform reachability test is still required (checklist below).
 
 Limitations:
 
@@ -523,7 +538,8 @@ These are **manual tests; none has been performed**. Use Play Solo (R15) and Tes
 10. Respawn during cooldown: the death ends the life, so the cooldown is cleared and the form is Baby Bug again; `Q` is rejected until you evolve to GLIDER in the new life.
 11. Leaving during a glide: with 2 clients, one leaves mid-glide. Expected: no server errors, and the remaining client sees no stray wings.
 12. Visual on other clients: with 2 or more clients, the wings and slow fall of the glider are visible to the others and disappear for everyone when the glide ends.
-13. Reachability: from ground level, a Baby Bug cannot reach `GliderPlatform1` (top Y = 16) with ordinary jumps. Then, as GLIDER, jump toward it and activate in the air: record whether you can land on it, how reliably, and how high the apex gets compared with a normal jump. Record the result before tuning `GliderGravityCompensation`.
+13. Reachability: from ground level, a Baby Bug cannot reach `GliderPlatform1` (top Y = 16) with ordinary jumps. Then, as GLIDER, jump toward it and activate in the air: record whether you can land on it, how reliably, and how high the apex gets compared with a normal jump. Record the result before tuning `ascentCompensation`.
+13b. Diagnostics (TT-P2-05B): set `Config.AbilityDebugLogging = true`, jump, press `Q` at the top of the jump and again early in a jump. Expected `[Glide]` lines: `start` with the state and vertical velocity, then an `end reason=Landing:...` after roughly 0.8 s (from the apex) or 2 s (from take-off), never after about 0.5 s unless you land that fast. Report any `ignored` lines and any `end reason=Landing:Running` or `Landing:FloorMaterial` that fires while still clearly in the air. Also check the descent is visibly slower and the landing gentle, that pressing `Q` on the ground starts no cooldown, and that a second `Q` during an active glide does nothing.
 14. Touch: on a phone emulator or real device, the button is tappable in the air and not covered by the jump button.
 15. Typing: with a TextBox focused (chat), `Q` does not start a glide.
 16. Tank regression: as TANK, repeat the shell checklist above (activation, 3 s duration, 12 s cooldown, death, respawn).

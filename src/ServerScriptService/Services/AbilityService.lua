@@ -12,13 +12,16 @@
 -- truth); the Shell and Glide implementations below are selected by the definition's kind.
 --
 -- Glide physics: a server-created VectorForce (+ Attachment) on HumanoidRootPart cancels
--- the Glide definition's gravityCompensation (AbilityDefinitions) of the character's weight, so gravity still wins.
+-- the Glide definition's compensation (AbilityDefinitions) of the character's weight: ascentCompensation
+-- while rising, the stronger gravityCompensation while descending, and gravity still wins. A landing ends the glide only when confirmed (see onLandingSignal). Set
+-- Config.AbilityDebugLogging = true to print why and when each glide ended.
 -- Network ownership is NOT changed: the player's client keeps simulating its character
 -- and the replicated force acts on it. The server therefore cannot fully prevent a
 -- modified client from ignoring the force or moving freely; it only owns when the
 -- ability may start, when it ends, and the cooldown.
 
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -34,6 +37,7 @@ type GlideDefinition = {
     durationSeconds: number,
     cooldownSeconds: number,
     gravityCompensation: number,
+    ascentCompensation: number,
 }
 
 local AbilityService = {}
@@ -42,6 +46,7 @@ type GlideState = {
     activeUntil: number,
     readyAt: number,
     token: number, -- bumped on every end/activation so stale expiry timers do nothing
+    startedAt: number, -- os.clock() of the current activation (diagnostics only)
     attachment: Attachment?,
     force: VectorForce?,
     wings: { Part },
@@ -164,10 +169,50 @@ end
 -- Glider: Air Glide (bounded glide, not flight)
 -- ---------------------------------------------------------------------------
 
--- Ends the glide and removes every temporary object. Safe to call repeatedly.
-local function endGlide(player: Player, state: State)
+local function debugLog(message: string)
+    if Config.AbilityDebugLogging then
+        print("[Glide] " .. message)
+    end
+end
+
+-- One-line snapshot of the character for diagnostics (only built when logging is on).
+local function describeCharacter(player: Player): string
+    local character = player.Character
+    local humanoid = if character ~= nil then character:FindFirstChildOfClass("Humanoid") else nil
+    local root = if character ~= nil then character:FindFirstChild("HumanoidRootPart") else nil
+    if humanoid == nil or root == nil or not root:IsA("BasePart") then
+        return "no character"
+    end
+    return string.format(
+        "state=%s floor=%s vy=%.1f y=%.1f",
+        tostring(humanoid:GetState()),
+        tostring(humanoid.FloorMaterial),
+        root.AssemblyLinearVelocity.Y,
+        root.Position.Y
+    )
+end
+
+-- True if there is solid ground just below the character, independent of the Humanoid's own floor
+-- tracking (for a client-owned character that reaches the server by replication).
+local GROUND_RAY_MARGIN = 1.0
+local function groundBelow(character: Model, humanoid: Humanoid, root: BasePart): boolean
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = { character }
+    params.RespectCanCollide = true
+    local distance = humanoid.HipHeight + root.Size.Y / 2 + GROUND_RAY_MARGIN
+    return workspace:Raycast(root.Position, Vector3.new(0, -distance, 0), params) ~= nil
+end
+
+-- Ends the glide and removes every temporary object. Safe to call repeatedly. `reason` is only used
+-- for diagnostics: Expired, Died, Landing:<event>, CharacterRemoving, FormChanged, Reset,
+-- PlayerRemoving or Reactivate.
+local function endGlide(player: Player, state: State, reason: string)
     local glide = state.glide
-    glide.token += 1
+    if Config.AbilityDebugLogging and (glide.force ~= nil or glide.activeUntil ~= 0) then
+        debugLog(string.format("%s end reason=%s elapsed=%.2fs %s", player.Name, reason, os.clock() - glide.startedAt, describeCharacter(player)))
+    end
+    local wasActive = Ability.EndGlide(glide) -- bumps the token, clears activeUntil, keeps the cooldown
     for _, connection in glide.connections do
         connection:Disconnect()
     end
@@ -184,11 +229,8 @@ local function endGlide(player: Player, state: State)
         wing:Destroy()
     end
     table.clear(glide.wings)
-    if glide.activeUntil ~= 0 then
-        glide.activeUntil = 0
-        if player.Parent == Players then
-            player:SetAttribute("GliderActiveUntil", 0)
-        end
+    if wasActive and player.Parent == Players then
+        player:SetAttribute("GliderActiveUntil", 0)
     end
 end
 
@@ -238,62 +280,108 @@ local function activateGlide(
         return
     end
 
-    endGlide(player, state) -- defensive: fresh token and no leftover objects
-    glide.activeUntil = now + definition.durationSeconds
-    glide.readyAt = now + definition.cooldownSeconds
+    endGlide(player, state, "Reactivate") -- defensive: fresh token and no leftover objects
+    -- Sets the token, the end time and the cooldown, which always runs from activation (even if
+    -- landing ends the glide early). A rejected request returned above and never gets here.
+    Ability.StartGlide(glide, now, definition.durationSeconds, definition.cooldownSeconds)
+    glide.startedAt = os.clock()
     player:SetAttribute("GliderActiveUntil", glide.activeUntil)
     player:SetAttribute("GliderReadyAt", glide.readyAt)
+    local token = glide.token -- every callback below is bound to this activation
+    -- Typed locals: the nil checks above do not carry into closures.
+    local liveCharacter = character :: Model
+    local liveHumanoid = humanoid :: Humanoid
+    local liveRoot = rootInstance :: BasePart
+    if Config.AbilityDebugLogging then
+        debugLog(string.format("%s start %s", player.Name, describeCharacter(player)))
+    end
 
-    -- Upward force = compensation * weight (mass * gravity), capped below 1 in Ability.
+    -- Upward force = compensation * weight (mass * gravity), capped below 1 in Ability; updateForce picks
+    -- the ascent or descent share from the vertical velocity. It starts at 0.
     local attachment = Instance.new("Attachment")
     attachment.Name = "GlideAttachment"
-    attachment.Parent = rootInstance
+    attachment.Parent = liveRoot
     local force = Instance.new("VectorForce")
     force.Name = "GlideForce"
     force.Attachment0 = attachment
     force.RelativeTo = Enum.ActuatorRelativeTo.World
     force.ApplyAtCenterOfMass = true
-    force.Force = Vector3.new(
-        0,
-        Ability.GetGlideForce(rootInstance.AssemblyMass, workspace.Gravity, definition.gravityCompensation),
-        0
-    )
-    force.Parent = rootInstance
+    force.Force = Vector3.zero
+    force.Parent = liveRoot
     glide.attachment = attachment
     glide.force = force
 
-    local height = character:GetExtentsSize().Y
-    table.insert(glide.wings, createWing(character, rootInstance, 1, height))
-    table.insert(glide.wings, createWing(character, rootInstance, -1, height))
+    local mass = liveRoot.AssemblyMass
+    local function updateForce()
+        local wanted = Ability.GetGlideForce(
+            mass,
+            workspace.Gravity,
+            definition.gravityCompensation,
+            liveRoot.AssemblyLinearVelocity.Y,
+            definition.ascentCompensation
+        )
+        if force.Force.Y ~= wanted then -- changes only when rising turns into falling (or back)
+            force.Force = Vector3.new(0, wanted, 0)
+        end
+    end
+    updateForce()
 
-    -- Landing (or death) ends the glide immediately.
+    local height = liveCharacter:GetExtentsSize().Y
+    table.insert(glide.wings, createWing(liveCharacter, liveRoot, 1, height))
+    table.insert(glide.wings, createWing(liveCharacter, liveRoot, -1, height))
+
+    -- A landing-related event ends the glide only if the ground is confirmed: a transient or premature
+    -- event while the Humanoid still reports air and nothing is below is ignored (and logged).
+    local function onLandingSignal(event: string)
+        if not Ability.IsCurrentGlide(glide, token) then
+            return -- stale: this activation already ended
+        end
+        local floorIsAir = liveHumanoid.FloorMaterial == Enum.Material.Air
+        local grounded = groundBelow(liveCharacter, liveHumanoid, liveRoot)
+        if Ability.IsGlideLanding(event, floorIsAir, grounded) then
+            endGlide(player, state, "Landing:" .. event)
+        else
+            debugLog(string.format("%s ignored %s (floorIsAir=%s groundBelow=%s) elapsed=%.2fs", player.Name, event, tostring(floorIsAir), tostring(grounded), os.clock() - glide.startedAt))
+        end
+    end
     table.insert(
         glide.connections,
-        humanoid:GetPropertyChangedSignal("FloorMaterial"):Connect(function()
-            if humanoid.FloorMaterial ~= Enum.Material.Air then
-                endGlide(player, state)
+        liveHumanoid:GetPropertyChangedSignal("FloorMaterial"):Connect(function()
+            if liveHumanoid.FloorMaterial ~= Enum.Material.Air then
+                onLandingSignal("FloorMaterial")
             end
         end)
     )
     table.insert(
         glide.connections,
-        humanoid.StateChanged:Connect(function(_, newState)
-            if newState == Enum.HumanoidStateType.Landed or newState == Enum.HumanoidStateType.Running then
-                endGlide(player, state)
+        liveHumanoid.StateChanged:Connect(function(_, newState)
+            if newState == Enum.HumanoidStateType.Landed then
+                onLandingSignal("Landed")
+            elseif newState == Enum.HumanoidStateType.Running then
+                onLandingSignal("Running")
             end
         end)
     )
     table.insert(
         glide.connections,
-        humanoid.Died:Connect(function()
-            endGlide(player, state)
+        liveHumanoid.Died:Connect(function()
+            endGlide(player, state, "Died")
+        end)
+    )
+    -- One bounded Heartbeat connection per active glide (removed by endGlide): switches the force
+    -- between the ascent and descent share (the force only changes when rising turns into falling).
+    table.insert(
+        glide.connections,
+        RunService.Heartbeat:Connect(function()
+            if Ability.IsCurrentGlide(glide, token) then
+                updateForce()
+            end
         end)
     )
 
-    local token = glide.token
     task.delay(definition.durationSeconds, function()
-        if glide.token == token then
-            endGlide(player, state)
+        if Ability.IsCurrentGlide(glide, token) then
+            endGlide(player, state, "Expired")
         end
     end)
 end
@@ -357,6 +445,7 @@ local function onPlayerAdded(player: Player)
             activeUntil = 0,
             readyAt = 0,
             token = 0,
+            startedAt = 0,
             attachment = nil,
             force = nil,
             wings = {},
@@ -373,7 +462,7 @@ local function onPlayerAdded(player: Player)
     -- Character replaced or removed: nothing may stay on an old character.
     table.insert(state.connections, player.CharacterRemoving:Connect(function()
         endShell(player, state)
-        endGlide(player, state)
+        endGlide(player, state, "CharacterRemoving")
     end))
     -- Leaving a form (not possible today) also drops that form's ability effects.
     table.insert(state.connections, player:GetAttributeChangedSignal("EvolutionForm"):Connect(function()
@@ -382,7 +471,7 @@ local function onPlayerAdded(player: Player)
             endShell(player, state)
         end
         if form ~= requiredFormOf(AbilityDefinitions.GlideId) then
-            endGlide(player, state)
+            endGlide(player, state, "FormChanged")
         end
     end))
 end
@@ -394,7 +483,7 @@ local function onPlayerRemoving(player: Player)
         return
     end
     endShell(player, state)
-    endGlide(player, state)
+    endGlide(player, state, "PlayerRemoving")
     for _, connection in state.connections do
         connection:Disconnect()
     end
@@ -411,9 +500,9 @@ function AbilityService.ResetLife(player: Player)
         return
     end
     endShell(player, state)
-    endGlide(player, state)
+    endGlide(player, state, "Reset")
     state.readyAt = 0
-    state.glide.readyAt = 0
+    state.glide.readyAt = 0 -- same as Ability.ResetGlide; the glide itself was ended above with its objects
     if player.Parent == Players then
         player:SetAttribute("ShellReadyAt", 0)
         player:SetAttribute("GliderReadyAt", 0)
