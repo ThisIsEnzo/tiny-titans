@@ -1,23 +1,22 @@
-# TINY TITANS — Evolution Sandbox Architecture v0.1
+# TINY TITANS — Evolution Sandbox Architecture
 
-**Status:** Proposal for review. Documentation only; no runtime code is changed by this document.
-**Branch:** `docs/define-evolution-sandbox`
-**Companion document:** `TT-P0-02R Implementation Migration Plan.md`
-**P2-01 update (documentation only):** adds the banner at the start of section 2, section 6.1, the status note and section 7.1, and the decision and question rows in section 12. The player-facing progression design is in `Combat Progression & Endgame Design v0.1.md`, section 13.
+**Status:** Technical reference. Describes current system boundaries and the intended Current Life / Evolution / Legacy architecture; verify implementation claims against current master and Studio.
+**Product definition:** `Gameplay Blueprint & MVP Contract.md`. **Execution plan:** `Tiny Titans Master Roadmap.md`.
+**Maintenance note:** this document retains historical audit snapshots. For current behavior, prefer the README and source code on `master`; this file is not a substitute for Studio verification.
 **Audited baseline:** the repository state after P1-05 lifecycle hardening (merged PR #26, based on master commit `5139da00` at the start of PR #27), including the earlier evolution-flow implementation (`Evolution.Select`, `EvolutionResult`, two-step selection UI). The P1 lifecycle implementation is present in code; automated test execution and Roblox Studio runtime validation are separate and must not be inferred from the merge.
 
 ## 0. Scope, sources and honesty notes
 
 - This is an architecture and product-alignment document. It describes the current code accurately and proposes a path; it does not build anything.
-- **Source documents and integration status.** The three project-level source documents were available on `master` and reviewed for this proposal. This document is aligned with them where decisions are sufficiently defined; unresolved design choices remain explicitly provisional.
+- **Source documents and integration status.** The product source documents were consolidated into the Blueprint, Product Vision and Master Roadmap. This document is aligned with them where decisions are sufficiently defined; unresolved design choices remain explicitly provisional.
 
   | Source | Status reviewed | Architectural consequence |
   |---|---|---|
-  | `docs/Evolution Adventure Sandbox Roadmap v0.1.md` (PR #18) | Present on `master`; proposed product roadmap, reviewed | Defines the Evolution Adventure Sandbox, Current Life / Evolution / Legacy, death and rebirth, and product phases P0–P7. This architecture is the TT-P0-02R architecture deliverable; it does not replace the roadmap. |
-  | `docs/Combat Progression & Endgame Design v0.1.md` (PR #19) | Present on `master`; proposed combat/progression design, reviewed | Defines combat principles, the exploratory 4–6-form long-term target, first combat-ready four-form target, and a proposed P3.5 Combat & Ecosystem Design milestone. P3.5 is a proposed roadmap addition, not approval to begin full combat implementation. |
-  | `docs/Product Vision & Top 1000 Strategy.md` | Present on `master`; product north star and living strategy, reviewed | Governs product priorities and evidence gates. Its P0–P8 strategy roadmap is distinct from the Evolution Adventure Sandbox roadmap's P0–P7 product phases and from this document's proposed engineering sequence. Top 1000 remains an ambition, not a forecast. |
+  | `docs/Gameplay Blueprint & MVP Contract.md` | Current product definition | Defines the game, first habitat, core loop, form roles and ability quality bar. |
+  | `docs/Combat Progression & Endgame Design.md` | Deferred design reference | Contains candidate combat and endgame ideas. It is not approved implementation scope or a launch roster commitment. |
+  | `docs/Product Vision & Top 1000 Strategy.md` | Product north star | Governs quality principles, Top 1000 ambition, player value, monetization guardrails and evidence discipline. |
 
-  **How to resolve overlap:** Product Vision governs product priorities and quality principles; the Evolution Adventure Sandbox Roadmap defines the product progression model and phase outcomes; Combat Progression & Endgame Design supplies combat-specific principles and the proposed P3.5 addition. This architecture translates those directions into system boundaries. The companion migration plan is an implementation proposal, not a replacement for any source roadmap. A proposed decision in this document does not mean it is implemented or finally approved.
+  **Document authority:** Product Vision = why and quality bar; Gameplay Blueprint = what game and what abilities must accomplish; Master Roadmap = when and in what order; this document = technical boundaries. Combat Progression & Endgame is a deferred reference only. A proposal in this document does not mean it is implemented or validated.
 - **Verification level:** everything in section 2 was read from the source files. Nothing in this document was tested in Roblox Studio by the author. The team's own Play Solo observations (spawn, walking, jumping, food, HUD at 40/100 and Stage 2/3, abrupt growth, intermittent ground clipping) are reported by the team, not re-verified here. The unit tests (section 2.8) have not been executed by the author either (the test runner was unavailable in the authoring environment).
 - Items that cannot be established from code are labelled **Unknown** or **Needs Studio validation**.
 
@@ -46,20 +45,20 @@ Three questions about an evolution option must never be confused:
 
 A discovery never makes an option available by itself, and availability never bypasses the selection rules.
 
-### 1.1 Class roster: current implementation versus target
+### 1.1 Form roster: current implementation versus first-release target
 
 | | Current implementation | Target for initial launch (provisional) |
 |---|---|---|
 | Starter | `BABY_BUG` (form, tutorial identity) | Baby Bug (not a class) |
-| Evolved classes | `TANK` (Shell, visual only) and `GLIDER` (Air Glide). **Two of the four.** | Exactly **four**: Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller |
+| Evolved forms | `TANK` (Shell, visual only) and `GLIDER` (Air Glide prototype) | Tank and Glider are the only planned evolved forms for the first vertical slice; their gameplay roles must pass the Blueprint's validation gate |
 | Not implemented | n/a | **Striker / Hunter** and **Support / Controller** |
 
 Notes:
 
-- The four role names are **provisional role directions**, not finalized class names, abilities, statistics or balance. This document defines no abilities or numbers for any class, and the two missing classes have no definitions, ids or code.
-- The Combat Progression & Endgame Design document keeps a broader **4–6-form long-term exploration target** and lists Support / Warden and Controller / Disruptor as separate candidate directions. The current initial-roster proposal deliberately combines those two candidate directions into one **Support / Controller** hybrid role, yielding four initial evolved classes. That combination is a project direction to validate, not a claim that the combat source has finalized the roster.
+- Do not treat a four-class roster as a launch requirement. Striker, Support and Controller remain unapproved future concepts with no implementation commitment.
+- The deferred Combat Progression & Endgame document contains a broader 4–6-form exploration idea. It is not a product requirement. Add a form only when playtests prove a new gameplay verb is needed.
 - Each class should eventually have distinct strengths, weaknesses, counterplay and a meaningful gameplay identity. Today Tank and Glider differ only by their ability, and the Tank shell has no combat effect because no combat system exists.
-- Initial launch planning is the starter plus these four provisional roles. **Do not add a fifth or sixth class before the initial roster and core loop are validated with players.** The combat design's 4–6 target is a long-term exploration range, not a requirement to ship six.
+- Initial MVP planning is Baby Bug plus the two evolved prototypes, only if their distinct roles are validated. A smaller, excellent roster is preferred to a larger shallow one.
 
 ### 1.2 Product guardrails (direction; none of this is implemented)
 
@@ -74,7 +73,7 @@ These guardrails are grounded in the reviewed Evolution Adventure Sandbox Roadma
 
 ## 2. Implementation inventory (what exists today)
 
-> **Historical baseline (P2-01 note).** Sections 2.1 to 2.10 describe the code as audited for TT-P0-02R, before several merged changes: the Energy to Biomass rename (PR #21), `LifeService` (PR #22), the reset on death (P1-03), controlled respawn with a recap (P1-04) and lifecycle hardening (P1-05). Rows that say `Energy`, "death changes nothing" or "respawn is automatic" are superseded. The current verified behavior is tabulated in `Combat Progression & Endgame Design v0.1.md`, section 13.2. Nothing here was re-validated in Studio.
+> **Historical baseline (P2-01 note).** Sections 2.1 to 2.10 describe the code as audited for architecture audit, before several merged changes: the Energy to Biomass rename (PR #21), `LifeService` (PR #22), the reset on death (P1-03), controlled respawn with a recap (P1-04) and lifecycle hardening (P1-05). Rows that say `Energy`, "death changes nothing" or "respawn is automatic" are superseded. For the current implementation, inspect the README and source code on `master`; historical descriptions here are not guaranteed to reflect later PRs. Nothing here was re-validated in Studio.
 
 ### 2.1 Runtime structure
 
@@ -389,7 +388,7 @@ Impact if adopted: attribute `Energy` becomes `Biomass` (all readers are in this
 
 ### 7.1 Resource model recommended by the P2-01 gate (PROPOSED, REQUIRES PLAYTEST)
 
-The design reasoning is in `Combat Progression & Endgame Design v0.1.md`, section 13.5; only the technical shape is recorded here.
+The player-facing design contract is in `Gameplay Blueprint & MVP Contract.md`; only the technical shape is recorded here.
 
 - **Three separate systems:** Biomass (a server-owned quantity), growth (a stage derived from Biomass, today `Config.GrowthStages` with `MinBiomass` and `Scale`), and evolution (an explicit selection once a requirement is met). They stay separate in code and in data.
 - **Two constants are currently one:** `EvolutionBiomassRequired` is both the evolution requirement and the Biomass cap. The recommendation separates them: the requirement belongs to each form's definition (P2-02), and a per-life **ceiling** equal to the final growth milestone is a distinct value (its name is a P2-09 decision).
@@ -514,7 +513,7 @@ Open questions:
 | Q9 | May other players see anyone's Biomass, or only form? | Privacy; attributes vs remotes |
 | Q10 | What are Roblox place settings for respawn (`RespawnTime`, `CharacterAutoLoads`)? | Currently **Unknown** |
 | Q11 | What is the cause of the intermittent ground clipping? | Unresolved; needs the Studio procedure in the README |
-| Q12 | What is the exact P3.5 combat prototype scope and its exit gate before P4 production implementation? | Combat foundation, Studio validation and scope control |
+| Q12 | What is the exact deferred combat-design gate combat prototype scope and its exit gate before P4 production implementation? | Combat foundation, Studio validation and scope control |
 | Q13 | What signature mechanics and counterplay define Striker / Hunter and the proposed combined Support / Controller role? | Class identity; the combined role must be validated against the separate Support and Controller candidate directions in the combat design |
 | Q14 | Which optional PvP format, if any, is justified after the PvE core is validated, and what PvPvE experiment is worth testing? | Fairness, anti-farming and multiplayer scope |
 

@@ -1,12 +1,12 @@
-# Tiny Titans — Combat, Long-Term Progression & Endgame Design
+# Tiny Titans — Deferred Combat & Endgame Design Reference
 
 **Document:** Combat and retention design direction  
 **Version:** 0.1  
 **Date:** November 2026  
-**Status:** Proposed product design; implementation scope must be approved through the roadmap and architecture milestones.  
-**Related:** Evolution Adventure Sandbox Roadmap v0.1; TT-P0-02R — Evolution Sandbox Architecture & Product Pivot; Tiny Titans Master Roadmap v0.1.
+**Status:** Deferred design reference — not approved MVP scope. Use only when the Master Roadmap reaches a validated need for combat depth or endgame systems.  
+**Related:** Gameplay Blueprint & MVP Contract; Product Vision & Top 1000 Strategy; Tiny Titans Master Roadmap; Evolution Sandbox Architecture.
 
-**P2-01:** Section 13 holds the Progression & Evolution Design Gate (documentation only, PROPOSED; no gameplay change).
+**Historical note:** Section 13 records an earlier progression/evolution design gate. The current product definition and implementation order are in Gameplay Blueprint & MVP Contract and Tiny Titans Master Roadmap.
 
 ---
 
@@ -14,7 +14,7 @@
 
 Tiny Titans should grow from a small creature evolution prototype into a multiplayer evolution adventure with a deep, readable combat system, meaningful long-term progression and activities that remain engaging after a player reaches the current level cap.
 
-The target is **4–6 genuinely distinct evolution classes/forms**, not dozens of shallow variants. The player should have reasons to:
+An exploratory long-term idea is **4–6 genuinely distinct evolution classes/forms**, not dozens of shallow variants. This is not an approved launch roster or a reason to add classes now. The player should have reasons to:
 - learn the strengths, weaknesses and matchups of their form;
 - improve through practice and meaningful progression over several days of play;
 - explore, hunt, gather, defend, cooperate and compete;

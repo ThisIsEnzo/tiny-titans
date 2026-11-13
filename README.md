@@ -2,18 +2,19 @@
 
 Roblox prototype: a multiplayer creature evolution arena.
 
-## Direction and architecture documents
+## Product and architecture documents
 
-The game is moving toward an Evolution Adventure Sandbox: a **Current Life** (temporary, reset on death), **Evolution** (the form and abilities of the current life) and **Legacy** (permanent discoveries that survive death). This README documents the code as it is today. In the current implementation death ends the life and resets the Current Life (Biomass, growth stage, form and ability state; see *Reset on death (P1-03)*), and the player begins the next life as Baby Bug from the life recap (controlled respawn, see *Controlled respawn and life recap (P1-04)*). There is no persistence and no Legacy yet.
+The product is defined as a **co-op-friendly PvE creature-evolution exploration/survival adventure** in a miniature living ecosystem. The player explores, grows, evolves into a form with a meaningful traversal/survival role, discovers the world and carries knowledge into future lives.
 
-Current implementation versus target: today there are three forms (`BABY_BUG`, `TANK`, `GLIDER`), with no damage, combat, PvE or PvP. The target (provisional) is the Baby Bug starter, which is not a class, plus four evolved classes (Tank / Guardian, Glider / Skirmisher, Striker / Hunter, Support / Controller); Striker / Hunter and Support / Controller are not implemented. "Biomass" is the name of the Current Life growth resource (approved by the project owner as the final player-facing name).
+Use these documents as the only current sources of truth:
 
-- [Evolution Sandbox Architecture v0.1](docs/Evolution%20Sandbox%20Architecture%20v0.1.md): audit of the current code and proposed architecture.
-- [TT-P0-02R Implementation Migration Plan](docs/TT-P0-02R%20Implementation%20Migration%20Plan.md): proposed engineering sequence (P1–P7, including the proposed P3.5 combat-design gate); it does not replace the product roadmap.
-- [Evolution Adventure Sandbox Roadmap v0.1](docs/Evolution%20Adventure%20Sandbox%20Roadmap%20v0.1.md): product progression model and product phases P0–P7.
-- [Combat Progression & Endgame Design v0.1](docs/Combat%20Progression%20%26%20Endgame%20Design%20v0.1.md): proposed combat, progression and endgame direction, including P3.5.
-- [Product Vision & Top 1000 Strategy](docs/Product%20Vision%20%26%20Top%201000%20Strategy.md): product north star and separate P0–P8 strategy roadmap.
-- [Tiny Titans Master Roadmap v0.1](docs/Tiny%20Titans%20Master%20Roadmap%20v0.1.md): unified roadmap from prototype through MVP/public launch and post-launch phases, with explicit scope, gates and estimated progress.
+- [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md): the actual game, core loop, first habitat, form roles, ability contract and MVP acceptance gates.
+- [Product Vision & Top 1000 Strategy](docs/Product%20Vision%20%26%20Top%201000%20Strategy.md): product north star, quality principles, retention, ethical monetization and growth strategy.
+- [Tiny Titans Master Roadmap](docs/Tiny%20Titans%20Master%20Roadmap.md): the single execution roadmap and phase gates.
+- [Evolution Sandbox Architecture](docs/Evolution%20Sandbox%20Architecture.md): technical architecture and audited implementation boundaries.
+- [Deferred Combat & Endgame Design Reference](docs/Combat%20Progression%20%26%20Endgame%20Design.md): future combat/endgame ideas only; not current implementation approval.
+
+Historical prototype specifications and duplicate roadmaps were removed. This README remains the implementation guide; it does not override product scope or roadmap priorities.
 
 ## Toolchain
 
@@ -739,4 +740,4 @@ rojo build default.project.json -o build.rbxlx
 
 Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. The Baby Bug has a custom visual model (P2-05, Studio validation pending). Tank and Glider models, damage, combat and persistence are not implemented.
 
-See `docs/Game Design Document v0.1.md` and `docs/Technical Design & Implementation Plan v0.1.md`.
+See the current product and architecture documents linked at the top of this README.
