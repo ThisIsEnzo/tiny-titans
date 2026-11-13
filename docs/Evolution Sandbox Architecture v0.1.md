@@ -320,7 +320,7 @@ Forms = {
 Abilities = {
     SHELL = { id = "SHELL", form = "TANK", handler = "Shell", key = "Q", duration = 3, cooldown = 12 },
     GLIDE = { id = "GLIDE", form = "GLIDER", handler = "Glide", key = "Q", duration = 3, cooldown = 10,
-              params = { gravityCompensation = 0.65 } },
+              params = { gravityCompensation = 0.9, ascentCompensation = 0.65 } },
 }
 ```
 

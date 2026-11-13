@@ -28,6 +28,7 @@ local Config = {
     -- Global ability settings. Ability ids, required forms and per-ability tuning (durations,
     -- cooldowns, gravity compensation) live in AbilityDefinitions.
     AbilityKey = "Q", -- client activation key (KeyCode name), shared by all abilities
+    AbilityDebugLogging = false, -- true: AbilityService prints why and when a glide ended (Output); leave false in production
     AbilityRequestInterval = 0.25, -- min seconds between processed RequestAbility calls per player (anti-spam; not a gameplay cooldown)
 
     -- Food (server-authoritative; see ServerScriptService/Services/FoodService).

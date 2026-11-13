@@ -15,8 +15,8 @@
 -- Honest behaviour notes:
 --   * SHELL is VISUAL ONLY. It does not mitigate damage (there is no damage system yet).
 --   * GLIDE is a bounded glide, NOT flight: it needs the player to be airborne, cancels only a
---     fraction of gravity (always capped below 1 by Ability.GetGlideForce) and ends on landing,
---     death or when `durationSeconds` expires.
+--     fraction of gravity (one share while rising, a larger one while descending, both capped below 1
+--     by Ability.GetGlideForce) and ends on landing, death or when `durationSeconds` expires.
 --
 -- To add an ability later: add one entry below (and a `kind` plus its implementation if it needs
 -- new behaviour). IDs are stable strings and must never be reused or renamed once shipped.
@@ -37,7 +37,8 @@ export type GlideDefinition = {
     requiredForm: string,
     durationSeconds: number, -- MAXIMUM glide time; landing or death ends it earlier
     cooldownSeconds: number, -- from activation until it can be used again
-    gravityCompensation: number, -- fraction of gravity cancelled; must stay below 1
+    gravityCompensation: number, -- fraction of gravity cancelled while DESCENDING; must stay below 1
+    ascentCompensation: number, -- fraction cancelled while still RISING (raises a glided jump's apex); must stay below 1
 }
 
 export type AbilityDefinition = ShellDefinition | GlideDefinition
@@ -61,7 +62,14 @@ local glide: GlideDefinition = table.freeze({
     requiredForm = "GLIDER",
     durationSeconds = 3,
     cooldownSeconds = 10,
-    gravityCompensation = 0.65,
+    -- Tuned from kinematics at default gravity (196.2), applied only while descending: a fall from the
+    -- apex of a normal jump (7.2 studs) lasts 0.85 s instead of 0.27 s and a 20-stud drop 1.4 s instead
+    -- of 0.45 s, with a gentle landing (about 17 studs/s). The earlier 0.65 gave only 0.45 s from the
+    -- apex, shorter than the airtime of an ordinary jump. Net acceleration stays downward (never rises).
+    gravityCompensation = 0.9,
+    -- While rising the original 0.65 is kept on purpose: it gives the designed apex gain (about 20
+    -- studs for a jump glided from take-off) that the glider-only platforms rely on.
+    ascentCompensation = 0.65,
 })
 
 -- Ordered: the order abilities are listed in.
