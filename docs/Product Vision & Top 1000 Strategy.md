@@ -1,8 +1,8 @@
 # TINY TITANS — Product Vision & Top 1000 Strategy
 
-**Status:** Product north star and living roadmap  
+**Status:** Product north star; product strategy reference  
 **Version:** 1.0  
-**Date:** 2026-11-04  
+**Date:** 2026-11-13  
 **Platform:** Roblox  
 **Primary ambition:** Build a genuinely compelling, commercially sustainable Roblox experience capable of competing for a Top 1000 experience ranking. This is an ambition, not a guaranteed outcome.
 
@@ -27,6 +27,8 @@ Every feature must support at least one of these outcomes:
 6. The game earns revenue without undermining trust or fair play.
 
 Top 1000 is a product and distribution challenge as well as a development challenge. Good code is necessary, but not sufficient. We must validate the experience with real players and improve it using observed behavior.
+
+**The concrete game and MVP contract now live in [Gameplay Blueprint & MVP Contract](Gameplay%20Blueprint%20%26%20MVP%20Contract.md).** That document is authoritative for the genre, core loop, first habitat, form roles and ability contract. [Tiny Titans Master Roadmap](Tiny%20Titans%20Master%20Roadmap.md) is the only execution roadmap. This document remains the north star and strategy; its strategic stages are not a second task tracker.
 
 ## 2. Product principles — non-negotiable
 
@@ -117,11 +119,11 @@ The arena should feel like a place, not a flat test map:
 Do not build a huge empty open world. Build a compact, dense, replayable space first.
 
 ### 5.2 Evolution must change how the player sees the world
-The first two branches are prototypes of a larger system:
-- **Tank:** resilience, control of space, protecting objectives/teammates, deliberate routes.
-- **Glider:** verticality, momentum, shortcuts, aerial routes, scouting and precision traversal.
+The first two branches remain prototypes, not accepted gameplay identities:
+- **Tank:** resilience and space control; should brace against hazards and move/hold designated heavy obstacles.
+- **Glider:** aerial traversal; should launch, steer, dive and glide across meaningful gaps and elevated routes.
 
-Future branches should introduce genuinely different verbs, not reskins. Potential directions to validate later include burrowing, climbing, camouflage, bouncing or support. Do not commit to a large roster until the first branches are fun and balanced.
+Baby Bug remains a useful agile baseline. The Glider's current gravity-compensation prototype is not sufficient: it needs agency and world-authored use cases. Do not add more forms until the First Habitat and these roles are validated. See the Gameplay Blueprint for the exact ability contract.
 
 ### 5.3 Emergent stories
 Design systems that allow short stories to happen naturally: a Glider reaches a high resource first, a Tank holds a narrow passage, two players coordinate to reach a hidden location, or a timed ecosystem event changes the safest route.
@@ -187,7 +189,7 @@ Inspect the full client-input → remote request → server validation → physi
 Instrument or log rejection reasons during development. Do not silently swallow failed activation. Distinguish “input received”, “request sent”, “server accepted/rejected”, and “effect started”.
 
 ### 7.2 Product direction to prototype
-The Glider should be a traversal tool with agency, not merely a 3-second gravity reduction. Prototype and compare:
+The chosen direction is an aerial traversal specialist: launch from height, steer, trade altitude for speed/distance, and use limited updrafts. It must not hover indefinitely or provide unrestricted flight. The habitat must contain meaningful aerial routes and rewards. Prototype and compare:
 - reliable one-press activation;
 - meaningful air steering;
 - momentum and direction control;
@@ -543,12 +545,13 @@ A release candidate is not “all planned features implemented.” It must demon
 
 ---
 
-## Appendix A — Relationship to existing documents
+## Appendix A — Document authority
 
-- `Game Design Document v0.1.md` remains a historical record of the initial prototype scope and hypothesis.
-- `Technical Design & Implementation Plan v0.1.md` remains a technical reference for the early implementation sequence.
-- This document is the higher-level product strategy and takes precedence when deciding product priorities.
-- Technical architecture still needs separate implementation plans and code review. This document does not authorize a large feature implementation by itself.
+- [Gameplay Blueprint & MVP Contract](Gameplay%20Blueprint%20%26%20MVP%20Contract.md) defines the actual game, first release scope, form roles and ability quality bar.
+- [Tiny Titans Master Roadmap](Tiny%20Titans%20Master%20Roadmap.md) is the only execution roadmap and task sequence.
+- [Evolution Sandbox Architecture](Evolution%20Sandbox%20Architecture.md) defines technical boundaries and current implementation facts.
+- [Combat Progression & Endgame Design](Combat%20Progression%20%26%20Endgame%20Design.md) is a deferred design reference, not approved implementation scope.
+- This document defines the north star and Top 1000 strategy. It does not authorize implementation without a scoped task, acceptance criteria and validation plan.
 
 ## Appendix B — Terminology
 
