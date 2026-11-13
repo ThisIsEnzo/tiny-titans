@@ -4,7 +4,7 @@
 **Version:** 0.1  
 **Date:** November 2026  
 **Status:** Deferred design reference — not approved MVP scope. Use only when the Master Roadmap reaches a validated need for combat depth or endgame systems.  
-**Related:** Evolution Adventure Sandbox Roadmap v0.1; TT-P0-02R — Evolution Sandbox Architecture & Product Pivot; Tiny Titans Master Roadmap v0.1.
+**Related:** Gameplay Blueprint & MVP Contract; Product Vision & Top 1000 Strategy; Tiny Titans Master Roadmap; Evolution Sandbox Architecture.
 
 **Historical note:** Section 13 records an earlier progression/evolution design gate. The current product definition and implementation order are in Gameplay Blueprint & MVP Contract and Tiny Titans Master Roadmap.
 
