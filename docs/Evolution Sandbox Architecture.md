@@ -1,9 +1,8 @@
 # TINY TITANS — Evolution Sandbox Architecture
 
 **Status:** Technical reference. Describes current system boundaries and the intended Current Life / Evolution / Legacy architecture; verify implementation claims against current master and Studio.
-**Branch:** `docs/define-evolution-sandbox`
 **Product definition:** `Gameplay Blueprint & MVP Contract.md`. **Execution plan:** `Tiny Titans Master Roadmap.md`.
-**design-gate update (documentation only):** adds the banner at the start of section 2, section 6.1, the status note and section 7.1, and the decision and question rows in section 12. The player-facing progression design is in `Combat Progression & Endgame Design v0.1.md`, section 13.
+**Maintenance note:** this document retains historical audit snapshots. For current behavior, prefer the README and source code on `master`; this file is not a substitute for Studio verification.
 **Audited baseline:** the repository state after P1-05 lifecycle hardening (merged PR #26, based on master commit `5139da00` at the start of PR #27), including the earlier evolution-flow implementation (`Evolution.Select`, `EvolutionResult`, two-step selection UI). The P1 lifecycle implementation is present in code; automated test execution and Roblox Studio runtime validation are separate and must not be inferred from the merge.
 
 ## 0. Scope, sources and honesty notes
@@ -74,7 +73,7 @@ These guardrails are grounded in the reviewed Evolution Adventure Sandbox Roadma
 
 ## 2. Implementation inventory (what exists today)
 
-> **Historical baseline (P2-01 note).** Sections 2.1 to 2.10 describe the code as audited for architecture audit, before several merged changes: the Energy to Biomass rename (PR #21), `LifeService` (PR #22), the reset on death (P1-03), controlled respawn with a recap (P1-04) and lifecycle hardening (P1-05). Rows that say `Energy`, "death changes nothing" or "respawn is automatic" are superseded. The current verified behavior is tabulated in `Combat Progression & Endgame Design v0.1.md`, section 13.2. Nothing here was re-validated in Studio.
+> **Historical baseline (P2-01 note).** Sections 2.1 to 2.10 describe the code as audited for architecture audit, before several merged changes: the Energy to Biomass rename (PR #21), `LifeService` (PR #22), the reset on death (P1-03), controlled respawn with a recap (P1-04) and lifecycle hardening (P1-05). Rows that say `Energy`, "death changes nothing" or "respawn is automatic" are superseded. For the current implementation, inspect the README and source code on `master`; historical descriptions here are not guaranteed to reflect later PRs. Nothing here was re-validated in Studio.
 
 ### 2.1 Runtime structure
 
@@ -389,7 +388,7 @@ Impact if adopted: attribute `Energy` becomes `Biomass` (all readers are in this
 
 ### 7.1 Resource model recommended by the P2-01 gate (PROPOSED, REQUIRES PLAYTEST)
 
-The design reasoning is in `Combat Progression & Endgame Design v0.1.md`, section 13.5; only the technical shape is recorded here.
+The player-facing design contract is in `Gameplay Blueprint & MVP Contract.md`; only the technical shape is recorded here.
 
 - **Three separate systems:** Biomass (a server-owned quantity), growth (a stage derived from Biomass, today `Config.GrowthStages` with `MinBiomass` and `Scale`), and evolution (an explicit selection once a requirement is met). They stay separate in code and in data.
 - **Two constants are currently one:** `EvolutionBiomassRequired` is both the evolution requirement and the Biomass cap. The recommendation separates them: the requirement belongs to each form's definition (P2-02), and a per-life **ceiling** equal to the final growth milestone is a distinct value (its name is a P2-09 decision).
