@@ -498,23 +498,24 @@ Decisions this document proposes (need owner approval):
 | D9 | P2-01 is a documentation-only design gate; creature-definition engineering is P2-02 | APPROVED DESIGN (from the P2-01 brief) |
 | D10 | Biomass keeps accumulating after evolution with a ceiling at the final growth milestone; growth milestones independent of the evolution requirement | PROPOSED; REQUIRES PLAYTEST; engineering in P2-09 after approval |
 
-Open questions:
 
-| ID | Question | Why it matters |
-|---|---|---|
-| Q1 | Is "Biomass" the final player-facing name, or only an internal name? | Rename scope |
-| Q2 | Is the Roblox reset button a death (it sets health to 0)? | Abuse and recap spam |
-| Q3 | Do ability cooldowns reset on a new life? | Section 3.1 |
-| Q4 | Should there be a minimum life length before history/recap counts? | History noise |
-| Q5 | What happens at the Biomass cap: stop, keep growing past 100, or multi-stage evolution lines? **P2-01 recommendation (PROPOSED, needs approval and playtest):** keep growing in the chosen form up to a ceiling at the final growth milestone; no multi-stage evolution tree in the first release (Combat doc, sections 13.3 and 13.5) | Longer adventure; evolution threshold |
-| Q6 | Which discoveries exist in the first habitat (species, landmarks, secrets) and what triggers them? | P3/P5 scope |
-| Q7 | Does the recap time out and auto-begin a new life, or wait for the button? | Idle players |
-| Q8 | Ability timestamp attributes: keep per-ability names or key by ability id? | Replication naming |
-| Q9 | May other players see anyone's Biomass, or only form? | Privacy; attributes vs remotes |
-| Q10 | What are Roblox place settings for respawn (`RespawnTime`, `CharacterAutoLoads`)? | Currently **Unknown** |
-| Q11 | What is the cause of the intermittent ground clipping? | Unresolved; needs the Studio procedure in the README |
-| Q12 | What is the exact deferred combat-design gate combat prototype scope and its exit gate before P4 production implementation? | Combat foundation, Studio validation and scope control |
-| Q13 | What signature mechanics and counterplay define Striker / Hunter and the proposed combined Support / Controller role? | Class identity; the combined role must be validated against the separate Support and Controller candidate directions in the combat design |
-| Q14 | Which optional PvP format, if any, is justified after the PvE core is validated, and what PvPvE experiment is worth testing? | Fairness, anti-farming and multiplayer scope |
+---
 
-The source documents are present and reviewed; this appendix is intentionally omitted rather than retaining obsolete instructions to update a supposedly unavailable Product Vision document.
+## 13. Product progression alignment — Hybrid RPG v2.0
+
+**Current authority:** This architecture document contains historical implementation audits and earlier proposals. Do not treat every old proposal as current product approval or current code behavior.
+
+The owner approved the Hybrid Creature Exploration RPG direction on 2026-11-15. The current progression boundaries and future technical contract are defined in **Progression & Legacy Architecture Addendum.md**.
+
+Key reconciliation:
+- Biomass and derived Growth remain Current Life state.
+- Evolution definitions are shared/static; the selected form is Current Life state.
+- Naturalist XP is the single proposed persistent general XP track; Naturalist Rank is derived from XP, not a second currency.
+- Creature Mastery is a future per-form record, only after form roles are validated.
+- Legacy contains Bestiary, discoveries, achievements, collections, cosmetics, bounded life history and progression records; it must not grant permanent raw power.
+- Discoveries, Life Goals and World Challenges have distinct permanent, per-life and repeatable semantics.
+- Personal Habitat and creature bonds/companions are post-MVP hypotheses.
+
+The addendum supersedes earlier conceptual suggestions that would create overlapping progression values or introduce broad temporary upgrades by default. In particular, no Research Samples currency is approved, no new forms are approved, and no persistent progression system is part of TT-P3-02.
+
+**Implementation truth remains README and source on master.** Naturalist XP/Rank, Mastery, Legacy persistence, Bestiary, quests, Habitat, companions, foraging variety and PvE encounter systems are not implemented in the inspected baseline. This section and the addendum describe future architecture only.
