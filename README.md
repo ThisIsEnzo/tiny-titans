@@ -1,20 +1,25 @@
 # TINY TITANS
 
-Roblox prototype: a multiplayer creature evolution exploration game (currently a first habitat greybox).
+Roblox prototype: a multiplayer **Creature Exploration RPG** (currently a first habitat greybox).
+
+## Current approved product direction
+
+Each player inhabits one personal, customizable Tiny Titan in an oversized living ecosystem. Baby Bug, Tank and Glider are no longer separate playable forms; their useful verbs may be reconsidered as optional adaptations after real world use cases are proven. A combat system is not required for MVP. Exploration, discovery, collection, character attachment and replayable activities are the foundation. Existing form/evolution code described later in this README is historical prototype implementation, not the approved product model.
 
 ## Product and architecture documents
 
-The product is defined as a **co-op-friendly PvE creature-evolution exploration/survival adventure** in a miniature living ecosystem. The player explores, grows, evolves into a form with a meaningful traversal/survival role, discovers the world and carries knowledge into future lives.
+Use these documents as the current sources of truth:
 
-Use these documents as the only current sources of truth:
-
-- [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md): the actual game, core loop, first habitat, form roles, ability contract and MVP acceptance gates.
-- [Product Vision & Top 1000 Strategy](docs/Product%20Vision%20%26%20Top%201000%20Strategy.md): product north star, quality principles, retention, ethical monetization and growth strategy.
+- [Product Vision v2.2 — Personalized Creature Exploration RPG](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md): product north star, retention principles and cosmetic-first monetization.
+- [GDD v2.2 — The Living World Adventure](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md): unified goal, discovery loop, first ecological story proposal, MVP scope and playtest contract.
+- [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md): core loop, first habitat and MVP acceptance gates.
 - [Tiny Titans Master Roadmap](docs/Tiny%20Titans%20Master%20Roadmap.md): the single execution roadmap and phase gates.
-- [Evolution Sandbox Architecture](docs/Evolution%20Sandbox%20Architecture.md): technical architecture and audited implementation boundaries.
-- [Deferred Combat & Endgame Design Reference](docs/Combat%20Progression%20%26%20Endgame%20Design.md): future combat/endgame ideas only; not current implementation approval.
+- [Player Identity & Adaptation Architecture](docs/Player%20Identity%20%26%20Adaptation%20Architecture.md): future character identity, appearance and optional adaptation boundaries.
+- [Progression & Legacy Architecture Addendum](docs/Progression%20%26%20Legacy%20Architecture%20Addendum.md): future progression and persistence boundaries.
 
-Historical prototype specifications and duplicate roadmaps were removed. This README remains the implementation guide; it does not override product scope or roadmap priorities.
+GDD v2.2 is the detailed experience contract; Gameplay Blueprint defines the first playable slice; Master Roadmap controls execution order. The former Evolution Sandbox Architecture and Combat Progression & Endgame Design are superseded/archived. Their detailed historical notes remain in Git history.
+
+Sections below describe the current code and historical Baby Bug / Tank / Glider prototype work. They are retained as implementation/audit evidence, not as product requirements. Where those notes conflict with the approved one-Tiny-Titan direction, the current product documents above take precedence. Do not infer that Studio validation has occurred unless explicitly recorded.
 
 ## Toolchain
 

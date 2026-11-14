@@ -1,221 +1,189 @@
 # Tiny Titans — Master Roadmap
 
-**Status:** Active execution plan  
-**Version:** 1.0  
-**Date:** 2026-11-13  
-**Product authority:** [Product Vision & Top 1000 Strategy](Product%20Vision%20%26%20Top%201000%20Strategy.md)  
-**Game definition:** [Gameplay Blueprint & MVP Contract](Gameplay%20Blueprint%20%26%20MVP%20Contract.md)  
-**Technical reference:** [Evolution Sandbox Architecture](Evolution%20Sandbox%20Architecture.md)
+**Version:** 2.2  
+**Date:** 2026-11-15  
+**Status:** Active execution roadmap; personalized Tiny Titan direction approved by owner.  
+**Repository:** ThisIsEnzo/tiny-titans  
+**Default branch:** master
 
-This is the **single execution roadmap**. Old phase/task documents have been consolidated here. A merged PR is implementation progress, not proof of a fun or validated feature.
+This is the single execution roadmap. Product Vision v2.2 defines the north star; GDD v2.2 defines the detailed experience contract; Gameplay Blueprint defines the first playable product; Player Identity & Adaptation Architecture defines future character/adaptation technical boundaries.
 
----
+## 1. Product outcome
 
-## 1. Product target
+Build a co-op-friendly **Creature Exploration RPG** in which each player inhabits one personal Tiny Titan in an oversized living ecosystem. Exploration, traversal, discovery, collection and attachment to the player's creature are the foundation. RPG progression, adaptations, companions and a personal Habitat deepen the experience only after the core loop is proven.
 
-Build a multiplayer, co-op-friendly **creature-evolution PvE exploration/survival adventure** in a miniature living ecosystem.
+The game does not require combat. Danger may come from environmental conditions and living creatures, with non-combat responses such as observation, avoidance, hiding, distraction and escape.
 
-The first release is not a generic simulator, a PvP arena or a large MMO. It must prove one compact, memorable habitat, a satisfying exploration/growth loop, meaningful evolution roles, one repeatable challenge and reasons to return across lives.
+The ambition is a commercially sustainable, high-quality Roblox experience with a credible path toward Top 1000. This is an ambition, not a forecast or guarantee.
 
-Top 1000 is the ambition, not a forecast. We will optimize for player value, replayability, first-session clarity, fairness, retention and sustainable content—not PR count or raw playtime.
+## 2. Current verified baseline
 
-## 2. Current repository status (2026-11-13)
+As of the master state inspected for this roadmap:
+- First Habitat greybox is merged (PR #36): Nest, Meadow, Rock Garden, Giant Roots and Secret route; generated Rojo model data and offline validator.
+- Existing systems include lifecycle tracking/reset, controlled respawn and minimal life recap, Biomass/growth, data-driven creature and ability definitions, evolution UI, Baby Bug visual and Glider Air Glide prototype.
+- Current code still contains the prototype form model (BABY_BUG, TANK, GLIDER) and related UI/abilities. **This is implementation history, not the approved product model.** Approved direction is one persistent player identity; adaptations are not yet designed or approved for implementation.
+- Tank Defensive Shell is visual-only; Glider is a bounded three-second air-glide prototype and is not an accepted adaptation.
+- Food remains identical FoodSpawn pickups that grant Biomass.
+- Persistent Legacy, Naturalist XP, Mastery, quests, foraging variety, companions, Habitat, combat/PvE encounters, DataStore and monetization are not implemented.
+- First Habitat Studio validation remains pending. CI, static validation or merged PRs do not prove collision correctness, fun or retention.
 
-### Implemented in code / merged
+Treat README and source on current master as implementation truth. Refresh this snapshot when work resumes.
 
-- First Habitat greybox (TT-P3-01: Nest, Meadow, Rock Garden, Giant Roots and a secret route; checked by an offline validator, Studio validation pending), spawn and food pickup loop.
-- Biomass and three growth stages (current values are prototype tuning).
-- Current Life lifecycle, death reset, controlled respawn and Life Recap.
-- Data-driven creature definitions, ability definitions and evolution UI.
-- Procedural Baby Bug visual character.
-- Tank Defensive Shell visual prototype.
-- Glider Air Glide physics prototype (PR #34 merged).
-- CI, Rojo build and pure-rule test workflow.
+## 3. Delivery rules
 
-### Not yet validated as a complete player experience
+- One independent task = one feature branch = one PR.
+- Default branch is master; never work directly on it.
+- Claude Code must not merge PRs.
+- Keep one outcome per PR and update the roadmap only with evidence.
+- Run Lune tests and Rojo build where available; report exactly what ran.
+- Studio validation is required for runtime physics, camera, collision, input, device and multiplayer behavior.
+- Never equate merged code, green CI or offline validation with fun or a validated game.
+- Prefer direct documentation/code changes by the project owner or assistant where possible; use Claude Code for repository-local implementation.
+- TT-P3-02 remains narrowly scoped to the exploration loop using existing systems only.
 
-- Roblox Studio runtime checks for lifecycle, Baby Bug visuals, Tank and Glider.
-- Real movement/camera feel and collision quality across devices.
-- Glider aerial steering, useful range, landing reliability and world use cases.
-- Tank's actual defensive/obstacle utility (currently visual only).
-- Whether the first-session loop is fun and whether players want another life.
+## 4. Active pre-MVP phases
 
-### Not implemented
+### Phase 0 — Foundation and uncertainty reduction
 
-- Production First Habitat (final art, audio, varied resource interactions); the current environment is the First Habitat greybox.
-- Varied resource interactions, discovery/bestiary, secrets and repeatable activities.
-- Health/damage, a PvE encounter or a designed environmental threat.
-- Legacy model and DataStore persistence.
-- Validated cooperative gameplay, external playtests, product analytics and launch operations.
-- Monetization.
+**Outcome:** know what works and remove critical technical uncertainty.
+- Keep lifecycle, reset, recap and Biomass/growth stable while product-facing form/evolution assumptions are reassessed.
+- Run existing automated checks and build in the available environment.
+- Complete deferred Studio checks for spawn, camera, current creature visual, growth, lifecycle and multiplayer isolation.
+- Record current prototype limitations honestly; Tank and Glider are not accepted product roles.
+- Observe new players and capture friction, fun moments and reasons to continue.
 
-**Do not interpret merged code or passing CI as Studio validation or evidence of fun.**
+**Exit gate:** no launch-blocking lifecycle/input defect; limitations documented; a real player can enter and control the current prototype. This does not prove the future character direction.
 
-## 3. Priority zero — stop feature expansion and validate the foundation
+### Phase 1 — Exploration and personal creature vertical slice
 
-**Outcome:** establish what actually works in Roblox Studio and remove uncertainty before adding systems.
+**Outcome:** First Habitat becomes a small adventure worth exploring more than once, and players begin to care about their own Tiny Titan.
 
-1. Run the existing manual Studio checklist for lifecycle, death/recap, Baby Bug appearance and multiplayer isolation.
-2. Validate the merged Glider prototype: activation, air steering (currently limited/absent), lift/descent, landing, cooldown, mobile/gamepad input and replication.
-3. Validate Tank's current shell behavior and record honestly that it is visual-only if it has no mechanical effect.
-4. Observe at least one first-time player in the current prototype without coaching. Record confusion, dead time, fun moments and whether they want to continue.
-5. Capture a short gameplay recording and a prioritized issue list.
+1. TT-P3-01 First Habitat greybox — merged PR #36; physical Studio validation pending.
+2. **TT-P3-02 Exploration Gameplay Loop:** implement the signature loop (clue → observation → interaction → feedback/record) using the smallest set of authored interactions; no generic quest framework.
+3. Build one short ecological story chain with a visible before/after world response (the GDD's “Quiet Glade” is a proposal to validate, not locked lore).
+4. Add at least two discovery categories (landmark/place and species/behavior) with clear player feedback; persistent Bestiary/Legacy remains Phase 2 unless a minimal persistence decision is separately approved.
+5. Add one compact repeatable route/observation challenge with controlled variants and solo completion.
+6. Evaluate current Baby Bug visual only as a temporary presentation prototype; define requirements for one consistent personal Tiny Titan. No full creator or adaptation/loadout system.
+7. Tune onboarding, camera, movement, navigation, interaction prompts and feedback through observed playtests.
 
-**Exit gate:** no critical lifecycle/input defects; known limitations recorded; owner accepts the first-habitat gameplay brief before more ability work.
+Do not add Naturalist Rank, persistent quests, Mastery, new currencies, companions, Habitat, combat or a generic adaptation/loadout system in this phase.
 
-## 4. Product phases
+**Exit gate:** first-time players understand the immediate goal; discover multiple points of interest; complete the ecological chain; notice and explain its visible outcome; try a second discovery or repeatable activity voluntarily; and navigate the habitat solo. Studio movement/camera/device validation and external playtests are required.
 
-### Phase 1 — First Habitat vertical slice
+### Phase 2 — RPG and Legacy foundation
 
-**Outcome:** a small world that is interesting to explore before we add content breadth.
+**Outcome:** understandable long-term goals without power creep or grind. Start only after Phase 1 passes its product gate.
 
-- Design a safe Nest and three distinct micro-areas.
-- Build readable landmarks, ground routes, elevated routes, narrow passages and meaningful gaps.
-- Add a small set of varied resource interactions.
-- Add one discovery/secret loop and a simple activity objective.
-- Ensure there are multiple routes and no mandatory class gate.
-- Tune camera, movement, scale, collision and mobile readability.
+- Define versioned Legacy data and safe DataStore lifecycle.
+- Add Naturalist XP and derived Naturalist Rank.
+- Add Bestiary and permanent discovery records.
+- Add Discoveries, Life Goals and World Challenges.
+- Add bounded life history and recap integration.
+- Design adaptation unlocks only if Phase 1 proves a concrete need for new player verbs; do not recreate separate form classes.
+- Consider mastery only for meaningful authored activities/adaptations after validation; no per-form Mastery.
+- Build idempotent server-authoritative reward claims, persistence retries, migrations and recovery.
+- Keep Legacy rewards to knowledge, identity, cosmetics and optional access, not permanent raw stats.
 
-Status (TT-P3-01): the greybox covers the Nest, three micro-areas, landmarks, ground and elevated routes, narrow passages, a hidden route with a reward location and a leaf-platform gap, with no ability gate. Still open: varied resource interactions, a simple activity objective, and tuning of camera, movement, scale, collision and mobile readability in Studio.
+**Exit gate:** players understand reset/persistence; data survives death/rejoin and recoverable failures; goals are meaningful without repetitive farming.
 
-**Exit gate:** a new player can explore for several minutes, find multiple opportunities and explain what makes the miniature world interesting. A second pass offers at least one different route or goal.
+### Phase 3 — Living ecosystem and Foraging
 
-### Phase 2 — Meaningful evolution and abilities
+**Outcome:** resources and species feel native to each micro-biome.
+- Replace identical food balls with readable food/resource interactions (berries, mushrooms, nectar, seeds, acorns) with distinct purposes.
+- Give each resource a biome identity, interaction, availability and economy sink/source.
+- Add a small number of species with distinct readable behaviors.
+- Expand Bestiary with observation/discovery conditions.
+- Add limited environmental events or changing resource opportunities.
+- Consider non-combat interactions: observe, avoid, hide, distract, follow tracks, help or safely approach.
+- Avoid hunger/thirst chores unless playtests prove they improve the fantasy.
+- Do not introduce Research Samples as another currency without a justified sink.
 
-**Outcome:** Baby Bug, Tank and Glider provide understandable, useful, balanced playstyles.
+**Exit gate:** players choose routes for resource variety and species discoveries; no pickup cluster dominates; ecosystem feels distinct without a huge map.
 
-- Keep Baby Bug as the agile baseline with narrow-space access.
-- Prototype Tank brace/impact protection and a meaningful heavy-object interaction.
-- Redesign Glider as controlled aerial traversal: launch, steer, dive, glide and land.
-- Build routes and optional rewards that demonstrate each role.
-- Define explicit trade-offs, counterplay, cooldown/resource rules and feedback.
-- Test each form solo and in multiplayer; ensure no form is mandatory for progression.
+### Phase 4 — Creature Bonds and Personal Habitat
 
-**Exit gate:** testers can describe when and why they would choose each form; each form has at least one satisfying use case and a meaningful weakness; no form dominates all routes. Numeric balance is based on playtest evidence.
+**Outcome:** attachment, self-expression and a meaningful home loop.
+- Prototype meeting/studying/helping/bonding with a small number of species.
+- Companions are optional relationships and utility, not a replacement for the player's Tiny Titan and never mandatory.
+- Add a modest personal Nest/Habitat with curated modular upgrades and decoration.
+- Add only a few meaningful stations; no factories or passive automation replacing play.
+- Define ownership, permissions, multiplayer visits and data safety.
+- Companion utility may reveal resources/clues or react to the world, but cannot be mandatory.
 
-### Phase 3 — Repeatable exploration and survival activity
+**Exit gate:** players value Habitat and bonds for attachment/expression while the main adventure remains enjoyable without them.
 
-**Outcome:** the player has a reason to explore, take risks and replay a life.
+### Phase 5 — Expanded ecosystem, encounters and biomes
 
-- Add one readable hazard or simple PvE creature encounter.
-- Add a small objective/challenge structure with clear completion and rewards.
-- Make risk/reward and failure understandable.
-- Ensure the activity is enjoyable without PvP or a second player.
-- Tune Biomass and evolution pacing around the activity rather than arbitrary thresholds.
+**Outcome:** new situations and social stories, not just more map acreage.
+- Add territorial creatures and authored encounters with non-combat responses (observe, avoid, distract, hide, escape, environmental solution).
+- Add cooperative challenges with complementary contributions and a complete solo route.
+- Add short World Events that do not punish players for missing a schedule.
+- Expand one dense biome at a time, each with new traversal, resources, species and challenges.
+- Combat is **not assumed**. Consider it only if playtests reveal a compelling need that non-combat interaction cannot serve; this requires a separate product decision.
+- Add crafting/equipment only when it creates meaningful choices without overwhelming creature identity.
 
-**Exit gate:** players can complete and replay the activity, understand the threat/counterplay and voluntarily start another life.
+**Exit gate:** each new biome/activity introduces a distinct verb or decision and supports replayability with measured player value.
 
-### Phase 4 — Life, Legacy and long-term goals
+### Phase 6 — Public-quality MVP and launch operations
 
-**Outcome:** death ends a life without making the session feel wasted.
+**Outcome:** ship a coherent, polished, safe and measurable public product.
+- Finalize first-session onboarding and UI.
+- Polish personal Tiny Titan presentation, animation, sound and VFX.
+- Validate touch, keyboard/mouse and gamepad; test low-end mobile performance.
+- Complete server-authority, exploit, data safety and Roblox policy reviews.
+- Run external playtests and instrument first-session funnel, discovery/activity completion, customization engagement, return intent and retention.
+- Prepare icon, thumbnails, store description, moderation/reporting, support, release and rollback plans.
+- Introduce cosmetic-first monetization only after player value and economy are demonstrated.
 
-- Define the Legacy schema: discoveries, bestiary, achievements, collections, cosmetics and life history.
-- Keep Legacy free of permanent raw combat/movement power.
-- Implement an in-memory model and recap integration first.
-- Add DataStore only after schema versioning, migration, retry, failure and recovery paths are tested.
-- Add a few long-term goals that unlock knowledge, identity or options.
+**Exit gate:** external players understand the game, enjoy the loop, voluntarily return and can name meaningful goals; no launch-blocking technical, security, policy, moderation or performance issue remains.
 
-**Exit gate:** discoveries survive death and rejoin reliably; data failure cannot erase valid progress; players can name a meaningful next goal.
+## 5. Post-MVP live development
 
-### Phase 5 — Multiplayer and social value
+After stable MVP and evidence of audience fit:
+- Expand collections, cosmetic expression and seasonal chapters.
+- Add companions and Habitat decoration incrementally.
+- Add adaptations only when a new gameplay verb is needed and validated.
+- Add biomes and ecosystem encounters one dense slice at a time.
+- Add social visits and co-op events with safe permissions and solo alternatives.
+- Grow creator/community outreach, localization and update cadence from player data.
 
-**Outcome:** other players make the habitat more interesting without breaking solo play.
+Deferred: breeding/genetics, player trading/marketplace, factories, guilds, forced PvP, ranked progression, large MMO zones, paid power, paid death protection and mandatory companions.
 
-- Add one co-op objective or encounter with complementary but non-mandatory roles.
-- Add clear contribution/reward rules and anti-AFK/farming protection.
-- Add friend/session improvements only when useful.
-- Consider friendly competitions after core PvE is stable.
-- Keep PvP optional and out of core progression.
+## 6. MVP release gates
 
-**Exit gate:** multiplayer produces positive interactions, solo play remains complete, and 2–4+ client tests show no state leaks or reward exploits.
-
-### Phase 6 — First public-quality MVP
-
-**Outcome:** a coherent, polished and testable release candidate.
-
-- First-session onboarding and readable UI.
-- Final-enough creature models, animation, sound and VFX for the MVP forms.
-- Mobile-first performance and keyboard/mouse/gamepad parity.
-- Server-authority, exploit and data-safety review.
-- Moderation/reporting and Roblox policy review.
-- External playtests, funnel instrumentation and issue closure.
-- Store page, icon, thumbnails, release/rollback plan.
-
-**Exit gate:** external players understand the game, enjoy the core loop, complete meaningful activities and express a reason to return; no launch-blocking technical, security, policy or performance issue remains.
-
-### Phase 7 — Live development and scale toward Top 1000
-
-Only after launch evidence:
-- expand the habitat one dense area at a time;
-- add forms only when they introduce a proven new gameplay verb;
-- add rotating challenges/events and collection chapters;
-- add cosmetic-first monetization and optional supporter products;
-- invest in creator/community outreach, localization and sustainable update cadence;
-- use cohort retention and player feedback to choose the next work.
-
-No paid resurrection, death protection, pay-to-win stats or monetized frustration.
-
-## 5. Work policy: what is paused
-
-Until Phase 1 and the product/runtime validation gate pass, pause:
-- additional classes and abilities;
-- full combat systems, PvP, ranked modes and deep combat progression;
-- large-scale persistence and DataStore;
-- pets, breeding, trading, crafting, guilds and multiple biomes;
-- shop, premium currency and monetization.
-
-This is not abandoning those ideas. It prevents expensive systems from being built before the core game is worth playing.
-
-## 6. Ability task acceptance template
-
-Every ability PR must include:
-
-- player fantasy and exact purpose;
-- two or more concrete world use cases;
-- unique gameplay verb;
-- strength, weakness, trade-off and counterplay;
-- activation, rejection, duration, cancel and cooldown rules;
-- server authority and exploit boundaries;
-- visual/audio/UI feedback;
-- keyboard, touch and gamepad behavior;
-- automated tests for deterministic rules;
-- manual Studio checklist and observed results;
-- playtest question and evidence required to accept the ability.
-
-If the ability has no meaningful habitat use case, do not implement it.
-
-## 7. Release readiness tracking
-
-Track gates, not a misleading percentage based on merged PRs:
-
-| Gate | Status |
+| Gate | Current evidence/status |
 |---|---|
-| Core lifecycle and reset implementation | Implemented; Studio validation pending |
-| Baby Bug visual | Implemented; Studio validation pending |
-| Tank role and ability | Not validated; current shell is visual-only |
-| Glider role and ability | Physics prototype merged; gameplay validation pending |
-| First Habitat | Greybox implemented (TT-P3-01); Studio validation pending |
-| Repeatable exploration/survival activity | Not implemented |
-| Legacy and persistence | Not implemented |
-| Multiplayer activity and fairness | Not implemented |
-| External playtests and retention evidence | Not started |
+| Lifecycle/reset/respawn | Implemented; Studio validation pending |
+| Biomass/growth | Implemented; Studio and pacing validation pending |
+| Current creature visual | Baby Bug visual prototype exists; not accepted as final identity; Studio validation pending |
+| Personal Tiny Titan customization | Direction approved; not implemented |
+| Adaptations | Not approved for MVP; old Tank/Glider abilities are prototypes only |
+| First Habitat | Greybox merged PR #36; Studio validation pending |
+| Exploration discovery loop | TT-P3-02 planned; not evidenced as fun |
+| Repeatable activity | Not implemented/accepted |
+| Naturalist XP, Rank, Bestiary, Legacy | Not implemented |
+| Foraging variety and living species | Not implemented |
+| Companions and personal Habitat | Post-MVP |
+| External playtests and retention evidence | Not established |
 | Public launch operations | Not started |
 
-Do not report an overall MVP percentage until these gates have measurable exit evidence.
+Do not calculate a single overall MVP percentage from merged PR count. Report evidence and blockers.
 
-## 8. PR and branch workflow
+## 7. PR and branch workflow
 
-- Default branch: `master`.
-- One independent task = one feature branch = one PR.
-- Claude Code must not work directly on `master` and must not merge PRs.
-- Each PR has one outcome, narrow scope, tests, acceptance criteria and a Studio checklist where Roblox runtime behavior is involved.
-- Record what was actually run. Never claim Studio validation without evidence.
-- Product design approval precedes ability/feature implementation.
-- Prefer direct documentation/code changes by the project owner or assistant when they can be safely completed without local Studio work.
+Default branch master; one independent task per feature branch and PR; Claude Code must not work directly on master or merge PRs. Every PR has one outcome, narrow scope, tests, acceptance criteria and a Studio checklist where runtime behavior is involved. The project owner reviews and merges.
 
-## 9. Decision log
+## 8. Decision log
 
-- **2026-11-13:** Product direction consolidated as a co-op-friendly PvE creature-evolution exploration/survival adventure in a miniature living ecosystem.
-- **2026-11-13:** First release is one dense habitat and a small activity set; forced PvP, large roster, MMO systems and monetization are deferred.
-- **2026-11-13:** Glider is not accepted as a finished ability. Target direction is controlled aerial traversal with steering, momentum, diving and world-authored routes.
-- **2026-11-13:** Tank is not accepted as a finished ability. Target direction is meaningful bracing/protection and a physical world interaction.
+- **2026-11-13:** Product direction consolidated as co-op-friendly PvE creature exploration in a miniature living ecosystem.
+- **2026-11-14:** First Habitat greybox merged as PR #36; physical Studio validation pending.
+- **2026-11-15:** Owner approved **Creature Exploration RPG** centered on one personal Tiny Titan per player.
+- **2026-11-15:** Separate Baby Bug / Tank / Glider playable forms are retired as product direction. Their useful ideas may be reconsidered as optional adaptations after real world use cases are proven.
+- **2026-11-15:** Combat is not required for danger, replayability or MVP; environmental and creature threats should support non-combat responses.
+- **2026-11-15:** Naturalist XP is the one persistent general XP track; Rank is derived, not a separate currency.
+- **2026-11-15:** Progression layers are Biomass/Growth, Naturalist XP/Rank, Legacy, and future optional adaptations/mastery.
+- **2026-11-15:** Bonds/companions and personal Habitat are post-MVP hypotheses; factories, breeding, trading and MMO scale remain deferred.
+- **2026-11-15:** TT-P3-02 remains a narrow exploration-loop task using existing systems only; its detailed discovery/eco-story vertical-slice contract is in GDD v2.2 and Gameplay Blueprint v2.2.
+- **2026-11-15:** Owner selected the hybrid direction with one unified long-term goal: explore, understand and gradually reconnect ecosystems while building a personal legacy.
+- **2026-11-15:** “The Quiet Glade” is a proposed first ecological story example, not locked world canon.
+- **2026-11-15:** Restoration must produce visible local world feedback; a progress bar alone is insufficient.
