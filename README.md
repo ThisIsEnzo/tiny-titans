@@ -10,8 +10,6 @@ Each player inhabits one personal, customizable Tiny Titan in an oversized livin
 
 Use these documents as the current sources of truth:
 
-Use these documents as the only current sources of truth:
-
 - [Product Vision v2.1 — Personalized Creature Exploration RPG](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md): product north star, retention principles and cosmetic-first monetization.
 - [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md): core loop, first habitat and MVP acceptance gates.
 - [Tiny Titans Master Roadmap](docs/Tiny%20Titans%20Master%20Roadmap.md): the single execution roadmap and phase gates.
