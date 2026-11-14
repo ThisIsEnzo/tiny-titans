@@ -6,7 +6,7 @@
 **Repository:** ThisIsEnzo/tiny-titans  
 **Default branch:** master
 
-This is the single execution roadmap. Product Vision defines why and the long-term ambition; Gameplay Blueprint defines the game and MVP contract; Evolution Sandbox Architecture plus the Progression & Legacy Architecture Addendum define technical boundaries. A future idea in any document is not implementation approval unless it appears in the active phase scope below.
+This is the single execution roadmap. [Product Vision v2.0 — Hybrid Creature Exploration RPG](Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md) defines why and the long-term ambition; Gameplay Blueprint defines the game and MVP contract; Evolution Sandbox Architecture plus the Progression & Legacy Architecture Addendum define technical boundaries. A future idea in any document is not implementation approval unless it appears in the active phase scope below.
 
 ## 1. Product outcome
 
