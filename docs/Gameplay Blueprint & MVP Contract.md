@@ -1,7 +1,7 @@
 # Tiny Titans — Gameplay Blueprint & MVP Contract
 
-**Status:** Proposed product direction for owner approval  
-**Version:** 1.0  
+**Status:** Product direction approved by owner; MVP contract remains active  
+**Version:** 2.0  
 **Date:** 2026-11-13  
 **Authority:** This document defines what game we are building and what the first playable product must prove. The Product Vision defines the ambition and principles; the Master Roadmap defines execution order.
 
@@ -211,3 +211,38 @@ If these answers are unclear, the task is not ready for implementation.
 **Build a compact, multiplayer creature-evolution PvE exploration/survival adventure in a miniature living ecosystem. Prove one excellent habitat and a few meaningful activities before expanding classes, combat depth, persistence breadth or monetization.**
 
 Top 1000 is the ambition. Player value, replayability, fairness and evidence are the operating standard.
+
+---
+
+## 11. Approved Hybrid RPG direction (Product Vision v2.0)
+
+**Owner approval:** 2026-11-15. The long-term identity is a **Hybrid Creature Exploration RPG**. This is approval of product direction, not approval to implement every future system immediately.
+
+The existing MVP contract remains intentionally narrow: prove an enjoyable miniature-world exploration loop, meaningful form roles and a repeatable activity before building long-term RPG breadth.
+
+### Progression boundaries
+
+- **Biomass / Growth:** Current Life only. Biomass is the existing growth resource; growth stage is derived from it. It is not Player XP or crafting currency.
+- **Evolution:** selected form for the current life. Baby Bug is the agile baseline; Tank and Glider remain role prototypes until playtested.
+- **Naturalist XP / Rank:** future persistent player progression. XP is the only value; Rank is derived from XP and is not a second currency. Rewards should be knowledge, cosmetics, optional challenges and access—not permanent raw power.
+- **Creature Mastery:** future per-form record of meaningful skill/use. It must not be a grind multiplier or prerequisite for an ability to function.
+- **Legacy:** future persistent Bestiary, discoveries, achievements, collections, life history, Naturalist progression, mastery and cosmetics. It is not implemented by this contract.
+- **Habitat / Bonds:** future persistent home and creature relationship systems, explicitly post-MVP.
+
+### Activity model
+
+- **Discoveries:** permanent first-time knowledge claims.
+- **Life Goals:** temporary objectives for one life.
+- **World Challenges:** authored repeatable activities with clear solo completion and anti-farm rules.
+
+Rewards must have one clear purpose: Biomass advances the current life; Naturalist XP advances persistent learning; Legacy records permanent knowledge; cosmetics express identity. Do not add multiple currencies or grant every reward type for every task.
+
+### Death contract
+
+On life end, Current Life state is reset according to the existing lifecycle contract. Future Legacy state must survive death and rejoin. Inventory/material carry-over, item drops, extraction and companion safety are unresolved design questions and must not be implemented by assumption. The actual current implementation is described in README/source; persistent Legacy and DataStore are not yet implemented.
+
+### MVP boundary
+
+No Naturalist XP/Rank, Mastery, persistent quests, DataStore, foraging catalogue, companions, Habitat building, creature utility automation, breeding, trading, factories, bosses or new biomes are added to TT-P3-02. The current task remains a small exploration loop using existing systems only.
+
+For the technical progression contract and future service/data boundaries, see **Progression & Legacy Architecture Addendum**. The Master Roadmap remains the sole execution plan.
