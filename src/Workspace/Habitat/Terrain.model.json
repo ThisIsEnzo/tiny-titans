@@ -1,0 +1,475 @@
+{
+  "className": "Folder",
+  "children": [
+    {
+      "name": "HabitatFloor",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Grass",
+        "Color": [
+          0.3765,
+          0.5569,
+          0.2745
+        ],
+        "Size": [
+          140,
+          1.0,
+          140
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              0,
+              0.0,
+              0
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "CliffNorth",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Slate",
+        "Color": [
+          0.3451,
+          0.3843,
+          0.4235
+        ],
+        "Size": [
+          148,
+          50,
+          4
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              0,
+              25.5,
+              -72
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Tags": [
+          "HabitatBoundary"
+        ]
+      }
+    },
+    {
+      "name": "HedgeSouth",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "LeafyGrass",
+        "Color": [
+          0.2588,
+          0.4235,
+          0.2118
+        ],
+        "Size": [
+          148,
+          50,
+          4
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              0,
+              25.5,
+              72
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Tags": [
+          "HabitatBoundary"
+        ]
+      }
+    },
+    {
+      "name": "CliffWest",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Slate",
+        "Color": [
+          0.3765,
+          0.3765,
+          0.3843
+        ],
+        "Size": [
+          4,
+          50,
+          140
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -72,
+              25.5,
+              0
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Tags": [
+          "HabitatBoundary"
+        ]
+      }
+    },
+    {
+      "name": "HedgeEast",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "LeafyGrass",
+        "Color": [
+          0.2588,
+          0.4235,
+          0.2118
+        ],
+        "Size": [
+          4,
+          50,
+          140
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              72,
+              25.5,
+              0
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Tags": [
+          "HabitatBoundary"
+        ]
+      }
+    },
+    {
+      "name": "TintMeadow",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Grass",
+        "Color": [
+          0.502,
+          0.6667,
+          0.3294
+        ],
+        "Size": [
+          0.1,
+          74,
+          74
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              4,
+              0.53,
+              34
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "TintRockGarden",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Pebble",
+        "Color": [
+          0.549,
+          0.4863,
+          0.4235
+        ],
+        "Size": [
+          0.1,
+          56,
+          56
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -46,
+              0.54,
+              -22
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "TintRoots",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.3059,
+          0.2118,
+          0.149
+        ],
+        "Size": [
+          0.1,
+          52,
+          52
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              46,
+              0.54,
+              -22
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "TintHollow",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Slate",
+        "Color": [
+          0.3451,
+          0.3843,
+          0.4235
+        ],
+        "Size": [
+          0.1,
+          22,
+          22
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -44,
+              0.54,
+              -60
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder",
+        "CastShadow": false
+      }
+    }
+  ]
+}

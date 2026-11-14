@@ -23,7 +23,7 @@ Top 1000 is the ambition, not a forecast. We will optimize for player value, rep
 
 ### Implemented in code / merged
 
-- Greybox arena, spawn and food pickup loop.
+- First Habitat greybox (TT-P3-01: Nest, Meadow, Rock Garden, Giant Roots and a secret route; checked by an offline validator, Studio validation pending), spawn and food pickup loop.
 - Biomass and three growth stages (current values are prototype tuning).
 - Current Life lifecycle, death reset, controlled respawn and Life Recap.
 - Data-driven creature definitions, ability definitions and evolution UI.
@@ -42,7 +42,7 @@ Top 1000 is the ambition, not a forecast. We will optimize for player value, rep
 
 ### Not implemented
 
-- Production First Habitat; current environment is a small greybox test arena.
+- Production First Habitat (final art, audio, varied resource interactions); the current environment is the First Habitat greybox.
 - Varied resource interactions, discovery/bestiary, secrets and repeatable activities.
 - Health/damage, a PvE encounter or a designed environmental threat.
 - Legacy model and DataStore persistence.
@@ -75,6 +75,8 @@ Top 1000 is the ambition, not a forecast. We will optimize for player value, rep
 - Add one discovery/secret loop and a simple activity objective.
 - Ensure there are multiple routes and no mandatory class gate.
 - Tune camera, movement, scale, collision and mobile readability.
+
+Status (TT-P3-01): the greybox covers the Nest, three micro-areas, landmarks, ground and elevated routes, narrow passages, a hidden route with a reward location and a leaf-platform gap, with no ability gate. Still open: varied resource interactions, a simple activity objective, and tuning of camera, movement, scale, collision and mobile readability in Studio.
 
 **Exit gate:** a new player can explore for several minutes, find multiple opportunities and explain what makes the miniature world interesting. A second pass offers at least one different route or goal.
 
@@ -192,7 +194,7 @@ Track gates, not a misleading percentage based on merged PRs:
 | Baby Bug visual | Implemented; Studio validation pending |
 | Tank role and ability | Not validated; current shell is visual-only |
 | Glider role and ability | Physics prototype merged; gameplay validation pending |
-| First Habitat | Greybox only |
+| First Habitat | Greybox implemented (TT-P3-01); Studio validation pending |
 | Repeatable exploration/survival activity | Not implemented |
 | Legacy and persistence | Not implemented |
 | Multiplayer activity and fairness | Not implemented |

@@ -1,6 +1,6 @@
 # TINY TITANS
 
-Roblox prototype: a multiplayer creature evolution arena.
+Roblox prototype: a multiplayer creature evolution exploration game (currently a first habitat greybox).
 
 ## Product and architecture documents
 
@@ -29,57 +29,80 @@ These are the versions recorded for the existing development setup. Verify local
 - `src/ReplicatedStorage/Shared`: shared configuration and data contracts
 - `src/ServerScriptService`: server-authoritative gameplay
 - `src/StarterPlayer/StarterPlayerScripts`: client input and UI
-- `src/Workspace`: minimal starting environment (see below). Everything in this folder, including the greybox arena in `src/Workspace/Arena`, is managed by Rojo.
+- `src/Workspace`: the Baseplate and the First Habitat greybox in `src/Workspace/Habitat` (see below). Everything in this folder is managed by Rojo.
+- `tools/habitat`: the habitat layout generator and its offline validator.
 
 ## Starting environment
 
-`src/Workspace` contains two static Rojo model files that are written into the generated place, so a fresh build is playable with no manual setup in Studio:
+`src/Workspace` contains the unchanged 512x512 `Baseplate.model.json` (anchored concrete floor, top at Y = 0, the safety floor under and around the play area, so there is no void anywhere near it) and the `Habitat` folder (below). Everything is declarative, anchored, script-free place data written into the generated place by Rojo, so a fresh build is playable with no manual setup in Studio.
 
-- `Baseplate.model.json`: anchored 512x20x512 concrete floor. Its top surface is at Y = 0.
-- `SpawnLocation.model.json`: anchored, neutral 12x1x12 spawn pad resting on the floor (Y = 0 to 1), with `Duration = 0` (no spawn forcefield).
-
-Implications:
-
-- The environment is declarative place data, not a runtime script, so it exists before any player joins and cannot create duplicates when the server restarts or a script re-runs. There is exactly one instance of each object.
-- The `Workspace` node sets `$ignoreUnknownInstances`, so objects you author in Studio (for example the future greybox arena) are not deleted when Rojo syncs.
-- Rojo matches instances by name. If a place you already saved contains a manually inserted `Baseplate` or `SpawnLocation`, delete the extra copies, or start from a fresh `rojo build`, to avoid two floors or two spawns.
-- The 512x512 Baseplate is kept unchanged as the safety floor under and around the arena, so there is no void anywhere near the play area. Keep one valid neutral `SpawnLocation` above solid, anchored ground.
-
-## Greybox arena
-
-`src/Workspace/Arena` holds the greybox arena as static Rojo `.model.json` Parts (anchored, `Locked`, simple materials, no scripts). It is declarative place data: it exists in the built place before any player joins, and nothing creates it at runtime. The arena itself contains no scripts; gameplay on top of it is described in the next section.
-
-Coordinates: arena is centered on the origin, +X is east, -Z is north. Floor top is Y = 0.5; studs.
-
-Layout (120x120 play area, X and Z from -60 to 60):
-
-| Folder | Contents |
-|---|---|
-| `Ground` | `ArenaFloor` 120x1x120 grass slab (top Y = 0.5), sitting on the Baseplate |
-| `Landmark` | `CentralPlaza` 36x36 sand pad around the existing `SpawnLocation`, and `Beacon`, a 16-stud neon pillar at (0, -14) visible from most of the arena |
-| `Platforms` | Jump route NE: `HillTier1` (top Y = 3.5) then `HillTier2` (top Y = 6.5). Jump route SW: `LedgeA` (top 3.5) then `LedgeB` (top 6.5). Each step is 3 studs |
-| `GliderPlatforms` | `GliderPlatform1` (center 12, -36, top Y = 16), `GliderPlatform2` (-16, -44, top Y = 20), `GliderPlatform3` (-22, 24, top Y = 16). Tops are well above default jump reach even from the 6.5 tiers, with horizontal gaps of 9+ studs from jumpable surfaces |
-| `Obstacles` | `Wall1`-`Wall3` (8 studs tall) and `Boulder1`-`Boulder5` (4-6 studs tall) forming detours. Obstacles keep at least 6 studs of clearance from each other, the plaza and the boundary |
-| `FoodSpawns` | `FoodSpawn1`-`FoodSpawn8`: small non-colliding neon markers. 6 on the ground, 1 on `HillTier2` (jump reward), 1 on `GliderPlatform2` (glide reward) |
-| `Boundaries` | `WallNorth/South/East/West`: 40-stud tall, 60% transparent collidable walls with inner faces at +/-60 |
-
-Main areas: center plaza (spawn and orientation), open ground ring with food, two jumpable climbs (NE hill, SW ledges), and a high glider layer reachable only with a future glide ability.
-
-CollectionService tags (set in the model files, so they exist in the built place):
-
-- `FoodSpawn`: the 8 food markers
-- `GliderPlatform`: the 3 high platforms
-- `ArenaBoundary`: the 4 boundary walls
-
-Future server code can use `CollectionService:GetTagged("FoodSpawn")` and so on.
-
-### Build with Rojo
+- The environment exists before any player joins and cannot create duplicates when the server restarts. There is exactly one instance of each object.
+- The `Workspace` node sets `$ignoreUnknownInstances`, so objects you author in Studio are not deleted when Rojo syncs.
+- Rojo matches instances by name. If a place you already saved contains a manually inserted `Baseplate`, `SpawnLocation` or an old `Arena` folder, delete them or start from a fresh `rojo build`, to avoid two floors, extra spawns or the old arena.
 
 ```powershell
 rojo build default.project.json -o build.rbxlx
 ```
 
-Open `build.rbxlx` in Studio, or connect the Rojo plugin with `rojo serve`. No manual Studio setup is required. If a saved place already contains manually inserted `Baseplate`, `SpawnLocation` or an `Arena` folder, delete them first or start from a fresh build.
+Open `build.rbxlx` in Studio, or connect the Rojo plugin with `rojo serve`.
+
+## First Habitat greybox (TT-P3-01)
+
+`src/Workspace/Habitat` replaces the old test arena with a compact, connected habitat for a tiny creature in an oversized world. It follows the gameplay direction in `docs/Gameplay Blueprint & MVP Contract.md` (co-op-friendly PvE exploration; no mandatory ability gates). It is a **greybox**: simple materials, no external assets, no scripts, no new gameplay systems. **It has not been played in Roblox Studio** (checklist below); only the offline layout validator has been run.
+
+Coordinates: centred on the origin, +X east, -Z north, floor top at Y = 0.5, play area X and Z from -70 to 70 (140 x 140), studs. The Nest is in the south-west corner and the Old Tree in the north-east.
+
+| File (`Habitat/`) | Parts | Contents |
+|---|---|---|
+| `Terrain` | 9 | `HabitatFloor` grass slab, four tall opaque boundary walls (`CliffNorth/West`, `HedgeSouth/East`, inner faces at +/-70, 50 studs high) and four non-colliding zone tints so each area reads by ground colour |
+| `Nest` | 18 | **A. Nest (safe start).** Twig rim (radius 14) with three 8-stud openings: east (main trail), north (Rock Garden lane), south-east (lowland lane). Three spawn pads, straw bed, loose twigs and the **Lone Dandelion** (22-stud stem, white puff), a home beacon visible from most of the habitat. One pickup just outside the east opening |
+| `Meadow` | 101 | **B. Meadow (main exploration)** and the north clearing. Worn trails, the **Great Stump** (22 wide, 9 tall, log ramp up its west side, a lookout with a pickup), a fallen-leaf ramp, puddle with pebbles, giant acorn, stepping stones, the **Red Toadstool** (walk-under cap), a Mushroom Grove, berries, a clover hill (two 3-stud steps), a snail shell, pebble cairns, a hollow log, boulders and non-colliding giant grass blades |
+| `RockGarden` | 32 | **C. Rock Garden.** Gate rocks, a wide S-curve passage with rock walls, a terrace stair (3-stud steps to a lookout), a roofed shelter den (7 studs of headroom), a **Tank nook** (alcove whose front is blocked by a static boulder, with a 6-stud side door), boulders on the strip toward the Nest |
+| `GiantRoots` | 35 | **D. Giant Roots.** The **Old Tree** trunk (26 wide, 70 tall), a walk-through **root arch** (8 wide, 7 high) with a walkable top, an elevated route: ramp to the arch top, a root bridge, **Leaf Platform 1**, and a ramp down to the north; **Leaf Platform 2** across a 10-stud gap (the glider span; it is also reachable on foot by a ramp), fungus-step stairs up the trunk (3 steps to a 9-stud vantage), seed pods and stones |
+| `Secret` | 28 | **E. Secret.** A 5-stud crack between two rock masses, its mouth hidden from the main passage by a screening rock, leading to the Dewdrop Glade (a 22-stud pocket with a glass dewdrop on a leaf and glowing mushrooms). Clues: glowing mushrooms near the approach and a tall translucent beam above the glade |
+
+Total 223 parts (budget 260), all anchored and `Locked`. Static decoration that is not part of the walkable surface (grass blades, tints, trails, puddle, glow mushrooms, beam) has `CanCollide = false`, `CanQuery = false` and no shadow.
+
+### Routes and design decisions
+
+- **Primary route (about 490 studs, roughly 30 s at 16 studs/s; every part at least 6 studs wide):** Nest east opening, Meadow trail to the Great Stump, west to the Rock Garden gate, through the S-curve passage to the north exit, east along the north lane to the Roots, south through the ground corridor and under the arch, back across the Meadow to the Nest. Trails are visual ground overlays (no collision).
+- **Alternatives:** three exits from the Nest (east, north lane, lowland lane along the south edge); the Meadow crossing from the stump straight to the Roots; in the Rock Garden the main passage, the terrace/den side loop and the secret crack; in the Roots the open ground, the elevated route over the arch (arch top, bridge, Leaf Platform 1, ramp down north) and the fungus steps. Routes differ in distance, height and exploration value, and ground-level alternatives always remain.
+- **Nothing is gated by an ability.** Every part of the habitat and every pickup is reachable on foot with the Baby Bug using steps of at most 3 studs (the old arena's rule) and ramps of at most 31 degrees. Nothing is reachable only by gliding, and nothing depends on a Tank mechanic.
+- **Reserved space for later forms (geometry only, nothing pretends to work yet):** the Tank nook (tags `TankNook`, `FutureTankPush`), roofed shelters, the arch gateway and the narrow crack; and for the Glider the high decks (Arch top, Leaf Platforms 1 and 2, the Great Stump top, the fungus-step vantage) and the 10-stud gap between Leaf Platforms 1 and 2 (tag `FutureGliderSpan`), which only saves a walk of roughly 50 studs. Falling from any height lands on solid floor.
+- **Scale:** oversized stump, toadstool, acorn, Old Tree (70 studs), dandelion and giant grass blades; recognisable landmarks (tag `Landmark`): the Dandelion (Nest), Great Stump (Meadow), Red Toadstool, Old Tree and Root Arch (Roots), Dewdrop (secret). Zones are told apart by ground colour and landmark silhouette, so no minimap is needed.
+- **Multiplayer:** three spawn pads (7x7, neutral, no forcefield), 8-stud nest openings, wide trails, and no unavoidable chokepoints on the primary route (narrow routes are optional). Roblox picks a random enabled `SpawnLocation` for each spawn. Solo play is unaffected.
+- **Pickups (reuse of the existing `FoodSpawn` system, no new currency or inventory):** 24 markers (Nest 1, Meadow and north clearing 11, Rock Garden 4, Giant Roots 6, Secret 2). They sit along the trails and on optional detours (stump top, leaf perch, clover hill, Mushroom Grove, den, Tank nook, arch top, leaf platforms, fungus vantage, boulder garden, glade) at irregular spacing, never on a grid. `FoodService`, the 10 Biomass per pickup, the cap of 100 and the 8 second respawn are unchanged. Known risk: every pickup is identical and respawns after 8 s, so a player could farm one cluster; the spread is meant to make exploring more attractive, and tuning belongs to a later task.
+- **Safety:** the whole area is solid floor on the Baseplate, bounded by tall opaque walls (no invisible walls, no void, no hazards, no precision platforming). The boundary is high enough that nothing in the current ability set clears it.
+
+CollectionService tags (set in the model files): `FoodSpawn`, `Landmark`, `HabitatBoundary`, `TankNook`, `FutureTankPush`, `FutureGliderSpan`.
+
+### Source of truth and tools
+
+The `.model.json` files are generated by `tools/habitat/generate_habitat.py` (the layout, one function per area) and are committed, so `rojo build` needs no extra tool. To change the layout, edit the generator and run both scripts; do not hand-edit the generated files.
+
+```powershell
+python tools/habitat/generate_habitat.py
+python tools/habitat/validate_habitat.py
+```
+
+`validate_habitat.py` (Python standard library only; an optional open-space check also needs `numpy` and `scipy`) reads the shipped JSON, rasterises the collidable parts and builds a walking graph for a baseline creature (step or jump up at most 3 studs, any drop, 6 studs of headroom, a body footprint). Run with `--map` for an ASCII map, `--crop=x0,x1,z0,z1` for a 1-stud view and `x,z[,h]` arguments to probe the widest body that fits a spot. It checks: structure, part budget, tags, three or more spawn pads, spawn safety, every pickup reachable on foot and able to return to the Nest, no trapped spots, the primary route and alternatives at 6-stud width, elevated and secret spots, the glider span not being a walkway, the Tank nook's side door, landmarks 15+ studs tall, proper rotation matrices, ramp slopes, and (with numpy and scipy) no open circle wider than 13 studs. It runs in CI.
+
+What the validator does **not** prove: that the habitat is fun, readable through the real camera, or collision-correct in the engine, that the jump height at every growth stage reaches 3-stud steps, or that the CFrame orientations are applied as modelled. Those need Studio.
+
+### Manual Studio checklist (all pending)
+
+1. Open a fresh `rojo build` (or `rojo serve`). Output: no errors or warnings, no old `Arena` or extra `SpawnLocation`.
+2. Spawn: the player appears on a Nest pad, facing the east opening and the Great Stump, with the Dandelion visible. Join with several players: they spread across the three pads and none spawns inside geometry.
+3. Camera: with the default camera distance, check that rock walls, the Nest rim, the arch and the trunk do not trap or obstruct the camera and that the tall landmarks read.
+4. Traverse the primary route and each alternative at growth stage 1 (scale 0.6) and stage 3 (1.0): the Nest openings, trails, the gate, the S-curve passage, the north lane, the Roots corridor, the arch, back to the Nest. Note every place where you snag, get stuck or find a gap too tight.
+5. Jumps: every 3-stud step (terrace, clover hill, stepping stones, fungus steps, Tank nook) is jumpable at stage 1; ramps (stump log, fallen leaf, root ramps, leaf ramp) are walkable without sliding; falling from the leaf platforms and the stump lands safely.
+6. Collect pickups: the markers line up with the ground and the platforms (the ball hovers 2 studs above the marker), pickups on the elevated decks and in the secret glade are collectable, and the first pickup outside the Nest is visible from the pads.
+7. Return: from the Roots, the Rock Garden and the secret glade, find the way back to the Nest using only landmarks.
+8. Secret: the crack mouth is not obvious from the main passage but can be found from the glow mushrooms and the beam; the glade is reachable and the exit works.
+9. Evolve to Tank and Glider and repeat the key routes; confirm that nothing is blocked for the baseline form, that the static boulder at the Tank nook front is not mistaken for a mechanic, and, optionally, try gliding from Leaf Platform 1 (top Y = 10.5) to Leaf Platform 2 and record the result.
+10. Two or more clients: both see the same Baby Bug appearance, landmarks and each other without collisions at the Nest openings; watch for choke points.
+11. Performance and readability: frame rate and memory on a low-end phone or the Studio mobile emulator; check for z-fighting between the ground tints, trails and the floor.
+12. Output: no errors or warnings during a full loop.
 
 ## Food and growth loop
 
@@ -102,7 +125,7 @@ Server-only gameplay, wired in `ServerScriptService/Bootstrap.server.lua`:
 
 How it works:
 
-1. On server start, `FoodService` spawns a neon ball 2 studs above each `FoodSpawn` marker (8 in the arena), under `Workspace.Food`.
+1. On server start, `FoodService` spawns a neon ball 2 studs above each `FoodSpawn` marker (24 in the habitat), under `Workspace.Food`.
 2. Every 0.1 s the server checks each active food item against every player. A player qualifies if their character is alive, has a `HumanoidRootPart` within `FoodPickupRange` (5 studs) of the food, and is below the biomass cap. If several players qualify at once, the closest one wins.
 3. The food is marked inactive and removed before biomass is awarded, so it cannot be collected twice. It respawns after `FoodRespawnDelay` (8 s).
 4. Each food gives `FoodBiomass` (10). Biomass caps at 100 (`EvolutionBiomassRequired`); a player at the cap does not consume food.
@@ -410,7 +433,7 @@ Server validation for `"GLIDE"`, after the existing per-player rate limit (`Abil
 
 Trust boundary (important): Roblox gives the player's client physics ownership of their own character, and this feature does not change that. The server decides when a glide may start and end and when the cooldown allows another, and the force object replicates to the owning client, but the server **cannot prevent a modified client from ignoring the force or moving the character however it likes**. That is true of all player movement in this game; no server-side movement validation (speed, height checks) was added. Landing detection uses the server's copy of `FloorMaterial` and `Humanoid.StateChanged`; the 3 s timer ends the glide regardless.
 
-Jump height and arena (analytic estimate, **not a Studio test**): with default `Workspace.Gravity` (196.2) and `JumpHeight` 7.2, a normal jump rises about 7.2 studs and lasts only about **0.54 s** (0.27 s down from the apex). Activating the glide near the start of a jump leaves 35% of gravity while rising (`ascentCompensation` 0.65, unchanged), so the same jump rises to roughly 20 studs: it does not provide upward acceleration, but it does raise the jump apex, which is how the glider-only platforms are meant to be reached. The existing `GliderPlatform1/3` tops are at Y = 16 and `GliderPlatform2` at Y = 20, while a Baby Bug jumping from the highest jumpable surface (`HillTier2`/`LedgeB`, top 6.5) reaches about 13.7. No arena geometry was changed. Whether the glide reaches them reliably must be tested in Studio.
+Jump height and the habitat (analytic estimate, **not a Studio test**): with default `Workspace.Gravity` (196.2) and `JumpHeight` 7.2, a normal jump rises about 7.2 studs and lasts only about **0.54 s** (0.27 s down from the apex). Activating the glide near the start of a jump leaves 35% of gravity while rising (`ascentCompensation` 0.65, unchanged), so the same jump rises to roughly 20 studs: it does not provide upward acceleration, but it does raise the jump apex, which is how the glider-only platforms are meant to be reached. The old arena's glider-only platforms were removed with the First Habitat: no pickup or route in the habitat needs the glide (the elevated decks have walkable ramps), and the only glider-oriented geometry is the optional 10-stud span between Leaf Platforms 1 and 2 (tops at Y = 10.5), which a glide from the first platform may or may not cross; that must be tested in Studio.
 
 ### Glide tuning and the "wings for half a second" report (TT-P2-05B)
 
@@ -447,7 +470,7 @@ Limitations:
 6. Collect until `Biomass = 100`. Expected: biomass stops at 100 and food is no longer consumed by you.
 7. Reset the character (or die). Expected: you respawn as a new life at stage 1 size with Biomass 0 (see the P1-03 checklist).
 8. Test > Clients and Servers, 2 players, both stand near the same ball. Expected: only one player gains biomass; the closer one if distances differ.
-9. Check the platform food: the ball on `HillTier2` is reachable by jumping, and the one on `GliderPlatform2` is not reachable yet (needs the future glide ability).
+9. Check the elevated pickups (Great Stump top, clover hill, arch top, leaf platforms, fungus vantage): each is reachable on foot, and none needs the glide.
 10. Check that the smaller character fits routes, jumps normally and the camera behaves at scale 0.6.
 
 ### Manual Studio test checklist: Biomass HUD
@@ -539,7 +562,7 @@ These are **manual tests; none has been performed**. Use Play Solo (R15) and Tes
 10. Respawn during cooldown: the death ends the life, so the cooldown is cleared and the form is Baby Bug again; `Q` is rejected until you evolve to GLIDER in the new life.
 11. Leaving during a glide: with 2 clients, one leaves mid-glide. Expected: no server errors, and the remaining client sees no stray wings.
 12. Visual on other clients: with 2 or more clients, the wings and slow fall of the glider are visible to the others and disappear for everyone when the glide ends.
-13. Reachability: from ground level, a Baby Bug cannot reach `GliderPlatform1` (top Y = 16) with ordinary jumps. Then, as GLIDER, jump toward it and activate in the air: record whether you can land on it, how reliably, and how high the apex gets compared with a normal jump. Record the result before tuning `ascentCompensation`.
+13. Glider span: as GLIDER, jump from Leaf Platform 1 toward Leaf Platform 2 (a 10-stud gap, tops at Y = 10.5) and activate in the air: record whether you can land on it, how reliably, and the apex compared with a normal jump. Both platforms are also reachable on foot. Record the result before tuning `ascentCompensation`.
 13b. Diagnostics (TT-P2-05B): set `Config.AbilityDebugLogging = true`, jump, press `Q` at the top of the jump and again early in a jump. Expected `[Glide]` lines: `start` with the state and vertical velocity, then an `end reason=Landing:...` after roughly 0.8 s (from the apex) or 2 s (from take-off), never after about 0.5 s unless you land that fast. Report any `ignored` lines and any `end reason=Landing:Running` or `Landing:FloorMaterial` that fires while still clearly in the air. Also check the descent is visibly slower and the landing gentle, that pressing `Q` on the ground starts no cooldown, and that a second `Q` during an active glide does nothing.
 14. Touch: on a phone emulator or real device, the button is tappable in the air and not covered by the jump button.
 15. Typing: with a TextBox focused (chat), `Q` does not start a glide.
@@ -630,7 +653,7 @@ Intermittent ground clipping: **root cause NOT confirmed.** I cannot run Studio,
 2. **Duplicate scale values** (fixed above, if it was happening): two `BodyHeightScale` values on the Humanoid would make the engine and our script disagree about the body size.
 3. **Hip height not following the scale** after a runtime change. The engine normally adjusts it, but this is unverified here.
 4. **A scale change while airborne**, if food was collected mid-jump (now a smooth tween rather than a jump).
-5. **Arena geometry:** `ArenaFloor` (top Y = 0.5) overlaps the Baseplate and the plaza adds a 0.3 step. Both are anchored solid slabs, so this is unlikely to cause it.
+5. **Habitat geometry:** `HabitatFloor` (top Y = 0.5) overlaps the Baseplate and the spawn pads add a 0.4 step. Both are anchored solid parts, so this is unlikely to cause it.
 
 Decisive Studio procedure (do this before accepting or reopening the issue). Use Play Solo, then Test > Current: Server, and run in the command bar:
 
@@ -647,12 +670,12 @@ for _, n in { "BodyHeightScale", "BodyWidthScale", "BodyDepthScale", "HeadScale"
     print(n, h[n].Value, "copies:", copies)
 end
 local foot = c.LeftFoot
-print("foot bottom Y", foot.Position.Y - foot.Size.Y / 2) -- standing on the arena floor this should be about 0.5
+print("foot bottom Y", foot.Position.Y - foot.Size.Y / 2) -- standing on the habitat floor this should be about 0.5
 ```
 
 1. **Duplicates:** `copies` must be 1 for each value at spawn and after each growth. 2 means cause 2.
 2. **Hip height vs scale:** record `hip` at each stage. It should shrink roughly in proportion to scale (about 0.6x, 0.8x, 1.0x). If it does not change, cause 3.
-3. **Penetration:** jump repeatedly on flat arena floor and run the last line right after landing while standing still; a value well under 0.5 means the feet are sunk. Record at which stage it happens and how often.
+3. **Penetration:** jump repeatedly on the flat floor and run the last line right after landing while standing still; a value well under 0.5 means the feet are sunk. Record at which stage it happens and how often.
 4. **A/B test:** temporarily set all three `Scale` values in `Config.GrowthStages` to 1.0, play, and repeat step 3. If clipping disappears, it is scale-related (causes 1 to 3); if it persists at scale 1.0, it is not caused by growth (look at the arena or the default Roblox character).
 5. **Airborne growth:** collect food mid-jump across a threshold and check the result of the landing.
 
@@ -738,6 +761,6 @@ Manual Studio checklist (all **pending**):
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the greybox arena and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. The Baby Bug has a custom visual model (P2-05, Studio validation pending). Tank and Glider models, damage, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the First Habitat greybox and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. The Baby Bug has a custom visual model (P2-05, Studio validation pending). Tank and Glider models, damage, combat and persistence are not implemented.
 
 See the current product and architecture documents linked at the top of this README.

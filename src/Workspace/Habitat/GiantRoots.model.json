@@ -1,0 +1,1801 @@
+{
+  "className": "Folder",
+  "children": [
+    {
+      "name": "RootsTrail1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          14.0,
+          0.1,
+          7
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              28.0,
+              0.57,
+              -33.0
+            ],
+            "orientation": [
+              [
+                0.0,
+                0.0,
+                -1.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "RootsTrail2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          14.3178,
+          0.1,
+          7
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              29.5,
+              0.57,
+              -19.0
+            ],
+            "orientation": [
+              [
+                0.209529,
+                0.0,
+                -0.977802
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.977802,
+                0.0,
+                0.209529
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "RootsTrail3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          10.7703,
+          0.1,
+          7
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              33.0,
+              0.57,
+              -7.0
+            ],
+            "orientation": [
+              [
+                0.371391,
+                0.0,
+                -0.928477
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.928477,
+                0.0,
+                0.371391
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "RootsTrail4",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          10.0499,
+          0.1,
+          7
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              34.5,
+              0.57,
+              3.0
+            ],
+            "orientation": [
+              [
+                -0.099504,
+                0.0,
+                -0.995037
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.995037,
+                0.0,
+                -0.099504
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "OldTreeTrunk",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.3059,
+          0.2118,
+          0.149
+        ],
+        "Size": [
+          70,
+          26,
+          26
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              54,
+              35.5,
+              -40
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder",
+        "Tags": [
+          "Landmark"
+        ]
+      }
+    },
+    {
+      "name": "FlareRoot1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          14,
+          6,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              44,
+              3.5,
+              -31
+            ],
+            "orientation": [
+              [
+                0.939693,
+                0.0,
+                0.34202
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.34202,
+                0.0,
+                0.939693
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "FlareRoot2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          14,
+          5,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              62,
+              3.0,
+              -24
+            ],
+            "orientation": [
+              [
+                0.819152,
+                0.0,
+                -0.573576
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.573576,
+                0.0,
+                0.819152
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "ArchLegW",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          5,
+          7,
+          7
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              28.5,
+              4.0,
+              -4
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "ArchLegE",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          5,
+          7,
+          7
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              41.5,
+              4.0,
+              -4
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "ArchBeam",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          18,
+          3,
+          7
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              35,
+              9.0,
+              -4
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Tags": [
+          "Landmark"
+        ]
+      }
+    },
+    {
+      "name": "RootRampArch",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          7,
+          1.5,
+          23.8328
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              52.7382,
+              4.8192,
+              1.8254
+            ],
+            "orientation": [
+              [
+                -0.5547,
+                0.349121,
+                -0.755263
+              ],
+              [
+                0.0,
+                0.907713,
+                0.419591
+              ],
+              [
+                0.83205,
+                0.232747,
+                -0.503509
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "RootBridge",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          6,
+          1.5,
+          9.5
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              35.0,
+              9.75,
+              -12.25
+            ],
+            "orientation": [
+              [
+                -1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                -1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "LeafPlatform1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "LeafyGrass",
+        "Color": [
+          0.3373,
+          0.6275,
+          0.2824
+        ],
+        "Size": [
+          16,
+          0.8,
+          11
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              35,
+              10.1,
+              -24
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "LeafStalk1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.3059,
+          0.2118,
+          0.149
+        ],
+        "Size": [
+          9.2,
+          3.5,
+          3.5
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              35,
+              5.1,
+              -24
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder"
+      }
+    },
+    {
+      "name": "LeafRampNorth",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "LeafyGrass",
+        "Color": [
+          0.5176,
+          0.7373,
+          0.3294
+        ],
+        "Size": [
+          6,
+          1.2,
+          22.809
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              35.0,
+              4.9607,
+              -39.4869
+            ],
+            "orientation": [
+              [
+                -1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.898768,
+                -0.438424
+              ],
+              [
+                -0.0,
+                -0.438424,
+                -0.898768
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "LeafPlatform2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "LeafyGrass",
+        "Color": [
+          0.3373,
+          0.6275,
+          0.2824
+        ],
+        "Size": [
+          14,
+          0.8,
+          10
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              60,
+              10.1,
+              -18
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Tags": [
+          "FutureGliderSpan"
+        ]
+      }
+    },
+    {
+      "name": "LeafStalk2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.3059,
+          0.2118,
+          0.149
+        ],
+        "Size": [
+          9.2,
+          3.5,
+          3.5
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              60,
+              5.1,
+              -18
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder"
+      }
+    },
+    {
+      "name": "RootRampEast",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          6,
+          1.2,
+          20.1246
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              63.9317,
+              4.9793,
+              -4.7902
+            ],
+            "orientation": [
+              [
+                -0.973417,
+                0.113811,
+                -0.198762
+              ],
+              [
+                0.0,
+                0.867806,
+                0.496904
+              ],
+              [
+                0.229039,
+                0.483695,
+                -0.844737
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "GroundRoot1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          10,
+          5,
+          4
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              46,
+              3.0,
+              -8
+            ],
+            "orientation": [
+              [
+                0.766044,
+                0.0,
+                0.642788
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.642788,
+                0.0,
+                0.766044
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "GroundRoot2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          8,
+          6,
+          4
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              47,
+              3.5,
+              -24
+            ],
+            "orientation": [
+              [
+                0.866025,
+                0.0,
+                -0.5
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.5,
+                0.0,
+                0.866025
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "GroundRoot3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Wood",
+        "Color": [
+          0.4078,
+          0.2824,
+          0.1882
+        ],
+        "Size": [
+          8,
+          3,
+          4
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              22,
+              2.0,
+              -30
+            ],
+            "orientation": [
+              [
+                0.984808,
+                0.0,
+                0.173648
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.173648,
+                0.0,
+                0.984808
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "FungusStep1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Fabric",
+        "Color": [
+          0.5882,
+          0.3922,
+          0.2196
+        ],
+        "Size": [
+          3.0,
+          12,
+          12
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              45.1,
+              2.0,
+              -52.7
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder"
+      }
+    },
+    {
+      "name": "FungusStep2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Fabric",
+        "Color": [
+          0.7686,
+          0.2196,
+          0.2039
+        ],
+        "Size": [
+          6.0,
+          12,
+          12
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              54.0,
+              3.5,
+              -55.5
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder"
+      }
+    },
+    {
+      "name": "FungusStep3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Fabric",
+        "Color": [
+          0.5882,
+          0.3922,
+          0.2196
+        ],
+        "Size": [
+          9.0,
+          12,
+          12
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              62.9,
+              5.0,
+              -52.7
+            ],
+            "orientation": [
+              [
+                0.0,
+                -1.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Cylinder"
+      }
+    },
+    {
+      "name": "SeedPod1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Fabric",
+        "Color": [
+          0.5882,
+          0.6275,
+          0.3294
+        ],
+        "Size": [
+          8,
+          8,
+          8
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              30,
+              3.7,
+              -60
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Ball"
+      }
+    },
+    {
+      "name": "SeedPod2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Fabric",
+        "Color": [
+          0.5882,
+          0.6275,
+          0.3294
+        ],
+        "Size": [
+          8,
+          8,
+          8
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              37,
+              3.7,
+              -64
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Ball"
+      }
+    },
+    {
+      "name": "SeedPod3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Fabric",
+        "Color": [
+          0.5882,
+          0.6275,
+          0.3294
+        ],
+        "Size": [
+          8,
+          8,
+          8
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              26,
+              3.7,
+              -66
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Shape": "Ball"
+      }
+    },
+    {
+      "name": "BrambleStone1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.549,
+          0.4863,
+          0.4235
+        ],
+        "Size": [
+          6,
+          3.0,
+          5
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              22,
+              2.0,
+              -56
+            ],
+            "orientation": [
+              [
+                0.939693,
+                0.0,
+                0.34202
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.34202,
+                0.0,
+                0.939693
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "BrambleStone2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.549,
+          0.4863,
+          0.4235
+        ],
+        "Size": [
+          5,
+          2.4,
+          5
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              34,
+              1.7,
+              -56
+            ],
+            "orientation": [
+              [
+                0.866025,
+                0.0,
+                -0.5
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.5,
+                0.0,
+                0.866025
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "RootFood6",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              63,
+              9.65,
+              -53
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    },
+    {
+      "name": "RootFood1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              36,
+              0.65,
+              1
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    },
+    {
+      "name": "RootFood2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              31,
+              10.65,
+              -4
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    },
+    {
+      "name": "RootFood3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              32,
+              10.65,
+              -24
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    },
+    {
+      "name": "RootFood4",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              60,
+              10.65,
+              -18
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    },
+    {
+      "name": "RootFood5",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              30,
+              0.65,
+              -42
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    }
+  ]
+}
