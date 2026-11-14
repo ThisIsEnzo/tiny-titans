@@ -109,3 +109,45 @@ Top 1000 is the ambition. Player value, replayability, fairness and evidence are
 Owner approval: 2026-11-15. Naturalist XP is the single persistent general XP track; Rank is derived. Discoveries, Life Goals and World Challenges have distinct one-time, per-life and repeatable semantics. Biomass remains Current Life growth. Natural Materials are a future hypothesis; Research Samples are not approved currency. Companions and Habitat are post-MVP.
 
 TT-P3-02 remains a narrow exploration-loop task using existing systems only. It must not introduce persistent XP, DataStore, a generic quest framework, character creator, adaptations, combat, companions, Habitat building or a new currency.
+
+
+## 12. Unified goal and signature discovery loop (v2.2)
+
+The unified long-term goal is to **explore, understand and gradually reconnect the world's ecosystems while creating a personal legacy within them**. Exploration is the primary activity; discoveries and visible ecological change give it purpose; one personal Tiny Titan is the emotional anchor; Bestiary/Discoveries/Legacy preserve knowledge; Nest and co-op deepen attachment later.
+
+The signature loop is:
+
+**Clue → Observation → Hypothesis → Test/Interaction → Visible World Response → Record.**
+
+A meaningful ecological activity needs a readable before-state, clues, a small player action, an observable after-state and a record of what was learned. Restoration must not be only a progress bar. The exact world mystery and lore remain proposals, not locked canon.
+
+## 13. First Habitat vertical-slice contract
+
+Use the existing Nest, Meadow, Rock Garden, Giant Roots and Secret/Dewdrop Glade greybox as the first compact adventure. It is still a greybox; Studio movement, camera, collision and device validation remain separate gates.
+
+**Required vertical-slice experience:**
+- First point of interest discoverable quickly without a forced waypoint trail.
+- Three memorable landmarks/points of interest and at least two discovery categories (place/landmark and species/behavior).
+- One short ecological story chain with a visible before/after world state.
+- One optional secret rewarding observation.
+- One repeatable route/observation challenge with a small number of controlled variants.
+- A lightweight discovery journal/recap and immediate feedback.
+- A small authored cast (one featured species and one or two supporting ambient behaviors), not a large roster.
+- Every essential interaction completable solo; co-op adds contribution/coordination but no mandatory role.
+- Existing Biomass pickups may be incidental, but cannot dominate the loop or become its main objective.
+
+**Recommended example — “The Quiet Glade” (proposal, not locked lore):** the player notices a flower that no longer blooms and the absence of its pollinator; follows clues toward the roots; discovers a blocked shallow water channel; clears the obstruction through a simple server-validated interaction; sees water reach the glade, the flower open and the pollinator return; records the species and ecological relationship. Keep this to two or three interaction states, not a generic quest framework.
+
+**Provisional playtest hypotheses (not launch promises):** first point of interest within 60–90 seconds; first meaningful discovery within roughly three minutes; players can explain the ecological problem/action/result; a meaningful share voluntarily chooses a second discovery or repeatable activity. Establish a baseline before locking numeric thresholds.
+
+## 14. MVP scope clarification
+
+**Must-have for the vertical slice:** Studio-validated movement/routes; onboarding; observe/inspect interaction; two discovery categories; one ecological chain with visible response; clear feedback/journal; one repeatable activity; solo completion; server-authoritative state/reward validation; input plan for touch, keyboard/mouse and gamepad.
+
+**Should-have:** a few visual appearance presets/palette choices; ambient creature behaviors; optional co-op contribution feedback; a second side discovery; Nest presentation polish.
+
+**Out of scope:** separate forms/classes; Agility/Brace/Glide adaptations; combat; full Naturalist XP/Rank/DataStore before the loop is proven; generic quest framework; full character creator; companions; customizable Habitat; crafting/trading; multiple large biomes; hunger chores, daily streaks or paid power.
+
+A region qualifies for future expansion only if it introduces a distinct ecological identity, new player decision/verb, species behavior or environmental relationship, local story chain, optional discoveries, repeatable activity, visible outcome and solo-completable core route. More acreage alone is not content.
+
+Detailed design and open decisions are recorded in [GDD v2.2 — The Living World Adventure](GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md).
