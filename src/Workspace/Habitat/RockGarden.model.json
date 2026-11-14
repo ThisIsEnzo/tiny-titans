@@ -1,0 +1,1634 @@
+{
+  "className": "Folder",
+  "children": [
+    {
+      "name": "RGTrail1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          14.1421,
+          0.1,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -47.0,
+              0.57,
+              25.0
+            ],
+            "orientation": [
+              [
+                -0.141421,
+                0.0,
+                0.989949
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.989949,
+                0.0,
+                -0.141421
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "RGTrail2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          14.0,
+          0.1,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -48.0,
+              0.57,
+              11.0
+            ],
+            "orientation": [
+              [
+                0.0,
+                0.0,
+                1.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -1.0,
+                0.0,
+                0.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "RGTrail3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          14.1421,
+          0.1,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -49.0,
+              0.57,
+              -3.0
+            ],
+            "orientation": [
+              [
+                -0.141421,
+                0.0,
+                0.989949
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.989949,
+                0.0,
+                -0.141421
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "RGTrail4",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          12.8062,
+          0.1,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -46.0,
+              0.57,
+              -15.0
+            ],
+            "orientation": [
+              [
+                0.624695,
+                0.0,
+                0.780869
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.780869,
+                0.0,
+                0.624695
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "RGTrail5",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          10.6301,
+          0.1,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -38.5,
+              0.57,
+              -24.0
+            ],
+            "orientation": [
+              [
+                0.658505,
+                0.0,
+                0.752577
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.752577,
+                0.0,
+                0.658505
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "RGTrail6",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Ground",
+        "Color": [
+          0.549,
+          0.4235,
+          0.2824
+        ],
+        "Size": [
+          17.8885,
+          0.1,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -31.0,
+              0.57,
+              -36.0
+            ],
+            "orientation": [
+              [
+                0.447214,
+                0.0,
+                0.894427
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.894427,
+                0.0,
+                0.447214
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false
+      }
+    },
+    {
+      "name": "GateRockW",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          9,
+          9,
+          11
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -59,
+              5.0,
+              0
+            ],
+            "orientation": [
+              [
+                0.984808,
+                0.0,
+                0.173648
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.173648,
+                0.0,
+                0.984808
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "GateRockE",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          9,
+          8,
+          10
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -37,
+              4.5,
+              1
+            ],
+            "orientation": [
+              [
+                0.978148,
+                0.0,
+                -0.207912
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.207912,
+                0.0,
+                0.978148
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WallW1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          12,
+          12,
+          14
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -62,
+              6.5,
+              -16
+            ],
+            "orientation": [
+              [
+                0.994522,
+                0.0,
+                0.104528
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.104528,
+                0.0,
+                0.994522
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WallW2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          10,
+          10,
+          10
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -58,
+              5.5,
+              -30
+            ],
+            "orientation": [
+              [
+                0.990268,
+                0.0,
+                -0.139173
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.139173,
+                0.0,
+                0.990268
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WallW3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          12,
+          13,
+          12
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -64,
+              7.0,
+              -42
+            ],
+            "orientation": [
+              [
+                0.978148,
+                0.0,
+                0.207912
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.207912,
+                0.0,
+                0.978148
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WallE1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          9,
+          10,
+          14
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -33,
+              5.5,
+              -12
+            ],
+            "orientation": [
+              [
+                0.990268,
+                0.0,
+                0.139173
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.139173,
+                0.0,
+                0.990268
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WallE2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          9,
+          11,
+          13
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -26,
+              6.0,
+              -30
+            ],
+            "orientation": [
+              [
+                0.984808,
+                0.0,
+                -0.173648
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.173648,
+                0.0,
+                0.984808
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WallE3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          10,
+          9,
+          8
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -14,
+              5.0,
+              -57
+            ],
+            "orientation": [
+              [
+                0.997564,
+                0.0,
+                0.069756
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.069756,
+                0.0,
+                0.997564
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "TerraceStep1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.549,
+          0.4863,
+          0.4235
+        ],
+        "Size": [
+          8,
+          3.0,
+          8
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -52,
+              2.0,
+              -14
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "TerraceStep2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.549,
+          0.4863,
+          0.4235
+        ],
+        "Size": [
+          5,
+          6.0,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -54,
+              3.5,
+              -16
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "DenBack",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          2,
+          8,
+          10
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -57,
+              4.5,
+              -26
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "DenSouth",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          10,
+          8,
+          2
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -52,
+              4.5,
+              -21
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "DenNorth",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          10,
+          8,
+          2
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -52,
+              4.5,
+              -31
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "DenRoof",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.3765,
+          0.3765,
+          0.3843
+        ],
+        "Size": [
+          12,
+          1.5,
+          12
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -52,
+              8.25,
+              -26
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "NookBack",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          2,
+          7,
+          9
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -36,
+              4.0,
+              14
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Tags": [
+          "TankNook"
+        ]
+      }
+    },
+    {
+      "name": "NookNorth",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          10,
+          7,
+          2
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -31,
+              4.0,
+              9.5
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "NookSouth",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          3,
+          7,
+          2
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -33.5,
+              4.0,
+              18.5
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "NookBoulder",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.3765,
+          0.3765,
+          0.3843
+        ],
+        "Size": [
+          5,
+          5,
+          5
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -24.5,
+              3.0,
+              14
+            ],
+            "orientation": [
+              [
+                0.939693,
+                0.0,
+                0.34202
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.34202,
+                0.0,
+                0.939693
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "Tags": [
+          "TankNook",
+          "FutureTankPush"
+        ]
+      }
+    },
+    {
+      "name": "ScreenRock",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.3765,
+          0.3765,
+          0.3843
+        ],
+        "Size": [
+          9,
+          9,
+          5
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -44,
+              5.0,
+              -31
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WestRock1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          7,
+          5,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -60,
+              3.0,
+              22
+            ],
+            "orientation": [
+              [
+                0.906308,
+                0.0,
+                0.422618
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.422618,
+                0.0,
+                0.906308
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WestRock2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.549,
+          0.4863,
+          0.4235
+        ],
+        "Size": [
+          6,
+          3.5,
+          6
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -56,
+              2.25,
+              11
+            ],
+            "orientation": [
+              [
+                0.984808,
+                0.0,
+                -0.173648
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.173648,
+                0.0,
+                0.984808
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "WestRock3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": true,
+        "CanTouch": false,
+        "CanQuery": true,
+        "Locked": true,
+        "Material": "Rock",
+        "Color": [
+          0.4863,
+          0.4784,
+          0.4627
+        ],
+        "Size": [
+          6,
+          6,
+          7
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -64,
+              3.5,
+              6
+            ],
+            "orientation": [
+              [
+                0.766044,
+                0.0,
+                0.642788
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.642788,
+                0.0,
+                0.766044
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth"
+      }
+    },
+    {
+      "name": "RockFood1",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -47,
+              0.65,
+              6
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    },
+    {
+      "name": "RockFood2",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -54,
+              6.65,
+              -16
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    },
+    {
+      "name": "RockFood3",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -53,
+              0.65,
+              -26
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    },
+    {
+      "name": "RockFood4",
+      "className": "Part",
+      "properties": {
+        "Anchored": true,
+        "CanCollide": false,
+        "CanTouch": false,
+        "CanQuery": false,
+        "Locked": true,
+        "Material": "Neon",
+        "Color": [
+          0.3,
+          1.0,
+          0.4
+        ],
+        "Size": [
+          3,
+          0.3,
+          3
+        ],
+        "CFrame": {
+          "CFrame": {
+            "position": [
+              -30,
+              0.65,
+              14
+            ],
+            "orientation": [
+              [
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                -0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          }
+        },
+        "TopSurface": "Smooth",
+        "BottomSurface": "Smooth",
+        "CastShadow": false,
+        "Tags": [
+          "FoodSpawn"
+        ]
+      }
+    }
+  ]
+}

@@ -512,7 +512,7 @@ Do not confuse engineering complexity with player value.
 
 ## 18. Current state and immediate decisions
 
-The current repository represents an early prototype foundation: a compact greybox arena, food/growth, Energy HUD, Tank/Glider evolution selection, initial Tank Shell and Glider abilities, and multiplayer hardening. This is a foundation, not a retention-ready or monetization-ready product.
+The current repository represents an early prototype foundation: a compact First Habitat greybox (TT-P3-01, Studio validation pending), food/growth, Energy HUD, Tank/Glider evolution selection, initial Tank Shell and Glider abilities, and multiplayer hardening. This is a foundation, not a retention-ready or monetization-ready product.
 
 The original prototype GDD explicitly excluded persistence, monetization, pets, trading, multiple biomes and long-term progression. This strategy supersedes those exclusions as long-term product direction, but does **not** mean all such systems should be built now. The MVP remains deliberately constrained.
 
