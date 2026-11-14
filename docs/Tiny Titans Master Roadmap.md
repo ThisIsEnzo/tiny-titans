@@ -1,12 +1,12 @@
 # Tiny Titans — Master Roadmap
 
-**Version:** 2.1  
+**Version:** 2.2  
 **Date:** 2026-11-15  
 **Status:** Active execution roadmap; personalized Tiny Titan direction approved by owner.  
 **Repository:** ThisIsEnzo/tiny-titans  
 **Default branch:** master
 
-This is the single execution roadmap. Product Vision v2.1 defines the north star; Gameplay Blueprint defines the first playable product; Player Identity & Adaptation Architecture defines future character/adaptation technical boundaries.
+This is the single execution roadmap. Product Vision v2.2 defines the north star; GDD v2.2 defines the detailed experience contract; Gameplay Blueprint defines the first playable product; Player Identity & Adaptation Architecture defines future character/adaptation technical boundaries.
 
 ## 1. Product outcome
 
@@ -59,15 +59,16 @@ Treat README and source on current master as implementation truth. Refresh this 
 **Outcome:** First Habitat becomes a small adventure worth exploring more than once, and players begin to care about their own Tiny Titan.
 
 1. TT-P3-01 First Habitat greybox — merged PR #36; physical Studio validation pending.
-2. TT-P3-02 Exploration Gameplay Loop — small discovery/landmark loop using existing systems only.
-3. Define a compact repeatable exploration activity or route challenge after discovery.
-4. Evaluate the current Baby Bug visual as a temporary creature presentation prototype; document requirements for a consistent personal Tiny Titan. Do not build a full character creator yet.
-5. Tune onboarding, camera, movement, navigation and reward feedback based on observation.
-6. Validate that the habitat is interesting without combat, separate forms or ability gates.
+2. **TT-P3-02 Exploration Gameplay Loop:** implement the signature loop (clue → observation → interaction → feedback/record) using the smallest set of authored interactions; no generic quest framework.
+3. Build one short ecological story chain with a visible before/after world response (the GDD's “Quiet Glade” is a proposal to validate, not locked lore).
+4. Add at least two discovery categories (landmark/place and species/behavior) with clear player feedback; persistent Bestiary/Legacy remains Phase 2 unless a minimal persistence decision is separately approved.
+5. Add one compact repeatable route/observation challenge with controlled variants and solo completion.
+6. Evaluate current Baby Bug visual only as a temporary presentation prototype; define requirements for one consistent personal Tiny Titan. No full creator or adaptation/loadout system.
+7. Tune onboarding, camera, movement, navigation, interaction prompts and feedback through observed playtests.
 
 Do not add Naturalist Rank, persistent quests, Mastery, new currencies, companions, Habitat, combat or a generic adaptation/loadout system in this phase.
 
-**Exit gate:** first-time player understands the goal, discovers multiple points of interest, completes a meaningful activity, recognizes their creature as their own and wants another exploration pass. Requires observed playtests.
+**Exit gate:** first-time players understand the immediate goal; discover multiple points of interest; complete the ecological chain; notice and explain its visible outcome; try a second discovery or repeatable activity voluntarily; and navigate the habitat solo. Studio movement/camera/device validation and external playtests are required.
 
 ### Phase 2 — RPG and Legacy foundation
 
@@ -182,4 +183,7 @@ Default branch master; one independent task per feature branch and PR; Claude Co
 - **2026-11-15:** Naturalist XP is the one persistent general XP track; Rank is derived, not a separate currency.
 - **2026-11-15:** Progression layers are Biomass/Growth, Naturalist XP/Rank, Legacy, and future optional adaptations/mastery.
 - **2026-11-15:** Bonds/companions and personal Habitat are post-MVP hypotheses; factories, breeding, trading and MMO scale remain deferred.
-- **2026-11-15:** TT-P3-02 remains a narrow exploration-loop task using existing systems only.
+- **2026-11-15:** TT-P3-02 remains a narrow exploration-loop task using existing systems only; its detailed discovery/eco-story vertical-slice contract is in GDD v2.2 and Gameplay Blueprint v2.2.
+- **2026-11-15:** Owner selected the hybrid direction with one unified long-term goal: explore, understand and gradually reconnect ecosystems while building a personal legacy.
+- **2026-11-15:** “The Quiet Glade” is a proposed first ecological story example, not locked world canon.
+- **2026-11-15:** Restoration must produce visible local world feedback; a progress bar alone is insufficient.
