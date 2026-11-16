@@ -38,6 +38,9 @@ local Config = {
     FoodHoverHeight = 2, -- studs above the FoodSpawn marker's center
     FoodCheckInterval = 0.1, -- seconds between server pickup checks
 
+    -- Discoveries (server-authoritative; see ServerScriptService/Services/DiscoveryService).
+    DiscoveryCheckInterval = 0.25, -- seconds between server checks of player positions against discovery volumes
+
     -- Growth stages. A player is in the last stage whose MinBiomass they have reached.
     -- Scale is applied to the R15 body scale values (visual growth).
     GrowthStages = table.freeze({

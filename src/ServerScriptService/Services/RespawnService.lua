@@ -35,7 +35,8 @@ local RespawnService = {}
 
 type Stats = { lifeId: number, startedAt: number, highestForm: string }
 -- lifeId 0 is the "first spawn failed" notice.
-type Recap = { lifeId: number, durationSeconds: number, highestForm: string }
+-- discoveries (TT-P3-02): plain summary { count, total, biomass, names, notable }; absent for lifeId 0.
+type Recap = { lifeId: number, durationSeconds: number, highestForm: string, discoveries: any? }
 type Entry = { record: Respawn.Record, stats: Stats?, pendingRecap: Recap?, clientReady: boolean, lastReadyAt: number? }
 
 local READY_MIN_INTERVAL = 1 -- seconds: LifeRecapReady messages closer together than this are ignored
@@ -47,6 +48,7 @@ local entries: { [Player]: Entry } = {}
 local life: any = nil
 local evolution: any = nil
 local reset: any = nil
+local discovery: any = nil
 local recapEvent: RemoteEvent? = nil
 
 local function sendPendingRecap(player: Player, entry: Entry)
@@ -147,7 +149,9 @@ local function onLifeEnded(player: Player, endedLifeId: number, reason: string)
         duration = Respawn.Duration(stats.startedAt, workspace:GetServerTimeNow())
         highestForm = stats.highestForm
     end
-    entry.pendingRecap = { lifeId = endedLifeId, durationSeconds = duration, highestForm = highestForm }
+    -- Exploration progress of the life that ended (the discovery log of that life survives the reset).
+    local discoveries = discovery.GetLifeSummary(player, endedLifeId)
+    entry.pendingRecap = { lifeId = endedLifeId, durationSeconds = duration, highestForm = highestForm, discoveries = discoveries }
     sendPendingRecap(player, entry)
 end
 
@@ -207,9 +211,10 @@ local function onPlayerAdded(player: Player)
 end
 
 -- Call very last in Bootstrap: loading a character begins a life, so every service must be
--- listening already. lifeService, evolutionService and resetService must be initialised.
-function RespawnService.Init(lifeService: any, evolutionService: any, resetService: any)
+-- listening already. lifeService, evolutionService, resetService and discoveryService must be initialised.
+function RespawnService.Init(lifeService: any, evolutionService: any, resetService: any, discoveryService: any)
     life = lifeService
+    discovery = discoveryService
     evolution = evolutionService
     reset = resetService
 

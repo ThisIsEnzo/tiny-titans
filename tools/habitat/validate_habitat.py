@@ -375,6 +375,34 @@ def main():
         walk = dist.get(lp2)
         check("walking from leaf platform 1 to 2 needs a detour of 35+ steps (a 10-stud glide would save it)", walk is not None and walk >= 35, str(walk))
 
+    # discovery sites (TT-P3-02): one volume per catalog id, reachable on foot and back, away from the Nest
+    sites = [p for p in parts if "DiscoverySite" in p.tags]
+    defs_path = os.path.join(ROOT, "src", "ReplicatedStorage", "Shared", "DiscoveryDefinitions.lua")
+    import re
+    defined = re.findall(r'^\s+id = "([A-Z_]+)",', open(defs_path).read(), re.M)
+    site_ids = sorted(p.name for p in sites)
+    check("discovery sites match the catalog ids exactly (one volume per discovery)", sorted(defined) == site_ids and len(set(site_ids)) == len(site_ids), f"catalog {sorted(defined)} sites {site_ids}")
+    check("at least 5 discoveries", len(sites) >= 5, str(len(sites)))
+    check("discovery volumes are invisible, not solid, not queryable", all(p.props["Transparency"] == 1.0 and not p.collide and p.props["CanQuery"] is False for p in sites))
+    check("discovery volumes are at most 32 studs per side", all(max(p.size) <= 32 for p in sites))
+    spawn_pos = [(s.pos[0], s.pos[2]) for s in spawns]
+    def box_xz(p):
+        return (p.pos[0] - p.size[0] / 2, p.pos[0] + p.size[0] / 2, p.pos[2] - p.size[2] / 2, p.pos[2] + p.size[2] / 2)
+    far = all(math.hypot(p.pos[0] - sx, p.pos[2] - sz) > 40 for p in sites for sx, sz in spawn_pos)
+    check("no discovery volume is at the Nest (leaving the Nest is required; every one is 40+ studs from the pads)", far)
+    check("no discovery volume contains a spawn pad", all(not (box_xz(p)[0] <= sx <= box_xz(p)[1] and box_xz(p)[2] <= sz <= box_xz(p)[3]) for p in sites for sx, sz in spawn_pos))
+    for p in sorted(sites, key=lambda q: q.name):
+        x0, x1, z0, z1 = box_xz(p)
+        ylo, yhi = p.pos[1] - p.size[1] / 2, p.pos[1] + p.size[1] / 2
+        inside = [nd for nd in reach_n if x0 <= nd[0] - HALF + 0.5 <= x1 and z0 <= nd[1] - HALF + 0.5 <= z1
+                  and nodes[nd] + 1.8 >= ylo and nodes[nd] + 3.0 <= yhi]
+        back = [nd for nd in inside if nd in home_n]
+        check(f"discovery {p.name}: {len(inside)} standing spots inside its volume, reachable on foot and able to return", len(inside) >= 4 and len(back) == len(inside))
+    overlap = [(a.name, b.name) for i, a in enumerate(sites) for b in sites[i + 1:]
+               if box_xz(a)[0] < box_xz(b)[1] and box_xz(b)[0] < box_xz(a)[1] and box_xz(a)[2] < box_xz(b)[3] and box_xz(b)[2] < box_xz(a)[3]
+               and abs(a.pos[1] - b.pos[1]) < (a.size[1] + b.size[1]) / 2]
+    check("discovery volumes do not overlap each other", not overlap, str(overlap))
+
     # tank nook: front door blocked by the static boulder, side door open
     nook_in = node_at(-31, 14, None, tol=1.5)
     check("Tank nook interior reachable by the baseline form through its side door", nook_in is not None and nook_in in reach_n)

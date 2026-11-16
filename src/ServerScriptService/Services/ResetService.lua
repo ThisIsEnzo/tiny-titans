@@ -3,7 +3,7 @@
 -- It is the only subscriber that decides WHEN to reset; each owning service performs its
 -- own reset through one small API, so no state is duplicated or moved:
 --   PlayerDataService.ResetBiomass, EvolutionService.ResetForm,
---   AbilityService.ResetLife, GrowthService.ResetLife.
+--   AbilityService.ResetLife, GrowthService.ResetLife, DiscoveryService.ResetLife.
 -- There is no second death detection: this only listens to LifeService.LifeEnded/LifeBegan.
 --
 -- Exactly once per (player, lifeId): the pure rules in Shared/LifeReset.lua keep a per-player
@@ -14,7 +14,8 @@
 -- No client request or client value is involved. Respawn is untouched (still automatic).
 --
 -- Reset order: biomass first (stage and evolution availability are derived from it), then
--- the form, then ability state, then growth visuals.
+-- the form, then ability state, then growth visuals, then the discovery log (the finished life's
+-- log stays readable for its recap).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -30,6 +31,7 @@ local playerData: any = nil
 local evolution: any = nil
 local abilities: any = nil
 local growth: any = nil
+local discovery: any = nil
 
 -- The player's tracker. It is stored only while the player is still in the game, so a late
 -- event for a player who left can never re-create state.
@@ -50,6 +52,7 @@ local function resetCurrentLife(player: Player)
     evolution.ResetForm(player)
     abilities.ResetLife(player)
     growth.ResetLife(player)
+    discovery.ResetLife(player)
 end
 
 local function onLifeEnded(player: Player, endedLifeId: number, _reason: string)
@@ -79,12 +82,20 @@ function ResetService.IsResetDone(player: Player, lifeId: number): boolean
 end
 
 -- Every argument must already be initialised. Call after the other services.
-function ResetService.Init(lifeService: any, playerDataService: any, evolutionService: any, abilityService: any, growthService: any)
+function ResetService.Init(
+    lifeService: any,
+    playerDataService: any,
+    evolutionService: any,
+    abilityService: any,
+    growthService: any,
+    discoveryService: any
+)
     life = lifeService
     playerData = playerDataService
     evolution = evolutionService
     abilities = abilityService
     growth = growthService
+    discovery = discoveryService
 
     lifeService.LifeEnded:Connect(onLifeEnded)
     lifeService.LifeBegan:Connect(onLifeBegan)

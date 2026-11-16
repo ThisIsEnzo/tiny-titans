@@ -59,7 +59,7 @@ Treat README and source on current master as implementation truth. Refresh this 
 **Outcome:** First Habitat becomes a small adventure worth exploring more than once, and players begin to care about their own Tiny Titan.
 
 1. TT-P3-01 First Habitat greybox — merged PR #36; physical Studio validation pending.
-2. **TT-P3-02 Exploration Gameplay Loop:** implement the signature loop (clue → observation → interaction → feedback/record) using the smallest set of authored interactions; no generic quest framework.
+2. **TT-P3-02 Exploration Gameplay Loop:** implement the signature loop (clue → observation → interaction → feedback/record) using the smallest set of authored interactions; no generic quest framework. *Status:* a first implementation (six place discoveries, each found by entering an invisible trigger volume, a small Biomass bonus, a counter and toast, and a recap line) is prepared in the feature branch `feature/tt-p3-02-exploration-gameplay-loop` (PR not merged); Studio validation pending. It is **per life and not persisted**, whereas Product Vision v2.0 defines Discoveries as one-time permanent knowledge claims: that semantic gap needs an owner decision (see the PR description) and persistence stays out of this task.
 3. Build one short ecological story chain with a visible before/after world response (the GDD's “Quiet Glade” is a proposal to validate, not locked lore).
 4. Add at least two discovery categories (landmark/place and species/behavior) with clear player feedback; persistent Bestiary/Legacy remains Phase 2 unless a minimal persistence decision is separately approved.
 5. Add one compact repeatable route/observation challenge with controlled variants and solo completion.
@@ -159,7 +159,7 @@ Deferred: breeding/genetics, player trading/marketplace, factories, guilds, forc
 | Personal Tiny Titan customization | Direction approved; not implemented |
 | Adaptations | Not approved for MVP; old Tank/Glider abilities are prototypes only |
 | First Habitat | Greybox merged PR #36; Studio validation pending |
-| Exploration discovery loop | TT-P3-02 planned; not evidenced as fun |
+| Exploration discovery loop | TT-P3-02 implementation prepared (per-life place discoveries; PR not merged); Studio validation pending; not evidenced as fun |
 | Repeatable activity | Not implemented/accepted |
 | Naturalist XP, Rank, Bestiary, Legacy | Not implemented |
 | Foraging variety and living species | Not implemented |
