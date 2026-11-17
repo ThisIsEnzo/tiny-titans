@@ -1,14 +1,21 @@
 --!strict
--- Lightweight discovery feedback (TT-P3-02), display only. Two small elements, no quest panel, no map,
--- no arrows:
---   * a tiny "Discoveries 2/6" counter in the top-left corner, driven by the server-owned Player
---     attributes "Discoveries" and "DiscoveryTotal";
---   * a short toast when the server sends DiscoveryFound: what was discovered, the Biomass it gave
---     (if any) and a one-line clue about what to explore next.
+-- Lightweight feedback for EXPEDITION DISCOVERIES (TT-P3-02), display only. These are per-life exploration
+-- objectives, not permanent discoveries, so the wording says "Expedition" and never implies anything was
+-- saved. Three small elements, no quest panel, no map, no arrows:
+--   * a tiny "Expedition 2/6" counter in the top-left corner;
+--   * a persistent one-line hint under it with the clue for the next place (or a completed message),
+--     driven by the server-owned Player attributes "Discoveries", "DiscoveryTotal" and "DiscoveryClue".
+--     Attributes replicate with the player, so the hint is correct from the first frame, after a
+--     respawn and after a reset, and never depends on an event that could arrive before this script;
+--   * a short toast when the server sends DiscoveryFound: which place, the Biomass it gave (if any) and
+--     the next clue.
 -- The client never asks for or grants anything; malformed events are ignored or shown as safe text.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Discovery = require(Shared:WaitForChild("Discovery") :: ModuleScript)
 
 local DiscoveryUIController = {}
 
@@ -53,7 +60,7 @@ local function cleanText(value: any, fallback: string): string
     return fallback
 end
 
-local function buildGui(): (ScreenGui, TextLabel, Frame, TextLabel)
+local function buildGui(): (ScreenGui, TextLabel, TextLabel, Frame, TextLabel)
     local gui = Instance.new("ScreenGui")
     gui.Name = GUI_NAME
     gui.ResetOnSpawn = false
@@ -70,10 +77,25 @@ local function buildGui(): (ScreenGui, TextLabel, Frame, TextLabel)
     counter.Parent = gui
     roundCorners(counter, 8)
 
+    -- Persistent hint under the counter: wraps to two lines, readable on a phone.
+    local hint = makeLabel("Hint", 15)
+    hint.Position = UDim2.new(0, 12, 0, 44)
+    hint.Size = UDim2.new(0, 270, 0, 44)
+    hint.BackgroundTransparency = 0.45
+    hint.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
+    hint.TextXAlignment = Enum.TextXAlignment.Left
+    hint.Visible = false
+    hint.Parent = gui
+    roundCorners(hint, 8)
+    local hintPadding = Instance.new("UIPadding")
+    hintPadding.PaddingLeft = UDim.new(0, 8)
+    hintPadding.PaddingRight = UDim.new(0, 8)
+    hintPadding.Parent = hint
+
     local toast = Instance.new("Frame")
     toast.Name = "Toast"
     toast.AnchorPoint = Vector2.new(0.5, 0)
-    toast.Position = UDim2.new(0.5, 0, 0.17, 0)
+    toast.Position = UDim2.new(0.5, 0, 0.26, 0) -- below the top-left counter and hint, also in landscape
     toast.Size = UDim2.new(0.5, 0, 0, 84)
     toast.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
     toast.BackgroundTransparency = 0.15
@@ -95,7 +117,7 @@ local function buildGui(): (ScreenGui, TextLabel, Frame, TextLabel)
     text.Size = UDim2.fromScale(0.92, 0.88)
     text.TextXAlignment = Enum.TextXAlignment.Center
     text.Parent = toast
-    return gui, counter, toast, text
+    return gui, counter, hint, toast, text
 end
 
 function DiscoveryUIController.Init()
@@ -105,19 +127,26 @@ function DiscoveryUIController.Init()
     initialized = true
 
     local player = Players.LocalPlayer
-    local gui, counter, toast, toastText = buildGui()
+    local gui, counter, hint, toast, toastText = buildGui()
     gui.Parent = player:WaitForChild("PlayerGui")
 
-    local function refreshCounter()
+    -- Counter and hint are both rebuilt from the three server-owned attributes, so any one of them
+    -- changing (or all being set before this script runs) always ends in a consistent display.
+    local function refresh()
         local count: any = player:GetAttribute("Discoveries")
         local total: any = player:GetAttribute("DiscoveryTotal")
+        local clue: any = player:GetAttribute("DiscoveryClue")
         local totalNumber = wholeNumber(total, 0)
         counter.Visible = totalNumber > 0
-        counter.Text = string.format("Discoveries %d/%d", math.min(wholeNumber(count, 0), totalNumber), totalNumber)
+        counter.Text = string.format("Expedition %d/%d", math.min(wholeNumber(count, 0), totalNumber), totalNumber)
+        local hintText = Discovery.FormatHint(clue, count, total)
+        hint.Visible = hintText ~= nil
+        hint.Text = hintText or ""
     end
-    player:GetAttributeChangedSignal("Discoveries"):Connect(refreshCounter)
-    player:GetAttributeChangedSignal("DiscoveryTotal"):Connect(refreshCounter)
-    refreshCounter()
+    for _, attribute in { "Discoveries", "DiscoveryTotal", "DiscoveryClue" } do
+        player:GetAttributeChangedSignal(attribute):Connect(refresh)
+    end
+    refresh()
 
     local toastId = 0
     local function showToast(text: string)
@@ -147,13 +176,13 @@ function DiscoveryUIController.Init()
             local biomass = wholeNumber(payload.biomass, 0)
             local count = wholeNumber(payload.count, 0)
             local total = math.max(wholeNumber(payload.total, count), count)
-            local title = "DISCOVERED: " .. cleanText(payload.name, "A new place")
+            local title = "EXPEDITION FIND: " .. cleanText(payload.name, "A new place")
             local reward = if biomass > 0 then string.format("+%d Biomass", biomass) else "No more Biomass to gain"
             local lines = { title, string.format("%s  (%d/%d)", reward, count, total) }
             if type(payload.nextClue) == "string" and payload.nextClue ~= "" then
                 table.insert(lines, "Next: " .. cleanText(payload.nextClue, ""))
             elseif count >= total and total > 0 then
-                table.insert(lines, "You found everything in this life!")
+                table.insert(lines, "Every expedition place found this life!")
             end
             showToast(table.concat(lines, "\n"))
         end)

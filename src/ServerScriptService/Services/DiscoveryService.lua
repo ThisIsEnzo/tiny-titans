@@ -1,5 +1,7 @@
 --!strict
--- Server-authoritative exploration discoveries (TT-P3-02). A discovery is found when a living
+-- Server-authoritative EXPEDITION DISCOVERIES (TT-P3-02): temporary exploration objectives that belong to
+-- ONE life. They are not permanent (Legacy) discoveries: nothing is saved, and the same places can be found
+-- again in every later life (so their small Biomass reward is repeatable per life). A discovery is found when a living
 -- character's HumanoidRootPart is INSIDE an invisible trigger volume of the map: a part tagged
 -- "DiscoverySite" under Workspace/Habitat/DiscoverySites whose Name is the discovery id (see
 -- Shared/DiscoveryDefinitions). Like FoodService there is no client request: the server polls player
@@ -16,8 +18,12 @@
 --     life are rejected as stale, so a late scan can never touch a newer life.
 --   * The reward is a small Biomass bonus through PlayerDataService.AddBiomass (clamped to the cap, so
 --     discoveries never exceed it); a discovery found at the cap still counts, it just grants 0.
---   * Feedback: a server-to-client DiscoveryFound event (display only) plus the Player attributes
---     "Discoveries" and "DiscoveryTotal" (display mirrors, never read for a decision).
+--   * Feedback: a server-to-client DiscoveryFound event (display only, for the toast) plus the Player
+--     attributes "Discoveries" (count this life), "DiscoveryTotal" and "DiscoveryClue" (the clue for the
+--     next place, "" when all are found). They are display mirrors, never read for a decision. The
+--     clue is an ATTRIBUTE, not an event, so a client that subscribes late (first spawn, rejoin) still
+--     reads the current value; it is set when the player is added, recomputed after every discovery,
+--     and restored to the first place by ResetLife for the next life (never a stale clue).
 --   * The recap reads GetLifeSummary(player, lifeId); the pure tracker keeps the just-finished life's
 --     log, so it does not matter whether the reset or the recap runs first.
 --   Not persisted: discoveries last one life, no DataStore.
@@ -60,19 +66,21 @@ local function registerSite(instance: Instance)
     sites[id] = instance
 end
 
--- Display mirrors for the client HUD: the current life's count and the catalog size.
+-- Display mirrors for the client HUD: the current life's count, the catalog size and the clue for the
+-- next place ("" when everything is found). A player without a tracker or a life yet gets the first clue.
 local function publish(player: Player)
     if player.Parent ~= Players then
         return
     end
-    local tracker = trackers[player]
+    local tracker = trackers[player] or Discovery.NewTracker()
     local lifeId = life.GetLifeId(player)
     local count = 0
-    if tracker ~= nil and lifeId ~= nil then
+    if lifeId ~= nil then
         count = Discovery.SummaryForLife(tracker, lifeId, DiscoveryDefinitions).count
     end
     player:SetAttribute("Discoveries", count)
     player:SetAttribute("DiscoveryTotal", #DiscoveryDefinitions.Discoveries)
+    player:SetAttribute("DiscoveryClue", Discovery.CurrentClue(tracker, lifeId, DiscoveryDefinitions))
 end
 
 -- The character's root if the player is alive, else nil.
@@ -147,8 +155,10 @@ function DiscoveryService.ResetLife(player: Player)
     end
     Discovery.ResetTracker(tracker)
     if player.Parent == Players then
-        player:SetAttribute("Discoveries", 0) -- the next life starts with nothing found (the recap has the old count)
+        -- The next life starts with nothing found (the recap has the old count) and with the first clue.
+        player:SetAttribute("Discoveries", 0)
         player:SetAttribute("DiscoveryTotal", #DiscoveryDefinitions.Discoveries)
+        player:SetAttribute("DiscoveryClue", Discovery.CurrentClue(tracker, nil, DiscoveryDefinitions))
     end
     return true
 end

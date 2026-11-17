@@ -1,5 +1,5 @@
 --!strict
--- Optional unit tests for the pure discovery rules (TT-P3-02): Shared/Discovery.lua and
+-- Optional unit tests for the pure rules of the per-life Expedition Discoveries (TT-P3-02): Shared/Discovery.lua and
 -- Shared/DiscoveryDefinitions.lua. Run with Lune from the repository root:
 --   lune run tests/Discovery.test.lua
 -- Lune is NOT part of rokit.toml; this file is outside the Rojo project tree.
@@ -201,22 +201,116 @@ check("missing or non-numeric arguments are never inside", not Discovery.IsInsid
 
 -- 7. Recap formatting (client display; malformed input is safe) -----------------------------------------
 local line, notable = Discovery.FormatRecap({ count = 3, total = 6, biomass = 13, names = {}, notable = "Dewdrop Glade" })
-check("recap line shows count, total and Biomass", line == "Discoveries: 3/6 (+13 Biomass)")
-check("recap notable line", notable == "Most notable: Dewdrop Glade")
+check("recap line shows count, total and Biomass (expedition wording)", line == "Expedition finds: 3/6 (+13 Biomass)")
+check("recap notable line", notable == "Best find: Dewdrop Glade")
 line, notable = Discovery.FormatRecap({ count = 2, total = 6, biomass = 0, notable = "X" })
-check("no Biomass part when none was gained", line == "Discoveries: 2/6")
+check("no Biomass part when none was gained", line == "Expedition finds: 2/6")
 line, notable = Discovery.FormatRecap({ count = 0, total = 6, biomass = 0, notable = "Ghost" })
-check("no notable line without discoveries", line == "Discoveries: 0/6" and notable == nil)
+check("no notable line without discoveries", line == "Expedition finds: 0/6" and notable == nil)
 for _, bad in { nil :: any, 5, "x", true, {} } do
     local l, n = Discovery.FormatRecap(bad)
     check("malformed summary " .. tostring(bad) .. " falls back safely", type(l) == "string" and l ~= "" and (n == nil or type(n) == "string"))
 end
 line = Discovery.FormatRecap({ count = 9, total = 2, biomass = -4, notable = 7 })
-check("a total below the count is raised and a negative Biomass is dropped", line == "Discoveries: 9/9")
+check("a total below the count is raised and a negative Biomass is dropped", line == "Expedition finds: 9/9")
 line, notable = Discovery.FormatRecap({ count = 1, total = 1, biomass = 1, notable = string.rep("a", 500) })
-check("an oversized notable name is truncated", notable ~= nil and #notable <= #"Most notable: " + 40)
+check("an oversized notable name is truncated", notable ~= nil and #notable <= #"Best find: " + 40)
 line = Discovery.FormatRecap({ count = 1.9, total = 6.2, biomass = 3.7 })
-check("fractional values are floored", line == "Discoveries: 1/6 (+3 Biomass)")
+check("fractional values are floored", line == "Expedition finds: 1/6 (+3 Biomass)")
+
+-- 8. The persistent clue (TT-P3-02 polish): a fresh expedition has the first clue, every discovery advances it,
+-- the last one clears it, and a new life restores the first one. The server publishes exactly this string.
+local first = Defs.Discoveries[1]
+local clueTracker = Discovery.NewTracker()
+check("a fresh expedition shows the first clue", Discovery.CurrentClue(clueTracker, 1, Defs) == first.clue and first.clue ~= "")
+check("the clue also works before any life id exists (initial spawn)", Discovery.CurrentClue(clueTracker, nil, Defs) == first.clue and Discovery.CurrentClue(clueTracker, 0 / 0, Defs) == first.clue)
+check("the published clue never exceeds the maximum length", (function()
+    for _, d in Defs.Discoveries do
+        local t = Discovery.NewTracker()
+        for _, other in Defs.Discoveries do
+            if other.id ~= d.id then
+                Discovery.TryDiscover(t, 1, other.id, Defs)
+            end
+        end
+        local clue = Discovery.CurrentClue(t, 1, Defs)
+        if clue ~= d.clue or #clue > Discovery.MaxClueLength then
+            return false
+        end
+    end
+    return true
+end)())
+local walker = Discovery.NewTracker()
+local advanceOk = true
+for index, d in Defs.Discoveries do
+    if Discovery.CurrentClue(walker, 1, Defs) ~= d.clue then
+        advanceOk = false -- before finding place #index the clue must be place #index's
+    end
+    Discovery.TryDiscover(walker, 1, d.id, Defs)
+    local expected = if index < #Defs.Discoveries then Defs.Discoveries[index + 1].clue else ""
+    if Discovery.CurrentClue(walker, 1, Defs) ~= expected then
+        advanceOk = false
+    end
+end
+check("each discovery advances the clue to the next undiscovered place, in catalog order", advanceOk)
+check("the final discovery leaves no clue", Discovery.CurrentClue(walker, 1, Defs) == "" and Discovery.SummaryForLife(walker, 1, Defs).count == #Defs.Discoveries)
+check("finding places out of order skips found ones", (function()
+    local t = Discovery.NewTracker()
+    Discovery.TryDiscover(t, 1, Defs.Discoveries[2].id, Defs)
+    local afterSecond = Discovery.CurrentClue(t, 1, Defs) -- still the first place
+    Discovery.TryDiscover(t, 1, Defs.Discoveries[1].id, Defs)
+    return afterSecond == Defs.Discoveries[1].clue and Discovery.CurrentClue(t, 1, Defs) == Defs.Discoveries[3].clue
+end)())
+Discovery.ResetTracker(walker) -- the life ended (ResetService): the next life starts clean
+check("resetting for a new life restores the first clue", Discovery.CurrentClue(walker, 1, Defs) == first.clue and Discovery.CurrentClue(walker, 2, Defs) == first.clue)
+check("no stale clue: the finished life's log never decides the next life's clue", (function()
+    local t = Discovery.NewTracker()
+    for _, d in Defs.Discoveries do
+        Discovery.TryDiscover(t, 1, d.id, Defs)
+    end
+    local doneClue = Discovery.CurrentClue(t, 1, Defs) -- ""
+    Discovery.TryDiscover(t, 2, Defs.Discoveries[1].id, Defs) -- a newer life starts without an explicit reset
+    return doneClue == "" and Discovery.CurrentClue(t, 2, Defs) == Defs.Discoveries[2].clue and Discovery.CurrentClue(t, 3, Defs) == first.clue
+end)())
+check("the same place stays once per life while the clue stays put", (function()
+    local t = Discovery.NewTracker()
+    Discovery.TryDiscover(t, 1, first.id, Defs)
+    local clueAfterFirst = Discovery.CurrentClue(t, 1, Defs)
+    local again = Discovery.TryDiscover(t, 1, first.id, Defs)
+    return not again and Discovery.CurrentClue(t, 1, Defs) == clueAfterFirst and Discovery.SummaryForLife(t, 1, Defs).count == 1
+end)())
+check("a place can be found and clued again in the next life", (function()
+    local t = Discovery.NewTracker()
+    Discovery.TryDiscover(t, 1, first.id, Defs)
+    Discovery.ResetTracker(t)
+    return Discovery.CurrentClue(t, 2, Defs) == first.clue and (Discovery.TryDiscover(t, 2, first.id, Defs)) and Discovery.CurrentClue(t, 2, Defs) == Defs.Discoveries[2].clue
+end)())
+local clueA, clueB = Discovery.NewTracker(), Discovery.NewTracker()
+Discovery.TryDiscover(clueA, 1, first.id, Defs)
+Discovery.TryDiscover(clueA, 1, Defs.Discoveries[2].id, Defs)
+check("each player's clue is independent", Discovery.CurrentClue(clueA, 1, Defs) == Defs.Discoveries[3].clue and Discovery.CurrentClue(clueB, 1, Defs) == first.clue)
+check("a rejected discovery does not move the clue", (function()
+    local before = Discovery.CurrentClue(clueB, 1, Defs)
+    Discovery.TryDiscover(clueB, 1, "NOPE", Defs)
+    Discovery.TryDiscover(clueB, 0, first.id, Defs)
+    return Discovery.CurrentClue(clueB, 1, Defs) == before
+end)())
+check("a catalog entry without clue text gives an empty clue instead of an error", Discovery.CurrentClue(Discovery.NewTracker(), 1, {
+    Discoveries = { { id = "A", displayName = "Alpha", biomass = 1 } },
+    GetDiscovery = function(): any
+        return nil
+    end,
+}) == "")
+
+-- 9. The persistent hint text (client display from the three server attributes).
+check("a clue is shown with its prefix", Discovery.FormatHint("Climb the stump.", 0, 6) == "Clue: Climb the stump.")
+check("an empty clue with everything found shows the completed message", Discovery.FormatHint("", 6, 6) == "All expedition places found!")
+check("an empty clue before the totals are known hides the hint", Discovery.FormatHint("", 0, 0) == nil and Discovery.FormatHint(nil, nil, nil) == nil)
+check("an empty clue mid-expedition hides the hint (nothing stale)", Discovery.FormatHint("", 3, 6) == nil)
+check("a malformed clue is ignored", Discovery.FormatHint(5, 6, 6) == "All expedition places found!" and Discovery.FormatHint({}, 1, 6) == nil and Discovery.FormatHint(true, 0, 0) == nil)
+check("an oversized clue is truncated", (function()
+    local text = Discovery.FormatHint(string.rep("x", 500), 0, 6)
+    return text ~= nil and #text <= #"Clue: " + Discovery.MaxClueLength
+end)())
 
 if failures > 0 then
     error(failures .. " test(s) failed")

@@ -1,6 +1,11 @@
 --!strict
--- Pure discovery rules (TT-P3-02). No Roblox services and no requires: callers pass the catalog
--- (DiscoveryDefinitions) in, like Evolution.lua, so everything here is unit-testable in Lune.
+-- Pure rules for EXPEDITION DISCOVERIES (TT-P3-02): temporary exploration objectives that belong to ONE
+-- life. They are not permanent Legacy discoveries: nothing here is saved, and the same places can be
+-- found again in the next life. (The unqualified word "Discoveries" is reserved for the future
+-- permanent knowledge system; identifiers keep the short name Discovery for now.)
+--
+-- No Roblox services and no requires: callers pass the catalog (DiscoveryDefinitions) in, like
+-- Evolution.lua, so everything here is unit-testable in Lune.
 --
 -- A Tracker belongs to ONE player (so players are isolated by construction) and holds:
 --   log   the discovery log of the player's current life (created lazily, keyed by lifeId)
@@ -142,6 +147,9 @@ function Discovery.SummaryForLife(tracker: Tracker, lifeId: any, catalog: Catalo
     return summarize(nil, catalog)
 end
 
+-- Longest clue text the server publishes to a client (and the client displays).
+Discovery.MaxClueLength = 120
+
 -- The first discovery (catalog order) the life has not found yet, or nil when all are found.
 function Discovery.NextClue(tracker: Tracker, lifeId: any, catalog: Catalog): any
     local log = tracker.log
@@ -152,6 +160,17 @@ function Discovery.NextClue(tracker: Tracker, lifeId: any, catalog: Catalog): an
         end
     end
     return nil
+end
+
+-- The clue to show for the life as a plain string: the first place not found yet, or "" once every place
+-- is found. Same rule as NextClue (a fresh expedition, a newer life, or a malformed life id all start
+-- from the first place), so the server can publish it without any extra state.
+function Discovery.CurrentClue(tracker: Tracker, lifeId: any, catalog: Catalog): string
+    local definition = Discovery.NextClue(tracker, lifeId, catalog)
+    if definition == nil or type(definition.clue) ~= "string" then
+        return ""
+    end
+    return string.sub(definition.clue, 1, Discovery.MaxClueLength)
 end
 
 -- Point-in-box test in the volume's local space (centre at the origin, half sizes hx, hy, hz).
@@ -176,22 +195,37 @@ local function whole(value: any, fallback: number): number
     return fallback
 end
 
+-- Client-side text of the persistent hint under the expedition counter (display only), from the
+-- server-owned Player attributes: the clue while there is one, a completed message once every place is
+-- found, otherwise nil (hide the hint). Malformed values are treated as "nothing to show".
+function Discovery.FormatHint(clue: any, count: any, total: any): string?
+    if type(clue) == "string" and clue ~= "" then
+        return "Clue: " .. string.sub(clue, 1, Discovery.MaxClueLength)
+    end
+    local found, all = whole(count, 0), whole(total, 0)
+    if all > 0 and found >= all then
+        return "All expedition places found!"
+    end
+    return nil
+end
+
 -- Client-side display lines for a recap summary received from the server (display only; malformed
--- data falls back to safe text). Returns (line, notableLine or nil).
+-- data falls back to safe text). The wording says "Expedition" on purpose: these finds belong to one
+-- life and are not saved as permanent discoveries. Returns (line, notableLine or nil).
 function Discovery.FormatRecap(summary: any): (string, string?)
     if type(summary) ~= "table" then
-        return "Discoveries: none", nil
+        return "Expedition finds: none", nil
     end
     local count = whole(summary.count, 0)
     local total = math.max(whole(summary.total, count), count)
     local biomass = whole(summary.biomass, 0)
-    local line = string.format("Discoveries: %d/%d", count, total)
+    local line = string.format("Expedition finds: %d/%d", count, total)
     if biomass > 0 then
         line ..= string.format(" (+%d Biomass)", biomass)
     end
     local notable: string? = nil
     if count > 0 and type(summary.notable) == "string" and summary.notable ~= "" then
-        notable = "Most notable: " .. string.sub(summary.notable, 1, 40)
+        notable = "Best find: " .. string.sub(summary.notable, 1, 40)
     end
     return line, notable
 end

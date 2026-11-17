@@ -1,6 +1,9 @@
 --!strict
--- Catalog of the habitat's discoveries (TT-P3-02): the single source of truth for each discovery's
--- stable id, player-facing name, the clue shown for finding it, and its small Biomass reward.
+-- Catalog of the habitat's EXPEDITION DISCOVERIES (TT-P3-02): per-life exploration objectives. The same
+-- places can be found again in every life and nothing is saved; the unqualified word "Discoveries" is
+-- reserved for the future permanent (Legacy) knowledge system. This module is the single source of
+-- truth for each place's stable id, player-facing name, the clue shown for finding it, and its small
+-- Biomass reward (repeatable per life, so it can be earned again in each new life).
 -- Pure data: no Roblox services, no requires, so it loads in Studio and in Lune.
 --
 -- WHERE a discovery happens is not here: it is an invisible trigger volume in the map
