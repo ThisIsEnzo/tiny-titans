@@ -1,7 +1,7 @@
 # Tiny Titans — Master Roadmap
 
 **Version:** 2.2  
-**Date:** 2026-11-15  
+**Date:** 2026-11-17  
 **Status:** Active execution roadmap; personalized Tiny Titan direction approved by owner.  
 **Repository:** ThisIsEnzo/tiny-titans  
 **Default branch:** master
@@ -39,7 +39,7 @@ Treat README and source on current master as implementation truth. Refresh this 
 - Studio validation is required for runtime physics, camera, collision, input, device and multiplayer behavior.
 - Never equate merged code, green CI or offline validation with fun or a validated game.
 - Prefer direct documentation/code changes by the project owner or assistant where possible; use Claude Code for repository-local implementation.
-- TT-P3-02 remains narrowly scoped to the exploration loop using existing systems only.
+- TT-P3-02 is merged; TT-P3-03 is the next planned slice: a compact, server-authoritative ecological observation and interaction chain in Meadow.
 
 ## 4. Active pre-MVP phases
 
@@ -59,7 +59,7 @@ Treat README and source on current master as implementation truth. Refresh this 
 **Outcome:** First Habitat becomes a small adventure worth exploring more than once, and players begin to care about their own Tiny Titan.
 
 1. TT-P3-01 First Habitat greybox — merged PR #36; physical Studio validation pending.
-2. **TT-P3-02 Exploration Gameplay Loop:** implement the signature loop (clue → observation → interaction → feedback/record) using the smallest set of authored interactions; no generic quest framework. *Status:* the first technical slice is implemented in PR #38 (open, not merged): clue → location arrival → feedback → per-life record. Six **Expedition Discoveries** (places in First Habitat; each found by entering an invisible server-checked trigger volume, once per life, with a small repeatable-per-life Biomass bonus), a persistent clue hint and counter, a toast and a recap line. These are temporary per-life objectives, **not** permanent Legacy Discoveries (nothing is persisted; the unqualified term "Discoveries" stays reserved for the future permanent knowledge system). This is **not yet the full signature exploration loop**: observation and interaction with objects, species and behavior discovery (item 4), the ecological chain with a visible world response (item 3) and the repeatable exploration challenge (item 5) remain separate future work. Studio validation pending.
+2. **TT-P3-02 Exploration Gameplay Loop:** *Merged in PR #38 on 2026-11-17* (merge commit `7e0fc39de32770076bce2f5b7df716b53141223d`). The first technical slice is implemented: clue → location arrival → feedback → per-life record. Six **Expedition Discoveries** (places in First Habitat; each found by entering an invisible server-checked trigger volume, once per life, with a small repeatable-per-life Biomass bonus), a persistent clue hint and counter, a toast and a recap line. These are temporary per-life objectives, **not** permanent Legacy Discoveries (nothing is persisted; the unqualified term "Discoveries" stays reserved for the future permanent knowledge system). This is **not yet the full signature exploration loop**: observation and interaction with objects, species and behavior discovery (item 4), the ecological chain with a visible world response (item 3) and the repeatable exploration challenge (item 5) remain separate future work. Studio validation pending.
 3. Build one short ecological story chain with a visible before/after world response (the GDD's “Quiet Glade” is a proposal to validate, not locked lore).
 4. Add at least two discovery categories (landmark/place and species/behavior) with clear player feedback; persistent Bestiary/Legacy remains Phase 2 unless a minimal persistence decision is separately approved.
 5. Add one compact repeatable route/observation challenge with controlled variants and solo completion.
@@ -159,7 +159,7 @@ Deferred: breeding/genetics, player trading/marketplace, factories, guilds, forc
 | Personal Tiny Titan customization | Direction approved; not implemented |
 | Adaptations | Not approved for MVP; old Tank/Glider abilities are prototypes only |
 | First Habitat | Greybox merged PR #36; Studio validation pending |
-| Exploration discovery loop | First technical slice in PR #38 (open): per-life Expedition Discoveries (clue → arrival → feedback → per-life record); not the full signature loop; Studio validation pending; not evidenced as fun |
+| Exploration discovery loop | TT-P3-02 merged in PR #38: per-life Expedition Discoveries (clue → arrival → feedback → per-life record); not the full signature loop; Studio validation pending; not evidenced as fun |
 | Repeatable activity | Not implemented/accepted |
 | Naturalist XP, Rank, Bestiary, Legacy | Not implemented |
 | Foraging variety and living species | Not implemented |
@@ -183,7 +183,8 @@ Default branch master; one independent task per feature branch and PR; Claude Co
 - **2026-11-15:** Naturalist XP is the one persistent general XP track; Rank is derived, not a separate currency.
 - **2026-11-15:** Progression layers are Biomass/Growth, Naturalist XP/Rank, Legacy, and future optional adaptations/mastery.
 - **2026-11-15:** Bonds/companions and personal Habitat are post-MVP hypotheses; factories, breeding, trading and MMO scale remain deferred.
-- **2026-11-15:** TT-P3-02 remains a narrow exploration-loop task using existing systems only; its detailed discovery/eco-story vertical-slice contract is in GDD v2.2 and Gameplay Blueprint v2.2.
+- **2026-11-17:** TT-P3-02 merged as PR #38 (merge commit `7e0fc39de32770076bce2f5b7df716b53141223d`). The merged slice is per-life Expedition Discoveries only; it does not complete the signature exploration loop.
 - **2026-11-15:** Owner selected the hybrid direction with one unified long-term goal: explore, understand and gradually reconnect ecosystems while building a personal legacy.
 - **2026-11-15:** “The Quiet Glade” is a proposed first ecological story example, not locked world canon.
+- **2026-11-17:** TT-P3-03 initial ecological interaction slice is scoped to the existing Meadow puddle area: a blocked channel and nearby wilted flower, two deliberate observations, one server-validated clearing interaction, and a shared visible water/flower response. Dewdrop Glade remains a separate secret area; no Biomass reward or persistence is included by default.
 - **2026-11-15:** Restoration must produce visible local world feedback; a progress bar alone is insufficient.
