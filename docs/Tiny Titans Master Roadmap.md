@@ -59,7 +59,7 @@ Treat README and source on current master as implementation truth. Refresh this 
 **Outcome:** First Habitat becomes a small adventure worth exploring more than once, and players begin to care about their own Tiny Titan.
 
 1. TT-P3-01 First Habitat greybox — merged PR #36; physical Studio validation pending.
-2. **TT-P3-02 Exploration Gameplay Loop:** implement the signature loop (clue → observation → interaction → feedback/record) using the smallest set of authored interactions; no generic quest framework.
+2. **TT-P3-02 Exploration Gameplay Loop:** implement the signature loop (clue → observation → interaction → feedback/record) using the smallest set of authored interactions; no generic quest framework. *Status:* the first technical slice is implemented in PR #38 (open, not merged): clue → location arrival → feedback → per-life record. Six **Expedition Discoveries** (places in First Habitat; each found by entering an invisible server-checked trigger volume, once per life, with a small repeatable-per-life Biomass bonus), a persistent clue hint and counter, a toast and a recap line. These are temporary per-life objectives, **not** permanent Legacy Discoveries (nothing is persisted; the unqualified term "Discoveries" stays reserved for the future permanent knowledge system). This is **not yet the full signature exploration loop**: observation and interaction with objects, species and behavior discovery (item 4), the ecological chain with a visible world response (item 3) and the repeatable exploration challenge (item 5) remain separate future work. Studio validation pending.
 3. Build one short ecological story chain with a visible before/after world response (the GDD's “Quiet Glade” is a proposal to validate, not locked lore).
 4. Add at least two discovery categories (landmark/place and species/behavior) with clear player feedback; persistent Bestiary/Legacy remains Phase 2 unless a minimal persistence decision is separately approved.
 5. Add one compact repeatable route/observation challenge with controlled variants and solo completion.
@@ -159,7 +159,7 @@ Deferred: breeding/genetics, player trading/marketplace, factories, guilds, forc
 | Personal Tiny Titan customization | Direction approved; not implemented |
 | Adaptations | Not approved for MVP; old Tank/Glider abilities are prototypes only |
 | First Habitat | Greybox merged PR #36; Studio validation pending |
-| Exploration discovery loop | TT-P3-02 planned; not evidenced as fun |
+| Exploration discovery loop | First technical slice in PR #38 (open): per-life Expedition Discoveries (clue → arrival → feedback → per-life record); not the full signature loop; Studio validation pending; not evidenced as fun |
 | Repeatable activity | Not implemented/accepted |
 | Naturalist XP, Rank, Bestiary, Legacy | Not implemented |
 | Foraging variety and living species | Not implemented |

@@ -64,9 +64,10 @@ Coordinates: centred on the origin, +X east, -Z north, floor top at Y = 0.5, pla
 | `Meadow` | 101 | **B. Meadow (main exploration)** and the north clearing. Worn trails, the **Great Stump** (22 wide, 9 tall, log ramp up its west side, a lookout with a pickup), a fallen-leaf ramp, puddle with pebbles, giant acorn, stepping stones, the **Red Toadstool** (walk-under cap), a Mushroom Grove, berries, a clover hill (two 3-stud steps), a snail shell, pebble cairns, a hollow log, boulders and non-colliding giant grass blades |
 | `RockGarden` | 32 | **C. Rock Garden.** Gate rocks, a wide S-curve passage with rock walls, a terrace stair (3-stud steps to a lookout), a roofed shelter den (7 studs of headroom), a **Tank nook** (alcove whose front is blocked by a static boulder, with a 6-stud side door), boulders on the strip toward the Nest |
 | `GiantRoots` | 35 | **D. Giant Roots.** The **Old Tree** trunk (26 wide, 70 tall), a walk-through **root arch** (8 wide, 7 high) with a walkable top, an elevated route: ramp to the arch top, a root bridge, **Leaf Platform 1**, and a ramp down to the north; **Leaf Platform 2** across a 10-stud gap (the glider span; it is also reachable on foot by a ramp), fungus-step stairs up the trunk (3 steps to a 9-stud vantage), seed pods and stones |
+| `DiscoverySites` | 6 | TT-P3-02: six invisible, non-solid trigger volumes (tag `DiscoverySite`, part name = discovery id), see "Exploration loop" |
 | `Secret` | 28 | **E. Secret.** A 5-stud crack between two rock masses, its mouth hidden from the main passage by a screening rock, leading to the Dewdrop Glade (a 22-stud pocket with a glass dewdrop on a leaf and glowing mushrooms). Clues: glowing mushrooms near the approach and a tall translucent beam above the glade |
 
-Total 223 parts (budget 260), all anchored and `Locked`. Static decoration that is not part of the walkable surface (grass blades, tints, trails, puddle, glow mushrooms, beam) has `CanCollide = false`, `CanQuery = false` and no shadow.
+Total 229 parts (budget 260), all anchored and `Locked`. Static decoration that is not part of the walkable surface (grass blades, tints, trails, puddle, glow mushrooms, beam) has `CanCollide = false`, `CanQuery = false` and no shadow.
 
 ### Routes and design decisions
 
@@ -79,7 +80,7 @@ Total 223 parts (budget 260), all anchored and `Locked`. Static decoration that 
 - **Pickups (reuse of the existing `FoodSpawn` system, no new currency or inventory):** 24 markers (Nest 1, Meadow and north clearing 11, Rock Garden 4, Giant Roots 6, Secret 2). They sit along the trails and on optional detours (stump top, leaf perch, clover hill, Mushroom Grove, den, Tank nook, arch top, leaf platforms, fungus vantage, boulder garden, glade) at irregular spacing, never on a grid. `FoodService`, the 10 Biomass per pickup, the cap of 100 and the 8 second respawn are unchanged. Known risk: every pickup is identical and respawns after 8 s, so a player could farm one cluster; the spread is meant to make exploring more attractive, and tuning belongs to a later task.
 - **Safety:** the whole area is solid floor on the Baseplate, bounded by tall opaque walls (no invisible walls, no void, no hazards, no precision platforming). The boundary is high enough that nothing in the current ability set clears it.
 
-CollectionService tags (set in the model files): `FoodSpawn`, `Landmark`, `HabitatBoundary`, `TankNook`, `FutureTankPush`, `FutureGliderSpan`.
+CollectionService tags (set in the model files): `FoodSpawn`, `Landmark`, `HabitatBoundary`, `DiscoverySite`, `TankNook`, `FutureTankPush`, `FutureGliderSpan`.
 
 ### Source of truth and tools
 
@@ -90,7 +91,7 @@ python tools/habitat/generate_habitat.py
 python tools/habitat/validate_habitat.py
 ```
 
-`validate_habitat.py` (Python standard library only; an optional open-space check also needs `numpy` and `scipy`) reads the shipped JSON, rasterises the collidable parts and builds a walking graph for a baseline creature (step or jump up at most 3 studs, any drop, 6 studs of headroom, a body footprint). Run with `--map` for an ASCII map, `--crop=x0,x1,z0,z1` for a 1-stud view and `x,z[,h]` arguments to probe the widest body that fits a spot. It checks: structure, part budget, tags, three or more spawn pads, spawn safety, every pickup reachable on foot and able to return to the Nest, no trapped spots, the primary route and alternatives at 6-stud width, elevated and secret spots, the glider span not being a walkway, the Tank nook's side door, landmarks 15+ studs tall, proper rotation matrices, ramp slopes, and (with numpy and scipy) no open circle wider than 13 studs. It runs in CI.
+`validate_habitat.py` (Python standard library only; an optional open-space check also needs `numpy` and `scipy`) reads the shipped JSON, rasterises the collidable parts and builds a walking graph for a baseline creature (step or jump up at most 3 studs, any drop, 6 studs of headroom, a body footprint). Run with `--map` for an ASCII map, `--crop=x0,x1,z0,z1` for a 1-stud view and `x,z[,h]` arguments to probe the widest body that fits a spot. It checks: structure, part budget, tags, three or more spawn pads, spawn safety, every pickup reachable on foot and able to return to the Nest, no trapped spots, the primary route and alternatives at 6-stud width, elevated and secret spots, the glider span not being a walkway, the Tank nook's side door, landmarks 15+ studs tall, proper rotation matrices, ramp slopes, the discovery volumes (one per catalog id, invisible and non-solid, reachable on foot and able to return, away from the Nest, not overlapping) and (with numpy and scipy) no open circle wider than 13 studs. It runs in CI.
 
 What the validator does **not** prove: that the habitat is fun, readable through the real camera, or collision-correct in the engine, that the jump height at every growth stage reaches 3-stud steps, or that the CFrame orientations are applied as modelled. Those need Studio.
 
@@ -125,6 +126,10 @@ Server-only gameplay, wired in `ServerScriptService/Bootstrap.server.lua`:
 | `ServerScriptService/Services/RespawnService.lua` | Controlled respawn: loads the first character, sends the recap after a life ends, handles `RequestBeginNewLife`, records life start time and highest form (see Controlled respawn) |
 | `ReplicatedStorage/Shared/Respawn.lua` | Pure rules: begin-new-life validation, recap helpers (highest form, duration, formatting) |
 | `StarterPlayerScripts/Controllers/LifeRecapController.lua` | Life recap screen with the BEGIN NEW LIFE button |
+| `ServerScriptService/Services/DiscoveryService.lua` | TT-P3-02: finds per-life Expedition Discoveries (a living character inside a `DiscoverySite` volume), grants the Biomass bonus once per life, mirrors `Discoveries` / `DiscoveryTotal` / `DiscoveryClue`, fires `Remotes.DiscoveryFound`, provides the per-life summary for the recap |
+| `ReplicatedStorage/Shared/DiscoveryDefinitions.lua` | Frozen catalog of the per-life Expedition Discoveries: id, display name, clue, Biomass reward |
+| `ReplicatedStorage/Shared/Discovery.lua` | Pure rules (once per life, stale events, per-player tracker, summary, current clue, volume test, hint and recap text) |
+| `StarterPlayerScripts/Controllers/DiscoveryUIController.lua` | Display only: the "Expedition 2/6" counter, the persistent clue hint and the expedition-find toast |
 | `ReplicatedStorage/Shared/Life.lua` | Pure life transition rules (no Roblox services) |
 | `ReplicatedStorage/Shared/Config.lua` | Tuning: `FoodBiomass`, `FoodRespawnDelay`, `FoodPickupRange`, `FoodHoverHeight`, `FoodCheckInterval`, `GrowthStages` |
 
@@ -174,10 +179,11 @@ What resets (per player, whose life ended):
 | `EvolutionForm` | `EvolutionService` | `ResetForm` sets `Config.BaseForm` (`BABY_BUG`) and refreshes the attributes |
 | Active Tank shell and Glider glide, their instances and pending expiry timers, both cooldowns (`ShellReadyAt`, `GliderReadyAt`) | `AbilityService` | `ResetLife` ends both effects (bumping their tokens) and zeroes the cooldowns |
 | Growth visuals (running scale tweens and the applied target) | `GrowthService` | `ResetLife`; the next character, or the current one if alive, gets the stage 1 scale at once. A dead body is not rescaled |
+| Discovery log (what the player found this life) | `DiscoveryService` | `ResetLife` keeps the finished life's log for its recap and starts the next life with nothing found; the `Discoveries` attribute returns to 0 |
 
 Not reset on purpose: per-player rate-limit timestamps (anti-spam, not life state), food in the world (shared), `LifeState`/`lifeId` (owned by `LifeService`). Biomass cap (100), food reward, thresholds (30 / 60), forms, abilities and respawn behaviour are unchanged. There is no Legacy and no persistence.
 
-Orchestration: `ResetService` (started last in `Bootstrap.server.lua`) subscribes to `LifeService.LifeEnded` and `LifeService.LifeBegan` and calls the four reset functions above in a fixed order (biomass, form, abilities, growth). There is no second death detection. Death is still detected only by `LifeService`.
+Orchestration: `ResetService` (started last in `Bootstrap.server.lua`) subscribes to `LifeService.LifeEnded` and `LifeService.LifeBegan` and calls the reset functions above in a fixed order (biomass, form, abilities, growth, discoveries). There is no second death detection. Death is still detected only by `LifeService`.
 
 Exactly once, duplicate and stale events (pure rules in `Shared/LifeReset.lua`, one tracker per player):
 
@@ -216,8 +222,8 @@ Behaviour:
 
 - `Bootstrap.server.lua` sets `Players.CharacterAutoLoads = false` before anything yields.
 - `RespawnService` (initialised last) loads each player's **first** character when they join (decided by the server, not a request). If a character already existed (it spawned before the setting took effect), it is kept and its life recorded.
-- When a life ends, `LifeService` fires `LifeEnded`, `ResetService` resets the Current Life (P1-03), and `RespawnService` stores the recap for that player (`lifeId`, `durationSeconds`, `highestForm`). The client subscribes to `LifeRecap` and then fires `LifeRecapReady`; the server sends the stored recap after this handshake. This avoids losing the recap if the client controller starts late. The dead character stays until the next spawn. There is no countdown and no automatic respawn.
-- The recap (`LifeRecapController`) shows **Life duration**, **Highest form** and a **BEGIN NEW LIFE** button (at least 56 px high, scaled panel). It appears only when the server sends the recap and hides when the new character spawns. After pressing, the button shows "Starting..." and re-enables after 6 s if nothing happened.
+- When a life ends, `LifeService` fires `LifeEnded`, `ResetService` resets the Current Life (P1-03), and `RespawnService` stores the recap for that player (`lifeId`, `durationSeconds`, `highestForm`, and since TT-P3-02 a `discoveries` summary). The client subscribes to `LifeRecap` and then fires `LifeRecapReady`; the server sends the stored recap after this handshake. This avoids losing the recap if the client controller starts late. The dead character stays until the next spawn. There is no countdown and no automatic respawn.
+- The recap (`LifeRecapController`) shows **Life duration**, **Highest form**, the life's per-life exploration progress (**Expedition finds: 3/6 (+13 Biomass)** and the **Best find**, TT-P3-02; these are temporary Expedition Discoveries, not saved) and a **BEGIN NEW LIFE** button (at least 56 px high, scaled panel). It appears only when the server sends the recap and hides when the new character spawns. After pressing, the button shows "Starting..." and re-enables after 6 s if nothing happened.
 - The button fires `Remotes.RequestBeginNewLife` with **no values**. The client never sends a duration, form, lifeId or state.
 
 Server validation of `RequestBeginNewLife` (pure rules in `Shared/Respawn.lua`, silent rejection, no state change on failure): the player exists and is tracked; `LifeService` says the life is `Ended` (not `Alive`); a recap is awaiting and is for the **current** life; no spawn is already in progress; and `ResetService.IsResetDone` says the ended life's reset has run (so a new life never starts before the P1-03 reset). The first valid request marks its spawn operation in flight synchronously, so spam, duplicates and same-frame requests are rejected until that operation's `LoadCharacter` call returns (changed in P1-05; before, the flag cleared when the character was added). A failed `LoadCharacter` (logged with `warn`) releases the operation so the player can retry. Extra arguments are ignored; there is no separate rate limiter because the state checks reject repeats immediately.
@@ -760,12 +766,68 @@ Manual Studio checklist (all **pending**):
 8. Evolve to Tank or Glider: the normal avatar returns and the shell and glide behave as before.
 9. Check Output for errors and warnings (no asset warnings expected: no asset ids are used).
 
+## Exploration loop (TT-P3-02)
+
+The smallest meaningful exploration loop on top of the First Habitat: six **Expedition Discoveries** (places) that reward going somewhere and looking, without combat, without a new currency and without any ability gate. **Not validated in Roblox Studio** (checklist below); the pure rules have Lune tests that were written but not run in the authoring environment, and the map side is checked offline by `tools/habitat/validate_habitat.py`.
+
+| Expedition place (`id`) | Where (map) | Biomass (each life) |
+|---|---|---|
+| Great Stump Lookout (`GREAT_STUMP`) | on top of the Great Stump (log ramp) | +4 |
+| Mushroom Grove (`MUSHROOM_GROVE`) | the grove of giant caps, east Meadow | +4 |
+| Rock Terrace (`ROCK_TERRACE`) | the terrace lookout in the Rock Garden | +4 |
+| Foot of the Old Tree (`OLD_TREE`) | ground at the trunk's foot | +4 |
+| Root Arch Top (`ROOT_ARCH`) | on the arch deck (the elevated route) | +5 |
+| Dewdrop Glade (`DEWDROP_GLADE`) | the secret glade behind the crack | +8 |
+
+**Terminology and per-life semantics.** These are temporary exploration objectives that belong to **one life**. They are **not** permanent (Legacy) discoveries: nothing is saved, no knowledge is recorded for later lives, and the UI says "Expedition" so it never implies otherwise. The unqualified word "Discoveries" is reserved for the future permanent knowledge system. The same six places can be found **again in every later life**, and their Biomass reward is therefore repeatable per life (29 Biomass each life, unchanged and not rebalanced here). Internal names (`Discovery.lua`, `DiscoveryService`, the `DiscoverySite` tag, the `Discoveries` attribute) keep the short name on purpose; only player-facing text and documentation say "Expedition".
+
+All six together give 29 Biomass per life: about three food items out of the cap of 100, so food stays the main source. No discovery pays more than one food item (10). Every place is optional and optional-route only: none lies on a route that has to be walked.
+
+**Behaviour.** The server checks every 0.25 s (`Config.DiscoveryCheckInterval`) whether a living player's `HumanoidRootPart` is inside a discovery's trigger volume. The first time per life: the discovery is marked found, the Biomass bonus is granted through `PlayerDataService.AddBiomass` (clamped to the cap; at the cap the discovery still counts and grants 0), and the player sees a toast ("EXPEDITION FIND: Great Stump Lookout / +4 Biomass (1/6) / Next: ...") and the counter and hint described below. A clue is the first unfound place in catalog order and never gives coordinates.
+
+**What the player sees.** A small "Expedition n/6" counter in the top-left corner with a persistent one-line **clue** under it. A new expedition (the first spawn and every new life) starts with the clue for the first place; each find advances the clue to the next place not found yet (catalog order); after the sixth find the hint says "All expedition places found!". A toast also appears on each find. After death the recap shows "Expedition finds: 3/6 (+13 Biomass)" and "Best find: ...". The clue is a server-owned Player attribute (`DiscoveryClue`), recomputed with `Discovery.CurrentClue` from the same tracker that decides the finds, so it is correct from the first frame, after a respawn and after a reset, and never depends on an event arriving before the client subscribed.
+
+**Multiplayer semantics: individual.** Each player has their own discoveries. Nobody can grant anything to anybody else, being near another player changes nothing, and solo play gets the whole loop. Two players standing at the same place each discover it for themselves. This was chosen as the simplest rule that is fair and cannot be abused remotely.
+
+**Architecture.**
+
+- `Shared/DiscoveryDefinitions.lua`: ids, display names, clues, rewards (frozen). `Shared/Discovery.lua`: pure rules, one `Tracker` per player holding the current life's log and the last finished life's log.
+- Where each discovery happens is data in the map: `Workspace/Habitat/DiscoverySites` has one invisible, non-solid, non-queryable part per discovery, tag `DiscoverySite`, **part Name = discovery id**. `DiscoveryService` reads them at start (and when tagged parts are added or removed). No script lives in a map part, and a missing or unknown site only logs a warning.
+- A volume is a region of space, so a trigger cannot fire through a wall or from a distance; the elevated volumes (stump top, terrace lookout, arch deck) sit exactly over the top surface of their solid landmark, so standing or jumping on the ground beside them does not reach them.
+- Lifecycle: the log belongs to one `lifeId`. `ResetService` calls `DiscoveryService.ResetLife` with the other resets; the pure tracker keeps the finished life's log, so the recap reads the right numbers whether the reset or the recap runs first. Discoveries only count while the character is alive and for the current life id; a late event for an older life is rejected. `PlayerRemoving` drops the state. Nothing is persisted.
+- Server to client: `Remotes.DiscoveryFound` (display only; the client sends nothing and the server ignores anything it receives), Player attributes `Discoveries`, `DiscoveryTotal` and `DiscoveryClue` (display mirrors, never read for a decision; `DiscoveryClue` is "" once everything is found), and the `discoveries` summary inside the existing `LifeRecap` payload. No new request remote.
+- Anti-exploit: no client request exists; a discovery is marked found before its reward in one thread without yielding, so it cannot be found twice; rewards are small and capped; the stale-life check stops a late scan from touching a newer life. Like food, it trusts the server's copy of the character position, so a client that teleports its own character could reach a volume; that class of exploit is outside this task.
+- Not implemented on purpose: new currency, quest panel, minimap or arrows, persistence or Legacy, Naturalist XP or rank, shared or co-op rewards, new food, combat, a second habitat.
+
+**Status against the approved v2.2 direction (read before extending).** This is the narrow "clue, arrival, feedback, record" slice; it is not the full vertical slice of the Gameplay Blueprint (sections 12-14). Specifically:
+
+- **Per-life Expedition Discoveries, not permanent Discoveries (product decision).** Product Vision v2.0 defines a *Discovery* as a one-time permanent knowledge claim and a *Life Goal* as a goal scoped to one life. The implemented places are temporary, per-life objectives, so they are called **Expedition Discoveries** in the UI and docs. Permanent recording of knowledge belongs to the future Legacy system and needs persistence, which is not part of TT-P3-02.
+- **Not implemented here (separate roadmap items):** the second discovery category (species/behaviour), the ecological before/after chain, an inspect/observe interaction beyond entering a place, a journal beyond the recap line, and the repeatable challenge. In terms of the signature loop this is only the first technical slice (clue, location arrival, feedback, per-life record); observation and interaction with objects are still open.
+- **Biomass reward:** a small Biomass bonus (29 in total) keeps the loop connected to existing growth; Biomass remains current-life growth and food remains the main source. The reward is repeatable per life; whether exploration should reward Biomass at all under v2.2 is still open.
+- **Forms:** the Tank and Glider forms still exist in the code, so the checklist below still tests them; the v2.2 direction (one personal creature) may later remove them.
+
+**Tests.** `lune run tests/Discovery.test.lua` covers the catalog (unique ids, modest rewards), once-per-life, malformed and stale life ids, rewards, death/reset/next life, recap order independence, player isolation, the persistent clue (first clue on a fresh expedition, advance on each find, none after the last, restored by a new life, independent per player), trigger-volume maths, the hint text and recap formatting (client display). It does not cover the Roblox wiring.
+
+**Manual Studio checklist (all pending).**
+
+1. Spawn at the Nest: the counter shows "Expedition 0/6", the hint under it shows the first clue from the first frame, and nothing triggers at the Nest.
+2. Climb the Great Stump by the log ramp: the toast appears, Biomass rises by 4, the counter shows 1/6 and the persistent hint moves to the second clue. Leave and re-enter: nothing happens again.
+3. Visit each other place (grove, terrace, Old Tree foot, arch top, glade): each rewards once. Check that standing next to a volume on the other side of a wall (for example the Rock Garden den walls and the glade ring) does not trigger it, and that jumping from the ground beside the stump or the arch does not trigger the elevated ones.
+4. Reach the Biomass cap and then discover something new: it counts, the toast says there is no more Biomass to gain, and Biomass stays at 100.
+5. Die with 2-3 finds: the recap shows "Expedition finds: n/6 (+x Biomass)" and the best find. Begin a new life: the counter is 0/6, the hint shows the first clue again (never the previous life's clue), and the same places reward again.
+6. Die before finding anything: the recap shows "Expedition finds: 0/6". A spawn-failed notice shows no exploration line.
+7. Two clients: each discovers independently (the second player still gets the reward for a place the first already found); one player's discovery does not change the other's counter.
+8. Solo play: the whole loop works with one player.
+9. Evolve to Tank or Glider: discoveries still work and nothing on a mandatory route changed.
+10. Find all six places: the hint changes to "All expedition places found!". Check the hint reads well on a phone-sized screen (two lines) and does not overlap the toast.
+11. Rejoin and respawn repeatedly: no duplicate toasts or counters, no leftover connections or Output errors or warnings (a warning means a discovery id and its site name do not match).
+
 ## Validate
 
 ```powershell
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the First Habitat greybox and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. The Baby Bug has a custom visual model (P2-05, Studio validation pending). Tank and Glider models, damage, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the First Habitat greybox, the exploration discoveries (TT-P3-02) and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. The Baby Bug has a custom visual model (P2-05, Studio validation pending). Tank and Glider models, damage, combat and persistence are not implemented.
 
 See the current product and architecture documents linked at the top of this README.

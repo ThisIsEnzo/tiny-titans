@@ -5,6 +5,8 @@
 -- NO values; the server decides whether a new life may begin. The recap hides when a new
 -- character spawns (the new life), not when the button is pressed, and the button re-enables
 -- after a timeout if nothing happened, so the player can never get stuck.
+-- The recap also shows the life's exploration progress (discoveries found, Biomass they gave and the
+-- most notable one), taken from the server's summary and formatted by the pure Discovery.FormatRecap.
 -- Each recap carries the server's lifeId. Older, already dismissed or malformed recaps are
 -- ignored (Respawn.ShouldShowRecap), so a late or replayed recap can neither overwrite a newer
 -- one nor reappear after the new character spawned. lifeId 0 is the "first spawn failed" notice.
@@ -14,6 +16,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Respawn = require(Shared:WaitForChild("Respawn") :: ModuleScript)
+local Discovery = require(Shared:WaitForChild("Discovery") :: ModuleScript)
 
 local LifeRecapController = {}
 
@@ -51,7 +54,7 @@ local function roundCorners(instance: Instance, radius: number)
     corner.Parent = instance
 end
 
-local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextLabel, TextButton)
+local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextLabel, TextLabel, TextLabel, TextButton)
     local gui = Instance.new("ScreenGui")
     gui.Name = GUI_NAME
     gui.ResetOnSpawn = false
@@ -73,38 +76,47 @@ local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextLabel, TextButt
     panel.Name = "Panel"
     panel.AnchorPoint = Vector2.new(0.5, 0.5)
     panel.Position = UDim2.fromScale(0.5, 0.5)
-    panel.Size = UDim2.fromScale(0.5, 0.55)
+    panel.Size = UDim2.fromScale(0.5, 0.62)
     panel.BackgroundColor3 = Color3.fromRGB(20, 22, 28)
     panel.BackgroundTransparency = 0.05
     panel.BorderSizePixel = 0
     panel.Parent = dim
     roundCorners(panel, 12)
     local panelLimit = Instance.new("UISizeConstraint")
-    panelLimit.MinSize = Vector2.new(300, 230)
-    panelLimit.MaxSize = Vector2.new(480, 320)
+    panelLimit.MinSize = Vector2.new(300, 270)
+    panelLimit.MaxSize = Vector2.new(480, 360)
     panelLimit.Parent = panel
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(255, 255, 255)
     stroke.Transparency = 0.7
     stroke.Parent = panel
 
-    local title = makeLabel("Title", UDim2.fromScale(0.05, 0.05), UDim2.fromScale(0.9, 0.17), 30)
+    local title = makeLabel("Title", UDim2.fromScale(0.05, 0.04), UDim2.fromScale(0.9, 0.15), 30)
     title.Text = "LIFE ENDED"
     title.Parent = panel
 
-    local duration = makeLabel("Duration", UDim2.fromScale(0.05, 0.27), UDim2.fromScale(0.9, 0.11), 20)
+    local duration = makeLabel("Duration", UDim2.fromScale(0.05, 0.22), UDim2.fromScale(0.9, 0.1), 20)
     duration.Font = Enum.Font.Gotham
     duration.Parent = panel
 
-    local form = makeLabel("HighestForm", UDim2.fromScale(0.05, 0.4), UDim2.fromScale(0.9, 0.11), 20)
+    local form = makeLabel("HighestForm", UDim2.fromScale(0.05, 0.33), UDim2.fromScale(0.9, 0.1), 20)
     form.Font = Enum.Font.Gotham
     form.Parent = panel
+
+    local discoveries = makeLabel("Discoveries", UDim2.fromScale(0.05, 0.44), UDim2.fromScale(0.9, 0.1), 20)
+    discoveries.Font = Enum.Font.Gotham
+    discoveries.Parent = panel
+
+    local notable = makeLabel("NotableDiscovery", UDim2.fromScale(0.05, 0.54), UDim2.fromScale(0.9, 0.09), 18)
+    notable.Font = Enum.Font.Gotham
+    notable.TextTransparency = 0.15
+    notable.Parent = panel
 
     local button = Instance.new("TextButton")
     button.Name = "BeginButton"
     button.AnchorPoint = Vector2.new(0.5, 0)
-    button.Position = UDim2.fromScale(0.5, 0.62)
-    button.Size = UDim2.fromScale(0.7, 0.26)
+    button.Position = UDim2.fromScale(0.5, 0.68)
+    button.Size = UDim2.fromScale(0.7, 0.24)
     button.BackgroundColor3 = Color3.fromRGB(60, 150, 100)
     button.BorderSizePixel = 0
     button.Font = Enum.Font.GothamBold
@@ -121,7 +133,7 @@ local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextLabel, TextButt
     textLimit.MaxTextSize = 26
     textLimit.Parent = button
 
-    return gui, title, duration, form, button
+    return gui, title, duration, form, discoveries, notable, button
 end
 
 function LifeRecapController.Init()
@@ -132,7 +144,7 @@ function LifeRecapController.Init()
 
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
-    local gui, titleLabel, durationLabel, formLabel, button = buildGui()
+    local gui, titleLabel, durationLabel, formLabel, discoveryLabel, notableLabel, button = buildGui()
 
     local requestRemote: RemoteEvent? = nil
     local pending = false
@@ -197,6 +209,12 @@ function LifeRecapController.Init()
             durationLabel.Text = "Life duration: " .. Respawn.FormatDuration(seconds)
             local formName = if type(highest) == "string" then (DISPLAY_NAMES[highest] or highest) else DISPLAY_NAMES.BABY_BUG
             formLabel.Text = "Highest form: " .. formName
+            local discoveryLine, notableLine = Discovery.FormatRecap(summary.discoveries)
+            local isLifeRecap = recapLifeId ~= 0 -- lifeId 0 is the "spawn failed" notice: no exploration line
+            discoveryLabel.Text = discoveryLine
+            discoveryLabel.Visible = isLifeRecap
+            notableLabel.Text = notableLine or ""
+            notableLabel.Visible = isLifeRecap and notableLine ~= nil
             if not sameRecap then
                 setPending(false) -- a replay of the recap already on screen must not undo a pending press
                 attempt += 1

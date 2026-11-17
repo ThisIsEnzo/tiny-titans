@@ -136,6 +136,11 @@ class Area:
         return self._add(Part(name, size=(3, 0.3, 3), pos=(x, FLOOR_TOP + h + 0.15, z), material="Neon",
                               color=[0.3, 1.0, 0.4], collide=False, tags=["FoodSpawn"]))
 
+    def volume(self, name, x, z, sx, sz, h0, h1):
+        """Invisible trigger volume (TT-P3-02): spans heights h0..h1 above the floor top. Not solid, no queries."""
+        return self._add(Part(name, size=(sx, h1 - h0, sz), pos=(x, FLOOR_TOP + (h0 + h1) / 2, z), material="SmoothPlastic",
+                              color=[1.0, 1.0, 1.0], collide=False, transparency=1.0, tags=["DiscoverySite"]))
+
     def to_json(self):
         return {"className": "Folder", "children": [p.to_json() for p in self.parts]}
 
@@ -432,10 +437,27 @@ def build_north_clearing(a):
     a.food("NorthFood2", 12, -38)
 
 
+# ============================================================================================
+# Discovery sites (TT-P3-02): one invisible volume per discovery in Shared/DiscoveryDefinitions.
+# The part Name is the discovery id. A character's HumanoidRootPart must be INSIDE the volume (server
+# polls, see DiscoveryService), so it cannot fire through walls or from far away. A grounded root sits
+# about 1.8 (scale 0.6) to 3 (scale 1.0) studs above the feet; elevated volumes start just under that.
+# ============================================================================================
+def build_discovery_sites():
+    a = Area("DiscoverySites")
+    a.volume("GREAT_STUMP", 8, 26, 14, 14, 10.2, 16.0)        # on top of the stump (top at 9)
+    a.volume("MUSHROOM_GROVE", 53, 43, 30, 32, 0.5, 12.0)     # under and between the grove's caps
+    a.volume("ROCK_TERRACE", -54, -16, 5, 6, 7.2, 13.0)       # exactly the lookout top (TerraceStep2, top at 6)
+    a.volume("OLD_TREE", 37, -44, 14, 14, 0.5, 12.0)          # ground at the trunk's foot
+    a.volume("ROOT_ARCH", 35, -4, 18, 8, 11.2, 17.0)          # on top of the arch (top at 10)
+    a.volume("DEWDROP_GLADE", -44, -60, 20, 16, 0.5, 12.0)    # inside the secret glade
+    return a
+
+
 def build_all():
     meadow = build_meadow()
     build_north_clearing(meadow)
-    return [build_terrain(), build_nest(), meadow, build_rock_garden(), build_giant_roots(), build_secret()]
+    return [build_terrain(), build_nest(), meadow, build_rock_garden(), build_giant_roots(), build_secret(), build_discovery_sites()]
 
 
 def main():
