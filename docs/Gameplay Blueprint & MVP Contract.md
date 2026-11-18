@@ -1,23 +1,37 @@
 # Tiny Titans — Gameplay Blueprint & MVP Contract
 
 **Status:** Product direction approved by owner; MVP contract active  
-**Version:** 2.1  
-**Date:** 2026-11-15  
+**Version:** 3.0  
+**Date:** 2026-11-19  
 **Authority:** This document defines the game and first playable product. Product Vision defines ambition; Master Roadmap defines execution order.
 
 ## 1. The game
 
-**Tiny Titans is a co-op-friendly Creature Exploration RPG about inhabiting one personal tiny creature, exploring an oversized living ecosystem, making discoveries and building a lasting identity in that world.**
+**Tiny Titans is a Zelda-inspired living-world adventure built around an original miniature ecosystem, ecological puzzles, exploration, secrets and compact challenges.** The player uses their standard Roblox avatar. The game supports complete solo play and equally supported co-op.
 
-This is an exploration-first, non-combat-required PvE adventure. Solo play must remain viable. Threats may exist, but combat is not a prerequisite for danger, progression or replayability.
+Zelda is a design inspiration for adventure structure, environmental puzzle craft, secrets and regional progression—not a template to copy. Tiny Titans' identity comes from miniature scale, natural systems, observation, creature behavior and visible ecosystem change.
 
-Not a generic food simulator, class-selection lobby, arena brawler, forced PvP game, huge empty open world or MMO grind.
+Not a generic food simulator, class-selection lobby, arena brawler, forced PvP game, empty open world or MMO grind.
 
 ## 2. Player fantasy
 
-“I have my own small creature. I explore places that feel huge, notice things others may miss, learn about the ecosystem, grow and customize my creature, and gradually build a collection and a place in this world.”
+“I explore a world that feels enormous as my Roblox avatar. I notice things others miss, discover how the ecosystem works, solve environmental problems, uncover hidden places and see the world respond to my actions.”
 
-Emotional beats: wonder, agency, personal identity, readable tension, discovery and lasting legacy.
+Emotional beats: wonder, agency, curiosity, mastery, readable tension, discovery, social cooperation and the satisfaction of changing a living place.
+
+## 2A. Character contract — Roblox avatar
+
+The standard Roblox avatar is the canonical playable character.
+
+- Keep the player's Roblox avatar visible and recognizable.
+- Preserve standard Humanoid/Animate behavior, movement and supported animations.
+- Preserve clothing, body packages and accessories wherever supported.
+- Do not hide the avatar or replace it with the current Baby Bug visual.
+- Do not introduce custom rigs, arbitrary scaling, collision proxies or camera overrides in the initial restoration.
+- The miniature fantasy comes from oversized environments, props, plants, creatures and readable camera framing.
+- Validate movement, collision, camera, animation, accessories, touch, keyboard/mouse and gamepad in Studio.
+
+Baby Bug is a retired player-character prototype. Tank and Glider are retired form concepts. Existing code may remain temporarily for compatibility, but it is not a product requirement. Any useful abilities must be reconsidered later as optional world interactions with at least two use cases and solo alternatives.
 
 ## 3. Core loop
 
@@ -44,21 +58,13 @@ Prioritize Explore & Discover, Traverse & Master, and Notice & Interact using ex
 
 A creature encounter or environmental hazard is optional and needs a separate design gate. Combat, health/damage, bosses and enemy progression are not MVP prerequisites.
 
-## 5. Character identity and adaptations
+## 5. Character, movement and world interaction
 
-### One personal Tiny Titan
+The player uses their normal Roblox avatar. The first playable slice must validate comfortable movement through the First Habitat with standard Roblox character dimensions and animation behavior.
 
-The player does not choose Baby Bug, Tank or Glider as separate playable forms/classes. Each player inhabits one personal Tiny Titan with consistent identity across lives.
+Do not build a custom creature rig, character creator, form-selection system or adaptation loadout for MVP. The world itself creates the tiny-scale fantasy.
 
-Target appearance is a purpose-built, expressive small creature with meaningful customization. This is not a commitment to simply scale down a standard R15 avatar. Rig, collision, animation, accessories, avatar integration and mobile readability require technical validation.
-
-Customization may eventually include palette, markings, eyes, shell/wings, antennae, accessories, animations, trails and emotes. Do not build a large character creator before the basic creature is convincing and performant.
-
-### Adaptations, not forms
-
-Baby Bug / Tank / Glider are retired as product-level forms. Their useful verbs survive only as candidate ideas: agility/squeeze, brace/shell and glide/wings. These are not an approved MVP roster.
-
-Each future adaptation needs at least two real world use cases, a distinct verb, trade-offs, counterplay, server validation, readable feedback, cross-platform input and playtest evidence. No mandatory gates. Do not implement per-form Mastery.
+Future optional abilities are considered only when an authored puzzle or route needs a distinct player verb. Each candidate requires two or more meaningful use cases, clear limits/trade-offs, server validation, cross-platform controls and solo-completable alternatives. No mandatory ability gates.
 
 ## 6. Progression and death
 
@@ -113,7 +119,7 @@ TT-P3-02 remains a narrow exploration-loop task using existing systems only. It 
 
 ## 12. Unified goal and signature discovery loop (v2.2)
 
-The unified long-term goal is to **explore, understand and gradually reconnect the world's ecosystems while creating a personal legacy within them**. Exploration is the primary activity; discoveries and visible ecological change give it purpose; one personal Tiny Titan is the emotional anchor; Bestiary/Discoveries/Legacy preserve knowledge; Nest and co-op deepen attachment later.
+The unified long-term goal is to **explore, understand and gradually reconnect the world's ecosystems while creating a personal legacy within them**. Exploration is the primary activity; discoveries and visible ecological change give it purpose; one Roblox avatar is the emotional anchor; Bestiary/Discoveries/Legacy preserve knowledge; Nest and co-op deepen attachment later.
 
 The signature loop is:
 
@@ -144,7 +150,7 @@ Use the existing Nest, Meadow, Rock Garden, Giant Roots and Secret/Dewdrop Glade
 
 **Must-have for the vertical slice:** Studio-validated movement/routes; onboarding; observe/inspect interaction; two discovery categories; one ecological chain with visible response; clear feedback/journal; one repeatable activity; solo completion; server-authoritative state/reward validation; input plan for touch, keyboard/mouse and gamepad.
 
-**Should-have:** a few visual appearance presets/palette choices; ambient creature behaviors; optional co-op contribution feedback; a second side discovery; Nest presentation polish.
+**Should-have:** a few Roblox-avatar-compatible cosmetic options; ambient creature behaviors; optional co-op contribution feedback; a second side discovery; Nest presentation polish.
 
 **Out of scope:** separate forms/classes; Agility/Brace/Glide adaptations; combat; full Naturalist XP/Rank/DataStore before the loop is proven; generic quest framework; full character creator; companions; customizable Habitat; crafting/trading; multiple large biomes; hunger chores, daily streaks or paid power.
 
