@@ -106,20 +106,20 @@ Before a feature enters the roadmap, define player problem/fantasy, core-loop mo
 
 ## Approved product decision
 
-**Build a compact Creature Exploration RPG about one personal, customizable Tiny Titan in a large-feeling living world. Prove exploration, discovery, character attachment and a repeatable activity before adding adaptations, combat, persistence breadth or monetization.**
+**Build a compact Zelda-inspired living-world adventure played as the standard Roblox avatar. Prove exploration, observation, ecological puzzles, visible world change, secrets and repeatable adventure activities in both solo and co-op before adding broad RPG progression or monetization.**
 
 Top 1000 is the ambition. Player value, replayability, fairness and evidence are the operating standard.
 
 ## 11. RPG direction and boundaries
 
-Owner approval: 2026-11-15. Naturalist XP is the single persistent general XP track; Rank is derived. Discoveries, Life Goals and World Challenges have distinct one-time, per-life and repeatable semantics. Biomass remains Current Life growth. Natural Materials are a future hypothesis; Research Samples are not approved currency. Companions and Habitat are post-MVP.
+Owner approval: 2026-11-19. Zelda is a high-level adventure-design inspiration only. The standard Roblox avatar is the canonical player character. Solo and co-op are equally supported. Naturalist XP/Rank, Bestiary persistence, companions and Habitat remain later systems; Biomass remains incidental current-life growth, not the adventure's central goal.
 
-TT-P3-02 remains a narrow exploration-loop task using existing systems only. It must not introduce persistent XP, DataStore, a generic quest framework, character creator, adaptations, combat, companions, Habitat building or a new currency.
+TT-P3-03 is the next ecological interaction slice in Meadow. Keep it narrow and server-authoritative. Do not introduce persistent XP, DataStore, a generic quest framework, custom Baby Bug player visuals, form selection, combat, companions, Habitat building or a new currency.
 
 
-## 12. Unified goal and signature discovery loop (v2.2)
+## 12. Unified goal and signature adventure loop (v3.0)
 
-The unified long-term goal is to **explore, understand and gradually reconnect the world's ecosystems while creating a personal legacy within them**. Exploration is the primary activity; discoveries and visible ecological change give it purpose; one Roblox avatar is the emotional anchor; Bestiary/Discoveries/Legacy preserve knowledge; Nest and co-op deepen attachment later.
+The unified long-term goal is to **explore, understand and gradually reconnect the world's ecosystems while creating a personal legacy within them**. Exploration is the primary activity; discoveries and visible ecological change give it purpose; the standard Roblox avatar is the player's identity anchor; Bestiary/Discoveries/Legacy preserve knowledge; Nest and co-op deepen attachment later.
 
 The signature loop is:
 
@@ -156,4 +156,4 @@ Use the existing Nest, Meadow, Rock Garden, Giant Roots and Secret/Dewdrop Glade
 
 A region qualifies for future expansion only if it introduces a distinct ecological identity, new player decision/verb, species behavior or environmental relationship, local story chain, optional discoveries, repeatable activity, visible outcome and solo-completable core route. More acreage alone is not content.
 
-Detailed design and open decisions are recorded in [GDD v2.2 — The Living World Adventure](GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md).
+Detailed design and open decisions are recorded in [GDD v3.0 — The Living World Adventure](GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md).
