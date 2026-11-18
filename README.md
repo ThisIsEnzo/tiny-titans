@@ -2,24 +2,30 @@
 
 Roblox prototype: a multiplayer **Creature Exploration RPG** (currently a first habitat greybox).
 
-## Current approved product direction
+## Current approved product direction (2026-11-19)
 
-Each player inhabits one personal, customizable Tiny Titan in an oversized living ecosystem. Baby Bug, Tank and Glider are no longer separate playable forms; their useful verbs may be reconsidered as optional adaptations after real world use cases are proven. A combat system is not required for MVP. Exploration, discovery, collection, character attachment and replayable activities are the foundation. Existing form/evolution code described later in this README is historical prototype implementation, not the approved product model.
+Tiny Titans is a **Zelda-inspired hybrid living-world adventure** with original ecological puzzles, environmental observation, secrets, compact challenges and regional adventures. Zelda is a high-level design inspiration only; Tiny Titans must use original characters, world fiction, art, maps, puzzles, names, UI and mechanics.
+
+The game is fully playable solo and equally supports co-op. Every essential route, puzzle and progression step must have a solo solution; co-op adds optional coordination and shared stories.
+
+**The canonical player character is the standard Roblox avatar.** Keep the avatar visible and preserve normal Roblox movement, Humanoid/Animate behavior, clothing, body packages and accessories wherever supported. The current custom Baby Bug visual is retired as the player character because its proportions and animation quality are not acceptable. The runtime still needs a separate restoration task and Roblox Studio validation; this documentation update does not itself change the character implementation.
+
+The miniature fantasy is communicated through oversized environments, plants, roots, props, creatures and camera framing—not by hiding the Roblox avatar or replacing it with the current Baby Bug model. Baby Bug, Tank and Glider form/evolution code below is historical prototype implementation, not approved product direction.
 
 ## Product and architecture documents
 
 Use these documents as the current sources of truth:
 
-- [Product Vision v2.2 — Personalized Creature Exploration RPG](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md): product north star, retention principles and cosmetic-first monetization.
+- [Product Vision v3.0 — The Living-World Adventure](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md): product north star, Zelda-inspired adventure identity, Roblox avatar direction, retention principles and cosmetic-first monetization.
 - [GDD v2.2 — The Living World Adventure](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md): unified goal, discovery loop, first ecological story proposal, MVP scope and playtest contract.
 - [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md): core loop, first habitat and MVP acceptance gates.
 - [Tiny Titans Master Roadmap](docs/Tiny%20Titans%20Master%20Roadmap.md): the single execution roadmap and phase gates.
-- [Player Identity & Adaptation Architecture](docs/Player%20Identity%20%26%20Adaptation%20Architecture.md): future character identity, appearance and optional adaptation boundaries.
+- [Player Identity & Adaptation Architecture](docs/Player%20Identity%20%26%20Adaptation%20Architecture.md): canonical Roblox avatar, appearance boundaries and deferred optional world-interaction abilities.
 - [Progression & Legacy Architecture Addendum](docs/Progression%20%26%20Legacy%20Architecture%20Addendum.md): future progression and persistence boundaries.
 
-GDD v2.2 is the detailed experience contract; Gameplay Blueprint defines the first playable slice; Master Roadmap controls execution order. The former Evolution Sandbox Architecture and Combat Progression & Endgame Design are superseded/archived. Their detailed historical notes remain in Git history.
+GDD v3.0 is the detailed adventure contract; Gameplay Blueprint defines the first playable slice; Master Roadmap controls execution order. The former Evolution Sandbox Architecture and Combat Progression & Endgame Design are superseded/archived. Their detailed historical notes remain in Git history.
 
-Sections below describe the current code and historical Baby Bug / Tank / Glider prototype work. They are retained as implementation/audit evidence, not as product requirements. Where those notes conflict with the approved one-Tiny-Titan direction, the current product documents above take precedence. Do not infer that Studio validation has occurred unless explicitly recorded.
+Sections below describe current code and historical Baby Bug / Tank / Glider prototype work. They are retained as implementation/audit evidence, not product requirements. The current product documents above take precedence. Avatar restoration remains pending until a separate code change is reviewed and validated in Studio. Do not infer that Studio validation has occurred unless explicitly recorded.
 
 ## Toolchain
 
@@ -818,7 +824,7 @@ All six together give 29 Biomass per life: about three food items out of the cap
 6. Die before finding anything: the recap shows "Expedition finds: 0/6". A spawn-failed notice shows no exploration line.
 7. Two clients: each discovers independently (the second player still gets the reward for a place the first already found); one player's discovery does not change the other's counter.
 8. Solo play: the whole loop works with one player.
-9. Evolve to Tank or Glider: discoveries still work and nothing on a mandatory route changed.
+9. Historical form/evolution prototype checks only; do not treat these as current product acceptance criteria.
 10. Find all six places: the hint changes to "All expedition places found!". Check the hint reads well on a phone-sized screen (two lines) and does not overlap the toast.
 11. Rejoin and respawn repeatedly: no duplicate toasts or counters, no leftover connections or Output errors or warnings (a warning means a discovery id and its site name do not match).
 
@@ -828,6 +834,6 @@ All six together give 29 Biomass per life: about three food items out of the cap
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the First Habitat greybox, the exploration discoveries (TT-P3-02) and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. The Baby Bug has a custom visual model (P2-05, Studio validation pending). Tank and Glider models, damage, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the First Habitat greybox, exploration discoveries (TT-P3-02), food/growth, lifecycle and recap systems. Historical implementation still includes the form/evolution prototype, Tank Defensive Shell, Glider Air Glide and custom Baby Bug visual. The approved product direction is the standard Roblox avatar; runtime restoration, removal/retirement of obsolete form UI and Studio validation are pending. Damage, combat and persistence are not implemented.
 
 See the current product and architecture documents linked at the top of this README.
