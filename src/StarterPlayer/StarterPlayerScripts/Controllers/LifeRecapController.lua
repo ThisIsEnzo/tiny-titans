@@ -25,9 +25,9 @@ local RETRY_SECONDS = 6
 local BUTTON_TEXT = "BEGIN NEW LIFE"
 
 local DISPLAY_NAMES: { [string]: string } = {
-    BABY_BUG = "Baby Bug",
-    TANK = "Tank",
-    GLIDER = "Glider",
+    BABY_BUG = "Roblox Avatar",
+    TANK = "Roblox Avatar",
+    GLIDER = "Roblox Avatar",
 }
 
 local initialized = false
@@ -208,7 +208,7 @@ function LifeRecapController.Init()
             titleLabel.Text = if recapLifeId == 0 then "SPAWN FAILED" else "LIFE ENDED"
             durationLabel.Text = "Life duration: " .. Respawn.FormatDuration(seconds)
             local formName = if type(highest) == "string" then (DISPLAY_NAMES[highest] or highest) else DISPLAY_NAMES.BABY_BUG
-            formLabel.Text = "Highest form: " .. formName
+            formLabel.Text = "Character: " .. formName
             local discoveryLine, notableLine = Discovery.FormatRecap(summary.discoveries)
             local isLifeRecap = recapLifeId ~= 0 -- lifeId 0 is the "spawn failed" notice: no exploration line
             discoveryLabel.Text = discoveryLine
