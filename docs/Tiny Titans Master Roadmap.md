@@ -46,7 +46,7 @@ Treat README and source on current master as implementation truth. Refresh this 
 ### Phase 0 — Foundation and uncertainty reduction
 
 **Outcome:** know what works and remove critical technical uncertainty.
-- Keep lifecycle, reset, recap and Biomass/growth stable while product-facing form/evolution assumptions are reassessed.
+- Keep lifecycle, reset, recap and Biomass/growth stable while retiring obsolete form/evolution presentation dependencies.
 - Run existing automated checks and build in the available environment.
 - Restore the standard Roblox avatar (visible body and standard animation stack); complete Studio checks for spawn, camera, avatar movement, collision, accessories, growth, lifecycle and multiplayer isolation.
 - Record current prototype limitations honestly; Tank and Glider are not accepted product roles.
@@ -121,7 +121,7 @@ Do not add Naturalist Rank, persistent quests, Mastery, new currencies, companio
 - Add short World Events that do not punish players for missing a schedule.
 - Expand one dense biome at a time, each with new traversal, resources, species and challenges.
 - Combat is **not assumed**. Consider it only if playtests reveal a compelling need that non-combat interaction cannot serve; this requires a separate product decision.
-- Add crafting/equipment only when it creates meaningful choices without overwhelming creature identity.
+- Add crafting/equipment only when it creates meaningful choices without overwhelming the adventure or Roblox avatar identity.
 
 **Exit gate:** each new biome/activity introduces a distinct verb or decision and supports replayability with measured player value.
 
@@ -129,10 +129,10 @@ Do not add Naturalist Rank, persistent quests, Mastery, new currencies, companio
 
 **Outcome:** ship a coherent, polished, safe and measurable public product.
 - Finalize first-session onboarding and UI.
-- Polish personal Tiny Titan presentation, animation, sound and VFX.
+- Polish Roblox avatar presentation, movement/animation, sound and environmental VFX.
 - Validate touch, keyboard/mouse and gamepad; test low-end mobile performance.
 - Complete server-authority, exploit, data safety and Roblox policy reviews.
-- Run external playtests and instrument first-session funnel, discovery/activity completion, customization engagement, return intent and retention.
+- Run external playtests and instrument first-session funnel, discovery/activity completion, avatar-compatible cosmetic engagement, return intent and retention.
 - Prepare icon, thumbnails, store description, moderation/reporting, support, release and rollback plans.
 - Introduce cosmetic-first monetization only after player value and economy are demonstrated.
 
