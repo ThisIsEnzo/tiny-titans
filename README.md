@@ -26,6 +26,8 @@ Our design target is a hybrid of open-world freedom and systemic interactions wi
 
 **Authority:** Product Vision defines the north star; GDD defines the experience; the Mechanics Matrix inventories mechanic families; Gameplay Blueprint defines the first vertical slice; Master Roadmap controls execution. README/source remain the truth for implementation. CI, static checks and merged PRs do not prove Roblox Studio behavior or player enjoyment.
 
+The detailed prototype notes below document existing repository history and implementation, including the old First Habitat, Biomass, discoveries, growth and form prototypes. They are not a commitment to preserve those systems in the new adventure. The approved product direction and Master Roadmap above take precedence; audit each prototype before reuse.
+
 ## Toolchain
 
 - Roblox Studio
