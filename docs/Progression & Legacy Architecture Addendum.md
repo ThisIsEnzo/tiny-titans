@@ -1,5 +1,7 @@
 # Tiny Titans — Progression & Legacy Architecture Addendum
 
+> **Owner direction update (2026-11-19):** Tiny Titans is now a Zelda-inspired living-world adventure played as the standard Roblox avatar, with complete solo play and equally supported co-op. Baby Bug is retired as the playable character. This progression addendum describes future knowledge/Legacy boundaries only; it must not reintroduce a custom creature avatar, form classes or grind-first progression. See Product Vision v3.0 and Player Identity & Adaptation Architecture v2.0.
+
 **Version:** 2.1 | **Date:** 2026-11-15  
 **Status:** Approved product model; technical implementation proposal, not implemented.  
 **Companion to:** Player Identity & Adaptation Architecture  
