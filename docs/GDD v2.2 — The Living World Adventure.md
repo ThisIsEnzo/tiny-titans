@@ -1,38 +1,57 @@
-# Tiny Titans — Game Design Document v2.2
+# Tiny Titans — Game Design Document v3.0
 ## The Living World Adventure
 
-**Date:** 2026-11-15  
-**Status:** Detailed design proposal based on the owner's approved hybrid direction. One personal Tiny Titan and the hybrid product direction are approved; the specific world mystery and first-region story are proposals pending review.  
-**Genre:** Co-op-friendly Creature Exploration RPG  
+**Date:** 2026-11-19  
+**Status:** Updated to the owner's approved Zelda-inspired hybrid adventure direction and standard Roblox avatar player character. Specific regional stories remain proposals pending playtest.  
+**Genre:** Solo + Co-op Living-World Adventure RPG  
 **Platform:** Roblox
 
 ## 1. High concept
 
-Tiny Titans is an exploration-first adventure RPG in which each player inhabits one personal, expressive Tiny Titan and explores an oversized living ecosystem.
+Tiny Titans is a **hybrid living-world adventure inspired by the design philosophy of The Legend of Zelda**, built around an original miniature ecosystem, ecological puzzles, hidden routes, compact challenges and cooperative discovery.
 
-The player is not grinding to become the strongest creature. They learn how the world works, discover species and hidden places, help local ecosystems recover, and build a lasting identity and history in that world.
+The player explores an oversized natural world, notices clues, studies creature behavior, understands how natural systems connect, experiments with solutions and sees the environment respond. The game is complete in solo play and equally supports co-op.
 
-**Player fantasy:** “I am a small creature in a huge world. I notice things others miss. My discoveries matter, the world responds to what I do, and over time I become someone who truly belongs here.”
+**Player fantasy:** “I am a Roblox adventurer exploring a world that feels enormous. I notice things others miss, uncover how this ecosystem works, solve problems in my own way and see the world change because of what I did.”
 
-**Unified long-term goal:** Explore, understand and gradually reconnect the world's ecosystems while creating a personal legacy within them.
+**Unified long-term goal:** Explore, understand and gradually reconnect the world's ecosystems while uncovering the mysteries that connect its regions.
 
-This is one connected game, not five unrelated modes:
-- Exploration is the primary activity.
-- Discovery and visible ecological change provide purpose and payoff.
-- The personal Tiny Titan is the emotional anchor.
-- Bestiary, Discoveries and Legacy preserve what the player learns.
-- Nest/Habitat is the place that makes the world feel personal.
-- Co-op lets players share discoveries without making solo play incomplete.
+Zelda is an inspiration for adventure structure, exploration, environmental puzzles, secrets, regional progression and memorable challenges. Tiny Titans must use original mechanics, world fiction, environments, characters, puzzles, names and presentation. Our unique identity is miniature scale, ecological relationships, behavioral observation, natural systems and co-op discovery.
+
+This is one connected adventure, not unrelated simulator modes:
+- Exploration and traversal are the primary activities.
+- Observation and ecological puzzles provide purpose.
+- Visible world changes provide satisfying consequences.
+- The player's standard Roblox avatar is the character identity anchor.
+- Discoveries and Bestiary preserve knowledge over time.
+- Solo and co-op are equally supported ways to experience the same adventure.
 
 ## 2. Product pillars and priority
 
 1. **Explore:** traverse dense, readable environments; choose routes; notice landmarks, clues, unusual behavior and environmental opportunities.
-2. **Discover and reconnect:** observe, form a hypothesis, test it in the world, learn something and sometimes cause a visible local change.
-3. **Personal Tiny Titan:** one stable creature identity across lives and sessions. Appearance and expression are separate from gameplay capability.
-4. **Knowledge and Legacy:** Bestiary, Discoveries, achievements and bounded adventure history preserve meaningful learning once persistence exists.
-5. **Nest and social play:** Nest is the safe starting point in the first slice. Customizable Habitat, creature bonds and visitors are later features. Co-op supports helping and shared observation; no mandatory party gates.
+2. **Observe and understand:** follow traces, sounds and behavior; form a hypothesis; test it through an authored interaction or route.
+3. **Solve and reconnect:** complete ecological puzzles that change a local part of the world in a visible way.
+4. **Adventure:** discover secrets, compact natural dungeons, traversal trials and memorable encounters.
+5. **Roblox avatar identity:** play as the standard Roblox avatar with familiar movement, animation, clothing, body packages and accessories wherever supported.
+6. **Solo + co-op:** complete all essential content alone; co-op adds coordination, optional synergy and shared stories.
+7. **Knowledge and Legacy:** Bestiary, Discoveries, collections and bounded adventure history preserve meaningful learning once persistence exists.
 
-Exploration is what players do; discoveries explain why it matters; the creature gives emotional ownership; Legacy remembers it; Habitat and co-op deepen attachment later.
+The player's Roblox avatar is the emotional anchor. The world and its inhabitants provide the miniature fantasy; the player does not need to become a custom insect model to experience the scale.
+
+## 2A. Character direction — standard Roblox avatar
+
+The canonical playable character is the player's standard Roblox avatar. The current custom Baby Bug model is retired as the player character because its proportions and animation quality are not acceptable.
+
+- Keep the Roblox avatar visible; do not hide it behind BabyBugVisual.
+- Preserve the normal Roblox Animate/Humanoid movement and animation stack.
+- Preserve clothing, body packages and accessories wherever supported.
+- Do not introduce custom rigging, arbitrary avatar scaling, collision proxies or camera overrides in the initial restoration.
+- Sell the miniature fantasy through oversized world geometry, props, plants, creatures and camera framing.
+- Any future scale or avatar presentation experiment requires a dedicated Studio test matrix for movement, camera, collision, animation, accessories and mobile readability.
+
+Baby Bug, Tank and Glider are historical prototypes, not selectable classes or the current character plan. The Baby Bug model may later be reused as an NPC/ambient creature only if separately designed; no player-visual work is approved.
+
+Every essential route and puzzle must remain completable with a normal Roblox avatar and without a form-specific ability.
 
 ## 3. World fiction and narrative frame
 
@@ -237,14 +256,14 @@ Test first-time and returning players, solo and mixed co-op groups. Observe beha
 Every new region must add a distinct ecological identity and visual silhouette, at least one new player decision/verb, new species behavior or environmental relationship, a main local mystery/restoration chain, optional discoveries, a repeatable activity, a visible outcome, and a solo-completable core route. A region that only adds acreage, collectibles or stat requirements does not qualify.
 
 ## 14. Monetization
-Cosmetic-first and only after players value their creature. Candidate products: palettes, markings, shells, eyes, accessories, animations, emotes, trails, visual effects and later Habitat decoration. Optional supporter products are acceptable if transparent.
+Cosmetic-first and only after players value their creature. Candidate products: Roblox-avatar-compatible accessories where permitted, trails, emotes, titles, visual effects and later Habitat decoration. Optional supporter products are acceptable if transparent.
 
 Never sell power, mandatory route access, faster Naturalist XP, stronger adaptations, paid revives, death protection or relief from intentionally frustrating design. The core adventure must be complete and enjoyable without spending.
 
 ## 15. Open decisions
 - Final lore and cause of ecological disruption.
 - Exact first ecological story and species art direction.
-- Final Tiny Titan rig, collision and relationship to Roblox avatar appearance.
+- Final avatar-scale and camera tuning for the miniature world, validated in Studio.
 - Whether MVP discovery records remain session-only or need minimal persistence before public testing.
 - Death/failed expedition/voluntary return contract.
 - Whether the first slice needs a full ambient creature system or can begin with authored observation states.
