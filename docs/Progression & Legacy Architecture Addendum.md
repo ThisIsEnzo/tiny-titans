@@ -2,10 +2,10 @@
 
 > **Owner direction update (2026-11-19):** Tiny Titans is now a Zelda-inspired living-world adventure played as the standard Roblox avatar, with complete solo play and equally supported co-op. Baby Bug is retired as the playable character. This progression addendum describes future knowledge/Legacy boundaries only; it must not reintroduce a custom creature avatar, form classes or grind-first progression. See Product Vision v3.0 and Player Identity & Adaptation Architecture v2.0.
 
-**Version:** 2.1 | **Date:** 2026-11-15  
+**Version:** 2.2 | **Date:** 2026-11-19  
 **Status:** Approved product model; technical implementation proposal, not implemented.  
 **Companion to:** Player Identity & Adaptation Architecture  
-**Product authority:** Product Vision v2.1; Gameplay Blueprint.
+**Product authority:** Product Vision v3.0; Gameplay Blueprint v3.0.
 
 ## 1. Authority
 
@@ -15,7 +15,7 @@ README/source describe implementation. Product Vision defines the north star; Ga
 
 | Domain | Lifetime | Purpose |
 |---|---|---|
-| Creature Identity / Appearance | Player lifetime | One personal Tiny Titan and selected visual identity |
+| Creature Identity / Appearance | Player lifetime | Roblox avatar identity and future avatar-compatible cosmetics |
 | Current Life | One lifeId | Biomass, derived growth, temporary objectives/effects and life stats |
 | Naturalist progression | Player lifetime | Naturalist XP and derived Rank |
 | Legacy | Player lifetime | Bestiary, discoveries, achievements, collections, cosmetics and life history |
