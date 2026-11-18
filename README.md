@@ -58,6 +58,8 @@ Open `build.rbxlx` in Studio, or connect the Rojo plugin with `rojo serve`.
 
 ## First Habitat greybox (TT-P3-01)
 
+**Historical prototype note:** this habitat was authored under the superseded small-creature/ecosystem concept. It is not the approved world direction or a locked first-region design. Reuse, redesign or retire it only after the new adventure vertical-slice design and avatar traversal audit.
+
 `src/Workspace/Habitat` replaces the old test arena with a compact, connected habitat for a tiny creature in an oversized world. It follows the gameplay direction in `docs/Gameplay Blueprint & MVP Contract.md` (co-op-friendly PvE exploration; no mandatory ability gates). It is a **greybox**: simple materials, no external assets, no scripts, no new gameplay systems. **It has not been played in Roblox Studio** (checklist below); only the offline layout validator has been run.
 
 Coordinates: centred on the origin, +X east, -Z north, floor top at Y = 0.5, play area X and Z from -70 to 70 (140 x 140), studs. The Nest is in the south-west corner and the Old Tree in the north-east.
