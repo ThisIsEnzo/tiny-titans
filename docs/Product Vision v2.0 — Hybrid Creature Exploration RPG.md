@@ -1,139 +1,144 @@
-# Tiny Titans — Product Vision v3.0
-## The Living-World Adventure
+# Tiny Titans — Product Vision v4.0
+## A replayable Zelda-style adventure for Roblox
 
-**Owner approval:** 2026-11-19  
-**Status:** Approved product direction; implementation remains governed by the Master Roadmap.  
-**Platform:** Roblox. **Ambition:** a high-quality, replayable experience with a credible path toward Top 1000, not a guarantee.
+**Owner direction:** 2026-11-19  
+**Status:** Approved strategic direction; detailed mechanics and delivery are governed by the GDD, Zelda Mechanics Adaptation Matrix and Master Roadmap.  
+**Platform:** Roblox  
+**Ambition:** Build a high-quality, highly replayable adventure that friends want to return to together, with a credible path toward Top 1000 Roblox games. This is an ambition, not a forecast or guarantee.
 
 ## 1. Executive vision
 
-Tiny Titans is a **hybrid adventure game inspired by the design philosophy of The Legend of Zelda**, built around an original miniature living ecosystem, original mechanics and Roblox-native social play.
+Tiny Titans is an original Roblox action-adventure game built around the breadth and depth of the Zelda gameplay experience: exploration, traversal, combat, puzzles, tools, dungeons, bosses, quests, secrets, discovery, equipment and meaningful progression.
 
-Players explore a world that feels enormous, notice clues, understand how natural systems connect, solve environmental puzzles, discover hidden routes, overcome compact challenges and change local parts of the ecosystem. The game supports a complete solo adventure and an equally supported cooperative experience. Co-op adds coordination, shared stories and optional synergy; it never makes essential progression impossible alone.
+**The game should feel like playing Zelda in Roblox — but in our own world, with our own characters, story, visual identity, locations, puzzles, systems and multiplayer design.**
 
-**Player promise:** Explore a world that feels enormous, understand its secrets, solve problems in your own way, and see the living world respond to your actions.
+This is not a small-creature simulator, ecological restoration game, miniature-world constraint or a conventional Roblox simulator. The title Tiny Titans does not restrict the scale, genre expression or world fiction. We are free to build a large fantasy adventure world.
 
-Zelda is a high-level inspiration for adventure structure, exploration, environmental puzzle design, secrets, readable progression and memorable regional challenges. Tiny Titans must not copy Zelda's characters, art, lore, maps, puzzle solutions, names, UI or signature mechanics. Our identity comes from miniature scale, ecological relationships, observation, natural systems, creature behavior and cooperative discovery.
+The game is designed from the beginning for both solo play and playing with friends. Co-op is not a later multiplayer mode bolted onto a single-player game. It is a core way to experience the adventure: exploring together, fighting together, coordinating puzzle solutions, discovering secrets and taking on repeatable challenges. At the same time, the essential adventure must remain completable solo.
+
+**Player promise:** Explore a memorable world, become more capable through discoveries and equipment, overcome clever challenges, defeat formidable enemies, uncover secrets and create memorable adventures with friends — then have meaningful reasons to return.
 
 ## 2. Product pillars
 
-1. **Exploration and traversal:** dense regions, route choices, landmarks, verticality, secrets and environmental navigation.
-2. **Observation and understanding:** players notice behavior, traces, sounds and environmental clues, then form and test hypotheses.
-3. **Ecological puzzles and world change:** actions alter local natural systems in visible, understandable ways.
-4. **Adventure challenges:** compact dungeons, natural obstacle courses, multi-step regional mysteries and memorable encounters.
-5. **Solo + co-op:** every essential objective is solo-completable; cooperation adds optional complementary contributions and social moments.
-6. **Roblox avatar identity:** players adventure as their own Roblox avatar, preserving familiar movement, animation, accessories and personal expression.
-7. **Discovery and legacy:** Bestiary, regional records, collections and future progression preserve meaningful learning after the core adventure is proven.
+1. **Zelda-depth adventure gameplay:** broad, interconnected systems rather than a narrow collection of isolated features.
+2. **World exploration:** a handcrafted-feeling world with regions, landmarks, secrets, hidden routes, verticality and meaningful points of interest.
+3. **Traversal and player verbs:** movement, climbing, swimming, gliding, jumping, tools and abilities that open new approaches.
+4. **Combat and encounters:** readable enemies, weapon/tool choices, defensive play, enemy behaviors, elite encounters and memorable bosses.
+5. **Puzzles and dungeons:** environmental logic, mechanisms, keys, layered spaces, dungeon-specific rules, mini-bosses and bosses.
+6. **Items, equipment and progression:** useful tools, weapons, armor, consumables, upgrades and new ways to interact with the world.
+7. **Story, NPCs and quests:** memorable characters, settlements, regional stories, side quests, merchants and optional narrative discoveries.
+8. **Solo + co-op by design:** essential progression works alone; co-op creates coordination, synergy and shared stories without mandatory party size.
+9. **Replayability and long-term return:** repeatable challenges, alternate approaches, optional completion goals, rematches, social play and future content chapters.
+10. **Roblox-native delivery:** reliable server authority, cross-platform controls, approachable sessions, social discovery and fair monetization.
 
-The first six pillars shape the first adventure. Long-term RPG systems expand only after the core experience is validated.
+## 3. What “Zelda gameplay” means for Tiny Titans
 
-## 3. Player character — Roblox avatar is canonical
+We intend broad coverage of the major Zelda adventure mechanic families, not a shallow visual imitation. The complete inventory and adaptation decisions live in **Zelda Mechanics Adaptation Matrix**.
 
-The playable character is the player's **standard Roblox avatar**, not a custom Baby Bug creature and not a choice between Baby Bug, Tank or Glider forms.
+The design reference combines:
+- the freedom, traversal, systemic interactions and open-world exploration associated with modern open-world Zelda;
+- the memorable dungeons, item-gated abilities, keys, structured progression and boss-focused adventure craft of classic Zelda;
+- our own co-op systems and replayability architecture, designed specifically for Roblox.
 
-- Keep the normal Roblox character appearance visible.
-- Preserve Roblox avatar clothing, body packages, accessories and identity wherever supported.
-- Preserve the standard Roblox animation experience (idle, walk, run, jump, fall, swim and emotes where supported).
-- Do not hide the avatar and replace it with the current Baby Bug model.
-- Do not make the player tiny by scaling the avatar until camera, movement, animation, collision, accessories and mobile readability have been tested in Studio.
-- The world should sell the miniature fantasy through oversized environment scale, camera framing, props, creatures and traversal design—not through a broken or unanimated replacement character.
+No single Zelda title is the complete template. We will select and adapt mechanics according to how well they work together in Tiny Titans.
 
-The current Baby Bug visual is a retired prototype. It may remain in Git history or be reused as a non-player creature/art reference, but it is not the playable character direction. No new Baby Bug player-visual work is approved.
+We may reproduce broad genre-level ideas and player verbs, but must create original expression: no copied Zelda characters, names, lore, art, maps, music, UI, puzzle layouts, signature item designs or recognizable encounter scripts.
 
-The Roblox avatar is the player's emotional identity anchor. Progression and rewards should support self-expression without granting paid or permanent raw power.
+## 4. Player character and world
 
-## 4. World and adventure structure
+The player uses their **standard Roblox avatar**. Preserve the player's recognizable avatar identity, supported clothing, body packages, accessories and familiar Roblox character behavior. Do not replace the player with Baby Bug or introduce selectable creature classes.
 
-The game is organized as a connected living world, released one dense region at a time.
+The world is an original fantasy adventure setting. Its scale, geography, cultures, architecture, creatures and visual language are design choices—not constrained to a miniature ecosystem. The name Tiny Titans remains the project name; it does not impose a tiny-player premise.
 
-- **World layer:** connected habitats with recognizable natural geography, routes and ecosystem relationships.
-- **Regional adventure layer:** each region has a local mystery, a main ecological chain, optional discoveries, hidden routes, inhabitants and a visible outcome.
-- **Challenge layer:** compact natural dungeons, puzzle spaces, traversal trials and creature encounters embedded in regions.
+World design should support:
+- distinct regions with their own identity, traversal challenges, enemies, stories and secrets;
+- settlements, landmarks, wilderness, caves, ruins and authored dungeons;
+- connected routes and meaningful verticality;
+- environmental systems that players can understand and manipulate;
+- memorable places that are enjoyable to revisit with friends.
 
-A region should feel like a small adventure, not a checklist of pickups. It needs a distinct visual identity, a memorable central problem, multiple routes, optional secrets and at least one repeatable activity or authored variation. Avoid giant empty maps and content built only from acreage.
+## 5. Core experience loops
 
-## 5. Signature gameplay loop
+**Moment-to-moment:** Explore → notice a clue, threat or opportunity → choose a tool, route or tactic → act → read the world response → decide what to do next.
 
-**Notice → Observe → Interpret → Experiment → Act → World Response → Record.**
+**Adventure loop:** discover a region → meet its inhabitants and threats → investigate its mystery → acquire or master useful tools → overcome its dungeon/challenge → defeat its major encounter → unlock new opportunities → explore optional content.
 
-A player sees an unusual event, follows clues, learns how the environment works, tries a solution and sees the result. Some discoveries are observation-only; others involve a puzzle, traversal challenge or cooperative interaction. Not every object needs a prompt and not every discovery needs a reward.
+**Co-op loop:** meet up → choose a shared goal → explore and coordinate → solve/fight/traverse together → share the moment and rewards fairly → choose the next activity.
 
-**Moment-to-moment:** Move → Notice an opportunity, clue or risk → Choose a route/action → Execute → Read feedback → Decide what to explore next.
+**Long-term loop:** improve equipment and mastery → unlock regions and story chapters → complete optional challenges and collections → revisit dungeons and bosses with different approaches or friends → take part in new content.
 
-**Regional loop:** arrive → explore landmarks and routes → investigate a local mystery → solve its ecological challenge → see the habitat change → discover optional secrets → unlock a new lead or region.
+## 6. Solo and cooperative contract
 
-**Long-term loop:** explore regions → understand ecosystem relationships → complete regional adventures → build a record of discoveries → reveal new opportunities and chapters.
+Solo and co-op are first-class experiences.
 
-## 6. Solo and cooperative design
+- Every essential story gate, region, dungeon and required boss must have a valid solo solution.
+- Co-op may make encounters more dynamic through complementary roles, simultaneous interactions, revives/rescues, coordinated timing and optional secrets.
+- Do not require a fixed party size, a specific class or another player to be online to finish essential progression.
+- Do not make co-op merely “more enemy health.” It should create interesting decisions and shared moments.
+- Server owns combat outcomes, item grants, puzzle state, boss state, progression and consequential rewards.
+- Players joining an active session must receive the correct shared world state and a fair path into the activity.
+- Protect against griefing, item theft, spawn camping, deliberate puzzle blocking and reward abuse.
+- Design for Roblox session realities: parties may split, players may disconnect, late-join and rejoin.
 
-Solo and co-op are first-class modes of the same adventure.
+## 7. Replayability is a product requirement
 
-- Every essential puzzle, route and regional progression step must have a solo solution.
-- Co-op may allow players to split observations, coordinate timing, carry out parallel actions or help each other traverse.
-- Never require an exact party size, fixed classes or mandatory waiting for another player.
-- Shared world changes are server-authoritative and visible to everyone in the server.
-- Personal discoveries and records remain individual.
-- Late joiners receive the current correct world state and can still participate in remaining content.
-- Avoid griefable interactions, shared-resource theft and mechanics where one player can permanently block another.
+A completed story must not be the end of the product's value. Replayability should come from good gameplay, not artificial grind.
 
-## 7. Original mechanics and world identity
+Planned replayability layers:
+- optional secrets, collectibles and completion goals;
+- combat encounters with multiple viable tactics and equipment choices;
+- repeatable dungeon/challenge variants where variation improves the experience;
+- boss rematches, mastery challenges and optional difficulty modifiers;
+- co-op-specific optional puzzles and activities with solo equivalents;
+- rotating or curated world activities, when they can be produced sustainably;
+- alternate builds/loadouts and meaningful equipment choices;
+- future adventure chapters and regions.
 
-Tiny Titans' differentiators are:
+Do not randomize every authored dungeon or replace handcrafted adventure design with procedural filler. Main story dungeons should be memorable and readable; replay modes can remix rules, enemy compositions, routes or objectives after the base encounter is proven.
 
-- **Ecological puzzles:** water, plants, light, wind, shelter and natural processes form understandable puzzle systems.
-- **Scale-based exploration:** roots become bridges, grass becomes a forest, puddles become lakes and small gaps become routes.
-- **Behavioral observation:** creatures communicate clues through patterns, reactions, tracks and habitat relationships.
-- **Persistent local consequences:** solving a regional problem produces a visible world response for the current shared world.
-- **Route knowledge:** players learn shortcuts, safe paths, hidden entrances and environmental opportunities.
-- **Cooperative discovery:** players can share observations and help without making solo play incomplete.
-
-These mechanics must be prototyped as small authored experiences before generalized systems are built.
+No daily chores, punitive streaks, mandatory waiting, endless stat inflation or repetitive farming as substitutes for replayability.
 
 ## 8. Progression and rewards
 
-| Layer | Lifetime | Purpose |
-|---|---|---|
-| Biomass / Growth | Current life | Existing temporary prototype; not the primary adventure goal |
-| Regional progress | Server/world session initially | Visible state of local adventure chains |
-| Discoveries / Bestiary | Future persistent | Knowledge, records and collections |
-| Naturalist XP / Rank | Future persistent | Optional long-term learning progression |
-| Cosmetics | Player identity | Roblox-avatar-compatible visual expression |
-| Adaptations | Deferred | Only if a specific world interaction proves a need |
+Progression should expand player options and mastery:
+- new tools and traversal/combat verbs;
+- weapons, armor, equipment and upgrades with meaningful trade-offs;
+- consumables and preparation choices;
+- region/story access earned through adventure;
+- collections, cosmetics, records and optional completion goals.
 
-Do not turn the adventure into a grind simulator. Reward knowledge, access to optional discoveries, visual world changes, cosmetics and recognition. No permanent raw power, paid power, paid revives or paid access to mandatory routes.
+Avoid permanent raw-stat inflation that makes co-op balance impossible. Avoid paid power, paid mandatory access, paid revives and monetization that sells relief from intentionally frustrating design. The game must remain enjoyable without spending.
 
-## 9. Danger and encounters
+Persistent progression, shared campaign semantics, inventory ownership, trading and item loss require explicit designs before implementation. Do not infer these from the old Biomass/Legacy prototype.
 
-Combat is optional, not the foundation. Danger can come from territorial creatures, environmental forces, unstable routes, hazards and timed natural events. Responses may include observation, avoidance, hiding, distraction, escape, timing or environmental problem-solving. Add combat only after a separate product decision and evidence that it improves the adventure.
+## 9. Retention and player value
 
-## 10. Retention and player value
+Build return intent across horizons:
+- **Minutes:** responsive controls, satisfying combat/traversal and a clear nearby opportunity.
+- **One session:** a dungeon room, quest, boss, secret route or co-op activity completed.
+- **Several sessions:** region completion, equipment goals, optional challenges and discovery.
+- **Long term:** new chapters, mastery, collections, rematches and social adventures with friends.
 
-Build return intent through:
-- **Minutes:** satisfying movement, visible nearby clues and a clear next interesting thing.
-- **One session:** a regional mystery, route, challenge or secret.
-- **Several sessions:** alternate routes, authored variations, Bestiary and collections.
-- **Long term:** new regions, connected ecosystem mysteries, cosmetics, social play and new adventure chapters.
+Measure whether players understand the goal, enjoy the activities, return voluntarily and invite friends. Session time alone is not success.
 
-Do not optimize session length in isolation. Measure first-session comprehension, time to first meaningful discovery, regional completion, voluntary second activity, replay attempts, solo/co-op satisfaction, D1/D7/D30 retention and qualitative enjoyment.
+## 10. Monetization
 
-## 11. Monetization
+Cosmetic-first and transparent. Potential options include avatar-compatible cosmetics, emotes, effects, mounts/companions if designed, housing/customization if later justified, supporter products and optional convenience that does not bypass gameplay.
 
-Cosmetic-first, transparent and non-coercive. Candidate products include Roblox-avatar-compatible accessories where permitted, visual effects, trails, emotes, titles, UI themes and later personal Nest decoration. Optional supporter products are acceptable if transparent.
+Never sell stronger combat power, exclusive mandatory progression, required dungeon tools, paid revives, better drop odds without transparent rules or relief from deliberately frustrating systems. Monetization follows demonstrated player value.
 
-Never sell power, required puzzle solutions, mandatory route access, stronger abilities, paid revives or protection from intentionally frustrating design. The core adventure must be complete and enjoyable without spending.
+## 11. Scope discipline and evidence
 
-## 12. Evidence gates
+The ambition is broad; the first release must still be focused. Design the full system landscape, then build a convincing vertical slice that proves the adventure and co-op loop before expanding.
 
-- Players understand how to explore and find clues without constant markers.
-- Players can explain the ecological problem, their action and the visible result.
-- Players enjoy at least one full regional adventure and voluntarily explore a second activity.
-- Solo players can complete all essential content.
-- Co-op creates positive cooperation without blocking solo players.
-- Roblox avatar movement, animation, camera, collision and accessories work acceptably on supported devices.
-- External players want to return for another secret, challenge or region.
+A green CI run, a completed PR or a large map does not prove fun. Roblox Studio validation, cross-device testing, multiplayer tests and external playtests are separate evidence gates.
 
-Merged code and green CI are not proof of fun. Roblox Studio, device and external-player validation are separate gates.
+## 12. Document authority
 
-## 13. Authority
-
-This document is the product north star. The GDD defines detailed adventure design; Gameplay Blueprint defines the first playable product; Master Roadmap is the sole execution order; technical architecture documents define implementation boundaries. The 2026-11-19 owner decision supersedes earlier one-personal-Tiny-Titan/Baby-Bug visual direction. Current runtime facts remain in README/source until migrated and validated.
+- **Product Vision v4.0:** strategic product identity and principles.
+- **GDD v4.0:** complete experience design and player-facing systems.
+- **Zelda Mechanics Adaptation Matrix:** mechanic-family inventory, original adaptation, priority, dependencies and solo/co-op/replayability contract.
+- **Gameplay Blueprint:** first vertical slice and MVP acceptance criteria.
+- **Master Roadmap:** sole execution order and phase gates.
+- **Player Identity Architecture:** standard Roblox avatar boundary.
+- **README/source:** implementation truth; never infer implementation from design documents.
