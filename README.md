@@ -1,31 +1,30 @@
 # TINY TITANS
 
-Roblox adventure prototype: a **Zelda-inspired living-world adventure** (currently a first habitat greybox).
+Original Roblox Zelda-style action-adventure designed for solo play, co-op with friends and replayability.
 
 ## Current approved product direction (2026-11-19)
 
-Tiny Titans is a **Zelda-inspired hybrid living-world adventure** with original ecological puzzles, environmental observation, secrets, compact challenges and regional adventures. Zelda is a high-level design inspiration only; Tiny Titans must use original characters, world fiction, art, maps, puzzles, names, UI and mechanics.
+**Tiny Titans is a Zelda-style adventure for Roblox.** We are building our own world, characters, story, art direction, enemies, items, puzzles, dungeons and bosses while adopting the broad gameplay language of Zelda: exploration, traversal, combat, environmental puzzles, tools, equipment, quests, secrets and meaningful progression.
 
-The game is fully playable solo and equally supports co-op. Every essential route, puzzle and progression step must have a solo solution; co-op adds optional coordination and shared stories.
+This is not a small-creature simulator, ecological restoration game or miniature-world constraint. The project name does not restrict the scale or fiction of the world.
 
-**The canonical player character is the standard Roblox avatar.** Keep the avatar visible and preserve normal Roblox movement, Humanoid/Animate behavior, clothing, body packages and accessories wherever supported. The current custom Baby Bug visual is retired as the player character because its proportions and animation quality are not acceptable. The runtime still needs a separate restoration task and Roblox Studio validation; this documentation update does not itself change the character implementation.
+The player uses their **standard Roblox avatar**. Baby Bug, Tank and Glider are historical prototypes, not playable classes. Runtime restoration and Roblox Studio validation must be verified against the current code and PR state; this documentation does not claim those checks have passed.
 
-The miniature fantasy is communicated through oversized environments, plants, roots, props, creatures and camera framing—not by hiding the Roblox avatar or replacing it with the current Baby Bug model. Existing GrowthService scale stages (0.6 / 0.8 / 1.0) are inherited prototype behavior and still require Studio validation for avatar proportions, animation, camera and collision. Baby Bug, Tank and Glider form/evolution code below is historical prototype implementation, not approved product direction.
+**Solo and co-op are first-class.** Every essential region, puzzle, dungeon and progression step must have a solo solution. Co-op should add real coordination, tactics and shared stories rather than simply increasing enemy health. The game must offer meaningful reasons to replay: optional secrets, equipment/build variety, challenge variants, boss rematches, co-op activities and future adventure chapters.
 
-## Product and architecture documents
+Our design target is a hybrid of open-world freedom and systemic interactions with authored classic-style dungeons, useful tools, structured regional adventures and memorable bosses. Zelda is a gameplay reference, not an IP template: all expression in Tiny Titans must be original.
 
-Use these documents as the current sources of truth:
+## Product and design documents
 
-- [Product Vision v3.0 — The Living-World Adventure](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md): product north star, Zelda-inspired adventure identity, Roblox avatar direction, retention principles and cosmetic-first monetization.
-- [GDD v3.0 — The Living World Adventure](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md): unified goal, discovery loop, first ecological story proposal, MVP scope and playtest contract.
-- [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md): core loop, first habitat and MVP acceptance gates.
-- [Tiny Titans Master Roadmap](docs/Tiny%20Titans%20Master%20Roadmap.md): the single execution roadmap and phase gates.
-- [Player Identity & Adaptation Architecture](docs/Player%20Identity%20%26%20Adaptation%20Architecture.md): canonical Roblox avatar, appearance boundaries and deferred optional world-interaction abilities.
-- [Progression & Legacy Architecture Addendum](docs/Progression%20%26%20Legacy%20Architecture%20Addendum.md): future progression and persistence boundaries.
+- [Product Vision v4.0](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md) — product identity, co-op and replayability principles.
+- [GDD v4.0](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md) — experience structure and gameplay systems.
+- [Zelda Mechanics Adaptation Matrix](docs/Zelda%20Mechanics%20Adaptation%20Matrix.md) — full mechanic-family inventory and adaptation priorities.
+- [Gameplay Blueprint & MVP Contract v4.0](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md) — first vertical-slice contract.
+- [Tiny Titans Master Roadmap v4.0](docs/Tiny%20Titans%20Master%20Roadmap.md) — single execution roadmap.
+- [Player Identity Architecture v3.0](docs/Player%20Identity%20%26%20Adaptation%20Architecture.md) — standard Roblox avatar boundary.
+- [Progression, Inventory & Adventure Records Addendum v3.0](docs/Progression%20%26%20Legacy%20Architecture%20Addendum.md) — progression and multiplayer ownership boundaries.
 
-GDD v3.0 is the detailed adventure contract; Gameplay Blueprint defines the first playable slice; Master Roadmap controls execution order. The former Evolution Sandbox Architecture and Combat Progression & Endgame Design are superseded/archived. Their detailed historical notes remain in Git history.
-
-Sections below include current systems plus a historical audit of Baby Bug / Tank / Glider prototype work. Legacy form/evolution notes are retained as implementation evidence, not product requirements. The current product documents above take precedence. Avatar restoration remains pending until a separate code change is reviewed and validated in Studio. Do not infer that Studio validation has occurred unless explicitly recorded.
+**Authority:** Product Vision defines the north star; GDD defines the experience; the Mechanics Matrix inventories mechanic families; Gameplay Blueprint defines the first vertical slice; Master Roadmap controls execution. README/source remain the truth for implementation. CI, static checks and merged PRs do not prove Roblox Studio behavior or player enjoyment.
 
 ## Toolchain
 
