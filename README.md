@@ -1,6 +1,6 @@
 # TINY TITANS
 
-Roblox prototype: a multiplayer **Creature Exploration RPG** (currently a first habitat greybox).
+Roblox adventure prototype: a **Zelda-inspired living-world adventure** (currently a first habitat greybox).
 
 ## Current approved product direction (2026-11-19)
 
@@ -17,7 +17,7 @@ The miniature fantasy is communicated through oversized environments, plants, ro
 Use these documents as the current sources of truth:
 
 - [Product Vision v3.0 — The Living-World Adventure](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md): product north star, Zelda-inspired adventure identity, Roblox avatar direction, retention principles and cosmetic-first monetization.
-- [GDD v2.2 — The Living World Adventure](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md): unified goal, discovery loop, first ecological story proposal, MVP scope and playtest contract.
+- [GDD v3.0 — The Living World Adventure](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md): unified goal, discovery loop, first ecological story proposal, MVP scope and playtest contract.
 - [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md): core loop, first habitat and MVP acceptance gates.
 - [Tiny Titans Master Roadmap](docs/Tiny%20Titans%20Master%20Roadmap.md): the single execution roadmap and phase gates.
 - [Player Identity & Adaptation Architecture](docs/Player%20Identity%20%26%20Adaptation%20Architecture.md): canonical Roblox avatar, appearance boundaries and deferred optional world-interaction abilities.
@@ -79,7 +79,7 @@ Total 229 parts (budget 260), all anchored and `Locked`. Static decoration that 
 
 - **Primary route (about 490 studs, roughly 30 s at 16 studs/s; every part at least 6 studs wide):** Nest east opening, Meadow trail to the Great Stump, west to the Rock Garden gate, through the S-curve passage to the north exit, east along the north lane to the Roots, south through the ground corridor and under the arch, back across the Meadow to the Nest. Trails are visual ground overlays (no collision).
 - **Alternatives:** three exits from the Nest (east, north lane, lowland lane along the south edge); the Meadow crossing from the stump straight to the Roots; in the Rock Garden the main passage, the terrace/den side loop and the secret crack; in the Roots the open ground, the elevated route over the arch (arch top, bridge, Leaf Platform 1, ramp down north) and the fungus steps. Routes differ in distance, height and exploration value, and ground-level alternatives always remain.
-- **Nothing is gated by an ability.** Every part of the habitat and every pickup is reachable on foot with the Baby Bug using steps of at most 3 studs (the old arena's rule) and ramps of at most 31 degrees. Nothing is reachable only by gliding, and nothing depends on a Tank mechanic.
+- **Nothing is gated by an ability.** Every essential route and pickup is intended to be reachable on foot with the standard Roblox avatar using the current baseline step/ramp constraints; this must be revalidated after avatar restoration. Nothing is reachable only by gliding, and nothing depends on a Tank mechanic.
 - **Reserved space for later forms (geometry only, nothing pretends to work yet):** the Tank nook (tags `TankNook`, `FutureTankPush`), roofed shelters, the arch gateway and the narrow crack; and for the Glider the high decks (Arch top, Leaf Platforms 1 and 2, the Great Stump top, the fungus-step vantage) and the 10-stud gap between Leaf Platforms 1 and 2 (tag `FutureGliderSpan`), which only saves a walk of roughly 50 studs. Falling from any height lands on solid floor.
 - **Scale:** oversized stump, toadstool, acorn, Old Tree (70 studs), dandelion and giant grass blades; recognisable landmarks (tag `Landmark`): the Dandelion (Nest), Great Stump (Meadow), Red Toadstool, Old Tree and Root Arch (Roots), Dewdrop (secret). Zones are told apart by ground colour and landmark silhouette, so no minimap is needed.
 - **Multiplayer:** three spawn pads (7x7, neutral, no forcefield), 8-stud nest openings, wide trails, and no unavoidable chokepoints on the primary route (narrow routes are optional). Roblox picks a random enabled `SpawnLocation` for each spawn. Solo play is unaffected.
@@ -106,13 +106,13 @@ What the validator does **not** prove: that the habitat is fun, readable through
 1. Open a fresh `rojo build` (or `rojo serve`). Output: no errors or warnings, no old `Arena` or extra `SpawnLocation`.
 2. Spawn: the player appears on a Nest pad, facing the east opening and the Great Stump, with the Dandelion visible. Join with several players: they spread across the three pads and none spawns inside geometry.
 3. Camera: with the default camera distance, check that rock walls, the Nest rim, the arch and the trunk do not trap or obstruct the camera and that the tall landmarks read.
-4. Traverse the primary route and each alternative at growth stage 1 (scale 0.6) and stage 3 (1.0): the Nest openings, trails, the gate, the S-curve passage, the north lane, the Roots corridor, the arch, back to the Nest. Note every place where you snag, get stuck or find a gap too tight.
+4. Traverse the primary route and each alternative at the current minimum and maximum avatar growth scales: the Nest openings, trails, the gate, the S-curve passage, the north lane, the Roots corridor, the arch, back to the Nest. Note every place where you snag, get stuck or find a gap too tight.
 5. Jumps: every 3-stud step (terrace, clover hill, stepping stones, fungus steps, Tank nook) is jumpable at stage 1; ramps (stump log, fallen leaf, root ramps, leaf ramp) are walkable without sliding; falling from the leaf platforms and the stump lands safely.
 6. Collect pickups: the markers line up with the ground and the platforms (the ball hovers 2 studs above the marker), pickups on the elevated decks and in the secret glade are collectable, and the first pickup outside the Nest is visible from the pads.
 7. Return: from the Roots, the Rock Garden and the secret glade, find the way back to the Nest using only landmarks.
 8. Secret: the crack mouth is not obvious from the main passage but can be found from the glow mushrooms and the beam; the glade is reachable and the exit works.
-9. Evolve to Tank and Glider and repeat the key routes; confirm that nothing is blocked for the baseline form, that the static boulder at the Tank nook front is not mistaken for a mechanic, and, optionally, try gliding from Leaf Platform 1 (top Y = 10.5) to Leaf Platform 2 and record the result.
-10. Two or more clients: both see the same Baby Bug appearance, landmarks and each other without collisions at the Nest openings; watch for choke points.
+9. Traverse the key routes with standard Roblox avatars and representative body packages/accessories. Confirm that the camera, collision, animation and all essential routes work; do not treat old Tank/Glider geometry as required mechanics.
+10. Two or more clients: both see their normal Roblox avatars, landmarks and each other without collisions at the Nest openings; watch for choke points.
 11. Performance and readability: frame rate and memory on a low-end phone or the Studio mobile emulator; check for z-fighting between the ground tints, trails and the floor.
 12. Output: no errors or warnings during a full loop.
 
