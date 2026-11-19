@@ -1,25 +1,32 @@
 # TINY TITANS
 
-Roblox prototype: a multiplayer **Creature Exploration RPG** (currently a first habitat greybox).
+Original Roblox Zelda-style action-adventure designed for solo play, co-op with friends and replayability.
 
-## Current approved product direction
+## Current approved product direction (2026-11-19)
 
-Each player inhabits one personal, customizable Tiny Titan in an oversized living ecosystem. Baby Bug, Tank and Glider are no longer separate playable forms; their useful verbs may be reconsidered as optional adaptations after real world use cases are proven. A combat system is not required for MVP. Exploration, discovery, collection, character attachment and replayable activities are the foundation. Existing form/evolution code described later in this README is historical prototype implementation, not the approved product model.
+**Tiny Titans is a Zelda-style adventure for Roblox.** We are building our own world, characters, story, art direction, enemies, items, puzzles, dungeons and bosses while adopting the broad gameplay language of Zelda: exploration, traversal, combat, environmental puzzles, tools, equipment, quests, secrets and meaningful progression.
 
-## Product and architecture documents
+This is not a small-creature simulator, ecological restoration game or miniature-world constraint. The project name does not restrict the scale or fiction of the world.
 
-Use these documents as the current sources of truth:
+The player uses their **standard Roblox avatar**. Baby Bug, Tank and Glider are historical prototypes, not playable classes. Runtime restoration and Roblox Studio validation must be verified against the current code and PR state; this documentation does not claim those checks have passed.
 
-- [Product Vision v2.2 — Personalized Creature Exploration RPG](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md): product north star, retention principles and cosmetic-first monetization.
-- [GDD v2.2 — The Living World Adventure](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md): unified goal, discovery loop, first ecological story proposal, MVP scope and playtest contract.
-- [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md): core loop, first habitat and MVP acceptance gates.
-- [Tiny Titans Master Roadmap](docs/Tiny%20Titans%20Master%20Roadmap.md): the single execution roadmap and phase gates.
-- [Player Identity & Adaptation Architecture](docs/Player%20Identity%20%26%20Adaptation%20Architecture.md): future character identity, appearance and optional adaptation boundaries.
-- [Progression & Legacy Architecture Addendum](docs/Progression%20%26%20Legacy%20Architecture%20Addendum.md): future progression and persistence boundaries.
+**Solo and co-op are first-class.** Every essential region, puzzle, dungeon and progression step must have a solo solution. Co-op should add real coordination, tactics and shared stories rather than simply increasing enemy health. The game must offer meaningful reasons to replay: optional secrets, equipment/build variety, challenge variants, boss rematches, co-op activities and future adventure chapters.
 
-GDD v2.2 is the detailed experience contract; Gameplay Blueprint defines the first playable slice; Master Roadmap controls execution order. The former Evolution Sandbox Architecture and Combat Progression & Endgame Design are superseded/archived. Their detailed historical notes remain in Git history.
+Our design target is a hybrid of open-world freedom and systemic interactions with authored classic-style dungeons, useful tools, structured regional adventures and memorable bosses. Zelda is a gameplay reference, not an IP template: all expression in Tiny Titans must be original.
 
-Sections below describe the current code and historical Baby Bug / Tank / Glider prototype work. They are retained as implementation/audit evidence, not as product requirements. Where those notes conflict with the approved one-Tiny-Titan direction, the current product documents above take precedence. Do not infer that Studio validation has occurred unless explicitly recorded.
+## Product and design documents
+
+- [Product Vision v4.0](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md) — product identity, co-op and replayability principles.
+- [GDD v4.0](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md) — experience structure and gameplay systems.
+- [Zelda Mechanics Adaptation Matrix](docs/Zelda%20Mechanics%20Adaptation%20Matrix.md) — full mechanic-family inventory and adaptation priorities.
+- [Gameplay Blueprint & MVP Contract v4.0](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md) — first vertical-slice contract.
+- [Tiny Titans Master Roadmap v4.0](docs/Tiny%20Titans%20Master%20Roadmap.md) — single execution roadmap.
+- [Player Identity Architecture v3.0](docs/Player%20Identity%20%26%20Adaptation%20Architecture.md) — standard Roblox avatar boundary.
+- [Progression, Inventory & Adventure Records Addendum v3.0](docs/Progression%20%26%20Legacy%20Architecture%20Addendum.md) — progression and multiplayer ownership boundaries.
+
+**Authority:** Product Vision defines the north star; GDD defines the experience; the Mechanics Matrix inventories mechanic families; Gameplay Blueprint defines the first vertical slice; Master Roadmap controls execution. README/source remain the truth for implementation. CI, static checks and merged PRs do not prove Roblox Studio behavior or player enjoyment.
+
+The detailed prototype notes below document existing repository history and implementation, including the old First Habitat, Biomass, discoveries, growth and form prototypes. They are not a commitment to preserve those systems in the new adventure. The approved product direction and Master Roadmap above take precedence; audit each prototype before reuse.
 
 ## Toolchain
 
@@ -53,6 +60,8 @@ Open `build.rbxlx` in Studio, or connect the Rojo plugin with `rojo serve`.
 
 ## First Habitat greybox (TT-P3-01)
 
+**Historical prototype note:** this habitat was authored under the superseded small-creature/ecosystem concept. It is not the approved world direction or a locked first-region design. Reuse, redesign or retire it only after the new adventure vertical-slice design and avatar traversal audit.
+
 `src/Workspace/Habitat` replaces the old test arena with a compact, connected habitat for a tiny creature in an oversized world. It follows the gameplay direction in `docs/Gameplay Blueprint & MVP Contract.md` (co-op-friendly PvE exploration; no mandatory ability gates). It is a **greybox**: simple materials, no external assets, no scripts, no new gameplay systems. **It has not been played in Roblox Studio** (checklist below); only the offline layout validator has been run.
 
 Coordinates: centred on the origin, +X east, -Z north, floor top at Y = 0.5, play area X and Z from -70 to 70 (140 x 140), studs. The Nest is in the south-west corner and the Old Tree in the north-east.
@@ -73,8 +82,8 @@ Total 229 parts (budget 260), all anchored and `Locked`. Static decoration that 
 
 - **Primary route (about 490 studs, roughly 30 s at 16 studs/s; every part at least 6 studs wide):** Nest east opening, Meadow trail to the Great Stump, west to the Rock Garden gate, through the S-curve passage to the north exit, east along the north lane to the Roots, south through the ground corridor and under the arch, back across the Meadow to the Nest. Trails are visual ground overlays (no collision).
 - **Alternatives:** three exits from the Nest (east, north lane, lowland lane along the south edge); the Meadow crossing from the stump straight to the Roots; in the Rock Garden the main passage, the terrace/den side loop and the secret crack; in the Roots the open ground, the elevated route over the arch (arch top, bridge, Leaf Platform 1, ramp down north) and the fungus steps. Routes differ in distance, height and exploration value, and ground-level alternatives always remain.
-- **Nothing is gated by an ability.** Every part of the habitat and every pickup is reachable on foot with the Baby Bug using steps of at most 3 studs (the old arena's rule) and ramps of at most 31 degrees. Nothing is reachable only by gliding, and nothing depends on a Tank mechanic.
-- **Reserved space for later forms (geometry only, nothing pretends to work yet):** the Tank nook (tags `TankNook`, `FutureTankPush`), roofed shelters, the arch gateway and the narrow crack; and for the Glider the high decks (Arch top, Leaf Platforms 1 and 2, the Great Stump top, the fungus-step vantage) and the 10-stud gap between Leaf Platforms 1 and 2 (tag `FutureGliderSpan`), which only saves a walk of roughly 50 studs. Falling from any height lands on solid floor.
+- **Nothing is gated by an ability.** Every essential route and pickup is intended to be reachable on foot with the standard Roblox avatar using the current baseline step/ramp constraints; this must be revalidated after avatar restoration. Nothing is reachable only by gliding, and nothing depends on a Tank mechanic.
+- **Legacy greybox geometry (not form-gated content):** the former Tank nook is an optional alcove; the high decks and 10-stud gap between Leaf Platforms 1 and 2 are optional route variations with a ground-level alternative. Old Tank/Glider tags are historical map metadata, not approved abilities or progression gates. Falling from any height lands on solid floor.
 - **Scale:** oversized stump, toadstool, acorn, Old Tree (70 studs), dandelion and giant grass blades; recognisable landmarks (tag `Landmark`): the Dandelion (Nest), Great Stump (Meadow), Red Toadstool, Old Tree and Root Arch (Roots), Dewdrop (secret). Zones are told apart by ground colour and landmark silhouette, so no minimap is needed.
 - **Multiplayer:** three spawn pads (7x7, neutral, no forcefield), 8-stud nest openings, wide trails, and no unavoidable chokepoints on the primary route (narrow routes are optional). Roblox picks a random enabled `SpawnLocation` for each spawn. Solo play is unaffected.
 - **Pickups (reuse of the existing `FoodSpawn` system, no new currency or inventory):** 24 markers (Nest 1, Meadow and north clearing 11, Rock Garden 4, Giant Roots 6, Secret 2). They sit along the trails and on optional detours (stump top, leaf perch, clover hill, Mushroom Grove, den, Tank nook, arch top, leaf platforms, fungus vantage, boulder garden, glade) at irregular spacing, never on a grid. `FoodService`, the 10 Biomass per pickup, the cap of 100 and the 8 second respawn are unchanged. Known risk: every pickup is identical and respawns after 8 s, so a player could farm one cluster; the spread is meant to make exploring more attractive, and tuning belongs to a later task.
@@ -91,7 +100,7 @@ python tools/habitat/generate_habitat.py
 python tools/habitat/validate_habitat.py
 ```
 
-`validate_habitat.py` (Python standard library only; an optional open-space check also needs `numpy` and `scipy`) reads the shipped JSON, rasterises the collidable parts and builds a walking graph for a baseline creature (step or jump up at most 3 studs, any drop, 6 studs of headroom, a body footprint). Run with `--map` for an ASCII map, `--crop=x0,x1,z0,z1` for a 1-stud view and `x,z[,h]` arguments to probe the widest body that fits a spot. It checks: structure, part budget, tags, three or more spawn pads, spawn safety, every pickup reachable on foot and able to return to the Nest, no trapped spots, the primary route and alternatives at 6-stud width, elevated and secret spots, the glider span not being a walkway, the Tank nook's side door, landmarks 15+ studs tall, proper rotation matrices, ramp slopes, the discovery volumes (one per catalog id, invisible and non-solid, reachable on foot and able to return, away from the Nest, not overlapping) and (with numpy and scipy) no open circle wider than 13 studs. It runs in CI.
+`validate_habitat.py` (Python standard library only; an optional open-space check also needs `numpy` and `scipy`) reads the shipped JSON, rasterises the collidable parts and builds a walking graph using its configured baseline step/jump, headroom and body-footprint assumptions. Those assumptions were authored for the earlier small-character prototype and must be reviewed/revalidated against standard Roblox avatar dimensions; an offline pass is not proof of Studio traversal. Run with `--map` for an ASCII map, `--crop=x0,x1,z0,z1` for a 1-stud view and `x,z[,h]` arguments to probe the widest body that fits a spot. It checks: structure, part budget, tags, three or more spawn pads, spawn safety, every pickup reachable on foot and able to return to the Nest, no trapped spots, the primary route and alternatives at 6-stud width, elevated and secret spots, the glider span not being a walkway, the Tank nook's side door, landmarks 15+ studs tall, proper rotation matrices, ramp slopes, the discovery volumes (one per catalog id, invisible and non-solid, reachable on foot and able to return, away from the Nest, not overlapping) and (with numpy and scipy) no open circle wider than 13 studs. It runs in CI.
 
 What the validator does **not** prove: that the habitat is fun, readable through the real camera, or collision-correct in the engine, that the jump height at every growth stage reaches 3-stud steps, or that the CFrame orientations are applied as modelled. Those need Studio.
 
@@ -100,13 +109,13 @@ What the validator does **not** prove: that the habitat is fun, readable through
 1. Open a fresh `rojo build` (or `rojo serve`). Output: no errors or warnings, no old `Arena` or extra `SpawnLocation`.
 2. Spawn: the player appears on a Nest pad, facing the east opening and the Great Stump, with the Dandelion visible. Join with several players: they spread across the three pads and none spawns inside geometry.
 3. Camera: with the default camera distance, check that rock walls, the Nest rim, the arch and the trunk do not trap or obstruct the camera and that the tall landmarks read.
-4. Traverse the primary route and each alternative at growth stage 1 (scale 0.6) and stage 3 (1.0): the Nest openings, trails, the gate, the S-curve passage, the north lane, the Roots corridor, the arch, back to the Nest. Note every place where you snag, get stuck or find a gap too tight.
+4. Traverse the primary route and each alternative at the current minimum and maximum avatar growth scales: the Nest openings, trails, the gate, the S-curve passage, the north lane, the Roots corridor, the arch, back to the Nest. Note every place where you snag, get stuck or find a gap too tight.
 5. Jumps: every 3-stud step (terrace, clover hill, stepping stones, fungus steps, Tank nook) is jumpable at stage 1; ramps (stump log, fallen leaf, root ramps, leaf ramp) are walkable without sliding; falling from the leaf platforms and the stump lands safely.
 6. Collect pickups: the markers line up with the ground and the platforms (the ball hovers 2 studs above the marker), pickups on the elevated decks and in the secret glade are collectable, and the first pickup outside the Nest is visible from the pads.
 7. Return: from the Roots, the Rock Garden and the secret glade, find the way back to the Nest using only landmarks.
 8. Secret: the crack mouth is not obvious from the main passage but can be found from the glow mushrooms and the beam; the glade is reachable and the exit works.
-9. Evolve to Tank and Glider and repeat the key routes; confirm that nothing is blocked for the baseline form, that the static boulder at the Tank nook front is not mistaken for a mechanic, and, optionally, try gliding from Leaf Platform 1 (top Y = 10.5) to Leaf Platform 2 and record the result.
-10. Two or more clients: both see the same Baby Bug appearance, landmarks and each other without collisions at the Nest openings; watch for choke points.
+9. Traverse the key routes with standard Roblox avatars and representative body packages/accessories. Confirm that the camera, collision, animation and all essential routes work; do not treat old Tank/Glider geometry as required mechanics.
+10. Two or more clients: both see their normal Roblox avatars, landmarks and each other without collisions at the Nest openings; watch for choke points.
 11. Performance and readability: frame rate and memory on a low-end phone or the Studio mobile emulator; check for z-fighting between the ground tints, trails and the floor.
 12. Output: no errors or warnings during a full loop.
 
@@ -818,7 +827,7 @@ All six together give 29 Biomass per life: about three food items out of the cap
 6. Die before finding anything: the recap shows "Expedition finds: 0/6". A spawn-failed notice shows no exploration line.
 7. Two clients: each discovers independently (the second player still gets the reward for a place the first already found); one player's discovery does not change the other's counter.
 8. Solo play: the whole loop works with one player.
-9. Evolve to Tank or Glider: discoveries still work and nothing on a mandatory route changed.
+9. Historical form/evolution prototype checks only; do not treat these as current product acceptance criteria.
 10. Find all six places: the hint changes to "All expedition places found!". Check the hint reads well on a phone-sized screen (two lines) and does not overlap the toast.
 11. Rejoin and respawn repeatedly: no duplicate toasts or counters, no leftover connections or Output errors or warnings (a warning means a discovery id and its site name do not match).
 
@@ -828,6 +837,6 @@ All six together give 29 Biomass per life: about three food items out of the cap
 rojo build default.project.json -o build.rbxlx
 ```
 
-Then connect Studio using the Rojo plugin. The project currently contains the First Habitat greybox, the exploration discoveries (TT-P3-02) and the food/growth loop. The Biomass HUD, life tracking, the reset on death, controlled respawn with a minimal life recap, and the evolution choice (TANK or GLIDER) are implemented. The TANK Defensive Shell (visual only) and the GLIDER Air Glide are implemented. The Baby Bug has a custom visual model (P2-05, Studio validation pending). Tank and Glider models, damage, combat and persistence are not implemented.
+Then connect Studio using the Rojo plugin. The project currently contains the First Habitat greybox, exploration discoveries (TT-P3-02), food/growth, lifecycle and recap systems. Historical implementation still includes the form/evolution prototype, Tank Defensive Shell, Glider Air Glide and custom Baby Bug visual. The approved product direction is the standard Roblox avatar; runtime restoration, removal/retirement of obsolete form UI and Studio validation are pending. Damage, combat and persistence are not implemented.
 
 See the current product and architecture documents linked at the top of this README.

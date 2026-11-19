@@ -1,90 +1,74 @@
-# Tiny Titans — Player Identity & Adaptation Architecture
+# Tiny Titans — Roblox Avatar & Player Identity Architecture v3.0
 
-**Version:** 1.0 | **Date:** 2026-11-15  
-**Status:** Approved product boundaries; future technical design, not implemented.  
-**Product authority:** Product Vision v2.1 and Gameplay Blueprint. **Execution:** Master Roadmap.
+**Date:** 2026-11-19  
+**Status:** Approved player-character boundary; runtime state must be verified separately.  
+**Product authority:** Product Vision v4.0 and GDD v4.0. **Execution:** Master Roadmap.
 
 ## 1. Purpose
 
-Defines technical boundaries for a player inhabiting one personal Tiny Titan rather than selecting Baby Bug, Tank or Glider forms. It does not claim the current prototype has this architecture. Current implementation facts remain in README/source. The former Evolution Sandbox Architecture is superseded and retained in Git history as a prototype audit.
+The canonical playable character is the player's **standard Roblox avatar**. Tiny Titans is an original Zelda-style action-adventure; the player is an adventurer, not a Baby Bug creature or a selectable creature class.
+
+This document defines the player-character boundary. It does not claim that runtime code has been restored or Studio-validated.
 
 ## 2. Core invariants
 
-1. A player has one persistent creature identity across lives/sessions once persistence is implemented.
-2. A life reset does not replace the player's identity with a different class/form.
-3. Appearance and gameplay capability are separate domains.
-4. Cosmetics grant no hidden gameplay power.
-5. Adaptations are optional world-interaction capabilities, not separate characters/classes.
-6. No adaptation without at least two concrete world use cases, trade-off, counterplay, server validation and cross-platform input.
-7. Essential routes/progression remain solo-accessible; no mandatory adaptation gates.
-8. No permanent raw power from Rank, Legacy, cosmetics or monetization.
-9. Server-authoritative gameplay state is separate from client presentation.
-10. Tiny-creature visuals must treat collision, movement, camera and Humanoid behavior as explicit technical constraints.
+1. Keep the player's normal Roblox avatar visible and recognizable.
+2. Preserve supported Roblox avatar appearance, clothing, body packages and accessories.
+3. Preserve standard Humanoid movement and Roblox animation behavior wherever supported.
+4. Baby Bug, Tank and Glider are historical prototypes, not playable forms or classes.
+5. Do not attach BabyBugVisual or hide the standard avatar in the active player path.
+6. Do not introduce arbitrary body scaling, custom rigs, collision proxies or camera overrides without a separate design and Studio test gate.
+7. Player identity and cosmetics are separate from gameplay power.
+8. Tools, weapons, equipment and abilities are acquired gameplay systems, not character classes.
+9. Essential traversal, combat and progression must have solo-compatible solutions.
+10. Server owns consequential gameplay state; client owns input and local presentation.
 
-## 3. Character identity model
+## 3. Avatar presentation
 
-| Domain | Lifetime | Responsibility |
-|---|---|---|
-| Creature Identity | Player lifetime | Stable identity/profile for the player's Tiny Titan |
-| Appearance | Player lifetime | Body style, palette, markings, facial details and cosmetics |
-| Current Life | One lifeId | Biomass, derived growth, temporary activity progress and life stats |
-| Adaptation Loadout | Future; exact scope TBD | Optional capabilities under authored rules |
-| Legacy | Player lifetime | Bestiary, discoveries, achievements, collections, Naturalist XP/Rank and history |
-| Habitat & Bonds | Future | Personal space and relationships with ecosystem creatures |
+Use the normal Roblox character appearance and animation stack. The standard Roblox avatar is the canonical player character, not a temporary fallback.
 
-Do not introduce all services/persisted records in one task. The roadmap determines when each domain is justified. A new life may reset Biomass, temporary objectives and life stats, but must not silently reset chosen appearance or identity. Temporary growth may affect visual scale only if camera, collision, readability and multiplayer behavior are validated.
+- Keep CharacterAutoLoads, Humanoid, Animate and existing lifecycle/respawn ownership unless a separately reviewed task proves a necessary change.
+- Do not hide avatar body parts, decals or accessories.
+- Do not attach BabyBugVisual to HumanoidRootPart.
+- Do not let CreatureAppearanceService replace the avatar in the active player path.
+- Do not let legacy EvolutionService or form-selection UI determine the player's character identity.
+- Preserve familiar Roblox movement and supported emotes.
+- Camera and world framing should keep the avatar, nearby threats and puzzle clues readable.
 
-The exact relationship between player identity and Roblox account avatar customization remains an open technical decision. Target is a purpose-built Tiny Titan visual, not an assumption that standard R15 scaled down is final.
+Any scale or custom presentation experiment requires explicit owner approval, a rollback plan and Studio tests for movement, camera, collision, animation, accessories, network replication and mobile readability.
 
-## 4. Appearance architecture
+## 4. Tools, equipment and abilities
 
-Future appearance pipeline separates:
-- stable appearance definition (validated IDs/values, not arbitrary client assets);
-- server-owned selected appearance/profile;
-- reusable creature visual builder or rig;
-- client-side animation/presentation;
-- collision and movement representation, not inferred from decorative geometry.
+Future player capabilities should be designed as adventure tools and equipment:
+- weapons and defensive equipment;
+- puzzle and traversal tools;
+- ranged/utility items;
+- consumables and temporary effects;
+- learned movement or interaction verbs.
 
-Cosmetic components need compatible slots/tags or authored presets. Avoid unrestricted combinations until clipping, scale, rig, performance, replication and mobile readability are tested. Server validates owned/allowed cosmetic identifiers.
+Do not implement a capability merely to preserve old Tank/Glider code. Every tool needs a clear gameplay purpose, at least two meaningful authored uses where practical, readable limits, cross-platform controls, server validation and a solo-compatible route through required content.
 
-## 5. Adaptation architecture
+Avoid permanent role/class selection. Players may prepare different equipment/loadouts if the inventory design later supports it, but no required class gate is allowed.
 
-Adaptations are future optional capabilities, not a form catalog.
+## 5. World and character scale
 
-Candidate verbs inherited from old prototypes:
-- **Agility / Squeeze:** traverse a designated narrow passage or improve a specific traversal interaction.
-- **Brace / Shell:** resist a bounded environmental force, hold position or protect an interaction for a limited window.
-- **Glide / Wings:** steer a controlled descent or traverse a designed aerial route.
+The world is an original fantasy adventure setting. It is not required to be miniature, insect-themed or built around a tiny avatar. The title Tiny Titans does not constrain world scale.
 
-These are examples, not implementation approval. Each proposal must define player problem and exact world use; two authored locations; unique verb/readable activation; limits, cost, cooldown and cancellation; trade-off/counterplay; server validation; cross-platform input; measurable Studio/external playtest criteria.
+World scale, architecture, creatures, camera and effects should create a coherent fantasy. Do not shrink the player as a shortcut to visual identity.
 
-Number of simultaneous adaptations, unlock policy, swap timing and whether they are equipment, biological traits or learned abilities remain open. Do not create a general loadout framework before a concrete activity needs it.
+## 6. Security and lifecycle
 
-## 6. Current prototype migration boundary
+Server owns equipment ownership, item grants, combat outcomes, ability cooldowns, puzzle completion, progression and rewards. Client sends intent and stable identifiers, never claimed outcomes or reward amounts.
 
-Current code still contains the historical form model:
-- BABY_BUG, TANK and GLIDER;
-- form-selection/evolution UI and server rules;
-- Tank Defensive Shell (visual-only prototype);
-- Glider Air Glide (three-second physics prototype);
-- Baby Bug custom visual model attached to an R15 Humanoid.
+Validate character/life state, distance, line of sight where relevant, cooldowns, party/activity membership, ownership and rate limits. Clean up player and character connections on death, respawn, disconnect and activity completion.
 
-These are prototype implementation facts, not approved product model. This documentation change does not remove or rewrite runtime code. Future migration must be separately scoped, tested and reviewed. Do not delete working lifecycle, growth or appearance code merely because product model changed.
+The avatar presentation must not break food/interaction distance checks, lifecycle, respawn, camera or multiplayer visibility.
 
-The Baby Bug visual can inform art direction, but is not automatically the final customizable character. Its R15 collision representation and pending Studio validation must be considered.
+## 7. Migration order
 
-## 7. Server authority and persistence
-
-Server owns identity selection, allowed cosmetic IDs, adaptation eligibility/activation and consequential rewards. Client owns input and local presentation. Remotes carry intent and stable identifiers, never arbitrary appearance data, reward values or claimed outcomes. Validate life state, proximity, cooldowns, ownership and rate limits. Keep private identity/Legacy data out of public Player attributes when not intended for others.
-
-Persistence requires versioned schema, migrations, retry/backoff, idempotent writes, failure UX and recovery tests. No DataStore implementation is approved here.
-
-## 8. Implementation order
-
-1. Prove First Habitat exploration with current prototype and existing systems.
-2. Evaluate personal Tiny Titan visual direction and technical constraints; no large creator yet.
-3. Define one concrete adaptation only if observed gameplay needs it.
-4. Add stable appearance persistence only with a designed Legacy schema and recovery behavior.
-5. Expand customization/adaptations only after external players demonstrate attachment and repeated use.
-
-The Master Roadmap controls execution.
+1. Verify PR #41/current master state before assuming the avatar restoration is merged.
+2. Restore standard avatar visibility and standard animation behavior if still pending.
+3. Studio-test spawn/respawn, movement, camera, collision, accessories and two-player visibility.
+4. Review and retire obsolete form/evolution UI and dependencies safely.
+5. Validate the existing First Habitat with standard avatar dimensions, then decide whether it remains useful under the new world direction.
+6. Build the adventure vertical slice using tools/equipment rather than creature forms.
