@@ -7,15 +7,11 @@ assert(RunService:IsClient(), "ClientBootstrap.client.lua must run on the client
 
 local Controllers = (script.Parent :: Instance):WaitForChild("Controllers")
 local BiomassUIController = require(Controllers:WaitForChild("BiomassUIController") :: ModuleScript)
-local EvolutionUIController = require(Controllers:WaitForChild("EvolutionUIController") :: ModuleScript)
-local AbilityController = require(Controllers:WaitForChild("AbilityController") :: ModuleScript)
 local LifeRecapController = require(Controllers:WaitForChild("LifeRecapController") :: ModuleScript)
-local BabyBugAnimationController = require(Controllers:WaitForChild("BabyBugAnimationController") :: ModuleScript)
 local DiscoveryUIController = require(Controllers:WaitForChild("DiscoveryUIController") :: ModuleScript)
 
+-- The standard Roblox avatar and its built-in Animate script are the active character presentation.
+-- Historical form/evolution, ability and Baby Bug animation controllers are intentionally not started.
 BiomassUIController.Init()
-EvolutionUIController.Init()
-AbilityController.Init()
 LifeRecapController.Init()
-BabyBugAnimationController.Init()
 DiscoveryUIController.Init()

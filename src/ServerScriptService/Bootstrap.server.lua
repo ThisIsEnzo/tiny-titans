@@ -18,7 +18,6 @@ local EvolutionService = require(Services:WaitForChild("EvolutionService") :: Mo
 local AbilityService = require(Services:WaitForChild("AbilityService") :: ModuleScript)
 local DiscoveryService = require(Services:WaitForChild("DiscoveryService") :: ModuleScript)
 local ResetService = require(Services:WaitForChild("ResetService") :: ModuleScript)
-local CreatureAppearanceService = require(Services:WaitForChild("CreatureAppearanceService") :: ModuleScript)
 local RespawnService = require(Services:WaitForChild("RespawnService") :: ModuleScript)
 
 LifeService.Init() -- first: later milestones subscribe other services to its events
@@ -26,8 +25,10 @@ PlayerDataService.Init()
 GrowthService.Init(PlayerDataService)
 FoodService.Init(PlayerDataService)
 EvolutionService.Init(PlayerDataService)
-AbilityService.Init(EvolutionService)
+-- Tank/Glider abilities are retired from the active player experience; keep the module
+-- available to ResetService as a compatibility no-op while old state is phased out.
 DiscoveryService.Init(LifeService, PlayerDataService) -- before ResetService, which resets its per-life log
 ResetService.Init(LifeService, PlayerDataService, EvolutionService, AbilityService, GrowthService, DiscoveryService) -- last: resets a life's state when LifeService reports its end
-CreatureAppearanceService.Init(PlayerDataService, GrowthService) -- before RespawnService: the first character must already be covered
+-- Do not initialise CreatureAppearanceService: standard Roblox avatars remain visible.
+-- The old BabyBugVisual replacement is intentionally inactive.
 RespawnService.Init(LifeService, EvolutionService, ResetService, DiscoveryService) -- very last: spawns characters, so every service above must already listen
