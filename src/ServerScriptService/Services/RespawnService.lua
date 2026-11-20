@@ -8,10 +8,10 @@
 -- LifeService stays the only authority on Alive/Ended; this service never detects death. A new
 -- life begins when LifeService sees the new character (CharacterAdded) and fires LifeBegan.
 -- ResetService must have reset the ended life first (IsResetDone), so a new life always starts
--- from clean state. The client never sends a duration, form, lifeId or any state.
+-- from clean state. The client never sends a duration, lifeId or any state.
 --
--- Recap statistics (kept here, per player): the life's start time (server time) and the highest
--- form reached, taken from EvolutionService.FormChanged (server-validated selections only).
+-- Recap statistics (kept here, per player): the life's start time (server time). M1 removed the
+-- retired highest-form and per-life exploration fields from the recap contract.
 --
 -- Spawn guarantees (P1-05): at most ONE LoadCharacter operation per player is in flight. It is
 -- released only when that call returns (not when the character is added, which happens while it
@@ -28,15 +28,13 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
-local Config = require(Shared:WaitForChild("Config") :: ModuleScript)
 local Respawn = require(Shared:WaitForChild("Respawn") :: ModuleScript)
 
 local RespawnService = {}
 
-type Stats = { lifeId: number, startedAt: number, highestForm: string }
+type Stats = { lifeId: number, startedAt: number }
 -- lifeId 0 is the "first spawn failed" notice.
--- discoveries (TT-P3-02): plain summary { count, total, biomass, names, notable }; absent for lifeId 0.
-type Recap = { lifeId: number, durationSeconds: number, highestForm: string, discoveries: any? }
+type Recap = { lifeId: number, durationSeconds: number }
 type Entry = { record: Respawn.Record, stats: Stats?, pendingRecap: Recap?, clientReady: boolean, lastReadyAt: number? }
 
 local READY_MIN_INTERVAL = 1 -- seconds: LifeRecapReady messages closer together than this are ignored
@@ -46,9 +44,7 @@ local SPAWN_CONFIRM_POLL_INTERVAL = 0.05
 
 local entries: { [Player]: Entry } = {}
 local life: any = nil
-local evolution: any = nil
 local reset: any = nil
-local discovery: any = nil
 local recapEvent: RemoteEvent? = nil
 
 local function sendPendingRecap(player: Player, entry: Entry)
@@ -75,7 +71,7 @@ local function waitForNewLife(player: Player, previousLifeId: number): boolean
     return false
 end
 
--- Loads a character on its own thread (LoadCharacter yields) for spawn operation `seq`. The
+-- Loads a character on its own thread (LoadCharacter yields) for spawn operation seq. The
 -- operation stays in flight until LoadCharacter returns AND LifeService has had time to observe
 -- the new life. Only that operation is released; stale operations and players who left do nothing.
 -- If no newer life is observed within the bounded confirmation window, the first spawn may retry.
@@ -109,14 +105,14 @@ local function loadCharacter(player: Player, entry: Entry, seq: number)
         local lifeAlive = observedNewLife and life.IsAlive(player) and currentLifeId > previousLifeId
         entry.record = Respawn.EndSpawn(before, seq, lifeAlive, currentLifeId)
         if entry.record.retryInitial and not before.retryInitial then
-            entry.pendingRecap = { lifeId = 0, durationSeconds = 0, highestForm = Config.BaseForm }
+            entry.pendingRecap = { lifeId = 0, durationSeconds = 0 }
             sendPendingRecap(player, entry)
         end
     end)
 end
 
-local function startStats(entry: Entry, lifeId: number, highestForm: string)
-    entry.stats = { lifeId = lifeId, startedAt = workspace:GetServerTimeNow(), highestForm = highestForm }
+local function startStats(entry: Entry, lifeId: number)
+    entry.stats = { lifeId = lifeId, startedAt = workspace:GetServerTimeNow() }
 end
 
 local function onLifeBegan(player: Player, lifeId: number)
@@ -129,7 +125,7 @@ local function onLifeBegan(player: Player, lifeId: number)
     if pending ~= nil and lifeId > pending.lifeId then
         entry.pendingRecap = nil -- a newer life began: that recap is no longer awaited
     end
-    startStats(entry, lifeId, Config.BaseForm)
+    startStats(entry, lifeId)
 end
 
 local function onLifeEnded(player: Player, endedLifeId: number, reason: string)
@@ -144,24 +140,11 @@ local function onLifeEnded(player: Player, endedLifeId: number, reason: string)
     end
     local stats = entry.stats
     local duration = 0
-    local highestForm = Config.BaseForm
     if stats ~= nil and stats.lifeId == endedLifeId then
         duration = Respawn.Duration(stats.startedAt, workspace:GetServerTimeNow())
-        highestForm = stats.highestForm
     end
-    -- Exploration progress of the life that ended (the discovery log of that life survives the reset).
-    local discoveries = discovery.GetLifeSummary(player, endedLifeId)
-    entry.pendingRecap = { lifeId = endedLifeId, durationSeconds = duration, highestForm = highestForm, discoveries = discoveries }
+    entry.pendingRecap = { lifeId = endedLifeId, durationSeconds = duration }
     sendPendingRecap(player, entry)
-end
-
-local function onFormChanged(player: Player, form: string)
-    local entry = entries[player]
-    local stats = if entry ~= nil then entry.stats else nil
-    if stats == nil or not life.IsAlive(player) or life.GetLifeId(player) ~= stats.lifeId then
-        return -- only a living life's evolution counts for its recap
-    end
-    stats.highestForm = Respawn.UpdateHighestForm(stats.highestForm, form, Config.BaseForm)
 end
 
 -- RequestBeginNewLife: no arguments are used (extra arguments are ignored). Every failure is
@@ -202,8 +185,7 @@ local function onPlayerAdded(player: Player)
         -- keep it and record its life, starting the clock now.
         local lifeId = life.GetLifeId(player)
         if lifeId ~= nil then
-            local formNow = Respawn.UpdateHighestForm(Config.BaseForm, evolution.GetForm(player), Config.BaseForm)
-            startStats(entry, lifeId, formNow)
+            startStats(entry, lifeId)
         end
     elseif player.Character == nil then
         startFirstSpawn(player, entry) -- the first spawn, decided by the server
@@ -211,11 +193,9 @@ local function onPlayerAdded(player: Player)
 end
 
 -- Call very last in Bootstrap: loading a character begins a life, so every service must be
--- listening already. lifeService, evolutionService, resetService and discoveryService must be initialised.
-function RespawnService.Init(lifeService: any, evolutionService: any, resetService: any, discoveryService: any)
+-- listening already. lifeService and resetService must be initialised.
+function RespawnService.Init(lifeService: any, resetService: any)
     life = lifeService
-    discovery = discoveryService
-    evolution = evolutionService
     reset = resetService
 
     local remotes = ReplicatedStorage:FindFirstChild("Remotes")
@@ -253,7 +233,6 @@ function RespawnService.Init(lifeService: any, evolutionService: any, resetServi
 
     lifeService.LifeBegan:Connect(onLifeBegan)
     lifeService.LifeEnded:Connect(onLifeEnded)
-    evolutionService.FormChanged:Connect(onFormChanged)
     Players.PlayerAdded:Connect(onPlayerAdded)
     Players.PlayerRemoving:Connect(function(player)
         entries[player] = nil

@@ -1,12 +1,10 @@
 --!strict
 -- Minimal life recap (P1-04, hardened in P1-05). Shown only when the server sends LifeRecap after
--- a life ended: life duration, highest form reached, and a BEGIN NEW LIFE button. The numbers and
--- the form come from the server and are display only. The button sends RequestBeginNewLife with
--- NO values; the server decides whether a new life may begin. The recap hides when a new
--- character spawns (the new life), not when the button is pressed, and the button re-enables
--- after a timeout if nothing happened, so the player can never get stuck.
--- The recap also shows the life's exploration progress (discoveries found, Biomass they gave and the
--- most notable one), taken from the server's summary and formatted by the pure Discovery.FormatRecap.
+-- a life ended: life duration and a BEGIN NEW LIFE button. Duration is server-derived and display
+-- only. The button sends RequestBeginNewLife with NO values; the server decides whether a new life
+-- may begin. The recap hides when a new character spawns (the new life), not when the button is
+-- pressed, and the button re-enables after a timeout if nothing happened, so the player can never
+-- get stuck.
 -- Each recap carries the server's lifeId. Older, already dismissed or malformed recaps are
 -- ignored (Respawn.ShouldShowRecap), so a late or replayed recap can neither overwrite a newer
 -- one nor reappear after the new character spawned. lifeId 0 is the "first spawn failed" notice.
@@ -16,7 +14,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Respawn = require(Shared:WaitForChild("Respawn") :: ModuleScript)
-local Discovery = require(Shared:WaitForChild("Discovery") :: ModuleScript)
 
 local LifeRecapController = {}
 
@@ -24,11 +21,6 @@ local GUI_NAME = "LifeRecap"
 local RETRY_SECONDS = 6
 local BUTTON_TEXT = "BEGIN NEW LIFE"
 
-local DISPLAY_NAMES: { [string]: string } = {
-    BABY_BUG = "Roblox Avatar",
-    TANK = "Roblox Avatar",
-    GLIDER = "Roblox Avatar",
-}
 
 local initialized = false
 
@@ -54,7 +46,7 @@ local function roundCorners(instance: Instance, radius: number)
     corner.Parent = instance
 end
 
-local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextLabel, TextLabel, TextLabel, TextButton)
+local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextButton)
     local gui = Instance.new("ScreenGui")
     gui.Name = GUI_NAME
     gui.ResetOnSpawn = false
@@ -99,18 +91,6 @@ local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextLabel, TextLabe
     duration.Font = Enum.Font.Gotham
     duration.Parent = panel
 
-    local form = makeLabel("HighestForm", UDim2.fromScale(0.05, 0.33), UDim2.fromScale(0.9, 0.1), 20)
-    form.Font = Enum.Font.Gotham
-    form.Parent = panel
-
-    local discoveries = makeLabel("Discoveries", UDim2.fromScale(0.05, 0.44), UDim2.fromScale(0.9, 0.1), 20)
-    discoveries.Font = Enum.Font.Gotham
-    discoveries.Parent = panel
-
-    local notable = makeLabel("NotableDiscovery", UDim2.fromScale(0.05, 0.54), UDim2.fromScale(0.9, 0.09), 18)
-    notable.Font = Enum.Font.Gotham
-    notable.TextTransparency = 0.15
-    notable.Parent = panel
 
     local button = Instance.new("TextButton")
     button.Name = "BeginButton"
@@ -133,7 +113,7 @@ local function buildGui(): (ScreenGui, TextLabel, TextLabel, TextLabel, TextLabe
     textLimit.MaxTextSize = 26
     textLimit.Parent = button
 
-    return gui, title, duration, form, discoveries, notable, button
+    return gui, title, duration, button
 end
 
 function LifeRecapController.Init()
@@ -144,7 +124,7 @@ function LifeRecapController.Init()
 
     local player = Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui")
-    local gui, titleLabel, durationLabel, formLabel, discoveryLabel, notableLabel, button = buildGui()
+    local gui, titleLabel, durationLabel, button = buildGui()
 
     local requestRemote: RemoteEvent? = nil
     local pending = false
@@ -202,19 +182,10 @@ function LifeRecapController.Init()
                 return -- older, already dismissed, or malformed
             end
             local seconds: any = summary.durationSeconds
-            local highest: any = summary.highestForm
             local sameRecap = recapLifeId == shownLifeId
             shownLifeId = recapLifeId :: number
             titleLabel.Text = if recapLifeId == 0 then "SPAWN FAILED" else "LIFE ENDED"
             durationLabel.Text = "Life duration: " .. Respawn.FormatDuration(seconds)
-            local formName = if type(highest) == "string" then (DISPLAY_NAMES[highest] or highest) else DISPLAY_NAMES.BABY_BUG
-            formLabel.Text = "Character: " .. formName
-            local discoveryLine, notableLine = Discovery.FormatRecap(summary.discoveries)
-            local isLifeRecap = recapLifeId ~= 0 -- lifeId 0 is the "spawn failed" notice: no exploration line
-            discoveryLabel.Text = discoveryLine
-            discoveryLabel.Visible = isLifeRecap
-            notableLabel.Text = notableLine or ""
-            notableLabel.Visible = isLifeRecap and notableLine ~= nil
             if not sameRecap then
                 setPending(false) -- a replay of the recap already on screen must not undo a pending press
                 attempt += 1
