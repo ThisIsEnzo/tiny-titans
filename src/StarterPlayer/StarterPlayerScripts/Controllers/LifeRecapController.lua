@@ -1,12 +1,10 @@
 --!strict
 -- Minimal life recap (P1-04, hardened in P1-05). Shown only when the server sends LifeRecap after
--- a life ended: life duration, highest form reached, and a BEGIN NEW LIFE button. The numbers and
--- the form come from the server and are display only. The button sends RequestBeginNewLife with
--- NO values; the server decides whether a new life may begin. The recap hides when a new
--- character spawns (the new life), not when the button is pressed, and the button re-enables
--- after a timeout if nothing happened, so the player can never get stuck.
--- The recap also shows the life's exploration progress (discoveries found, Biomass they gave and the
--- most notable one), taken from the server's summary and formatted by the pure Discovery.FormatRecap.
+-- a life ended: life duration and a BEGIN NEW LIFE button. Duration is server-derived and display
+-- only. The button sends RequestBeginNewLife with NO values; the server decides whether a new life
+-- may begin. The recap hides when a new character spawns (the new life), not when the button is
+-- pressed, and the button re-enables after a timeout if nothing happened, so the player can never
+-- get stuck.
 -- Each recap carries the server's lifeId. Older, already dismissed or malformed recaps are
 -- ignored (Respawn.ShouldShowRecap), so a late or replayed recap can neither overwrite a newer
 -- one nor reappear after the new character spawned. lifeId 0 is the "first spawn failed" notice.
