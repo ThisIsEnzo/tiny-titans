@@ -1,6 +1,16 @@
 --!strict
--- TINY TITANS server entry point.
--- Gameplay services are wired here.
+-- TINY TITANS server entry point (composition root).
+-- Active services are required and initialized here in a documented order with explicit
+-- dependency injection. No gameplay logic lives in this file.
+--
+-- Active service ownership (M1):
+--   LifeService     character life state, life IDs, LifeBegan/LifeEnded events, stale-signal protection
+--   ResetService    exactly-once per-life reset orchestration; gates the next life (IsResetDone)
+--   RespawnService  controlled first spawn and player-driven respawn; life recap delivery
+--
+-- M1 batch 1: the retired creature prototype (Biomass/Food/Growth, Evolution forms, form
+-- abilities, per-life Biomass discoveries, Baby Bug appearance) is no longer wired into runtime.
+-- Those modules still exist on disk and are removed in a later, dependency-verified cleanup.
 
 local RunService = game:GetService("RunService")
 assert(RunService:IsServer(), "Bootstrap.server.lua must run on the server.")
@@ -11,22 +21,9 @@ game:GetService("Players").CharacterAutoLoads = false
 
 local Services = (script.Parent :: Instance):WaitForChild("Services")
 local LifeService = require(Services:WaitForChild("LifeService") :: ModuleScript)
-local PlayerDataService = require(Services:WaitForChild("PlayerDataService") :: ModuleScript)
-local FoodService = require(Services:WaitForChild("FoodService") :: ModuleScript)
-local EvolutionService = require(Services:WaitForChild("EvolutionService") :: ModuleScript)
-local AbilityService = require(Services:WaitForChild("AbilityService") :: ModuleScript)
-local DiscoveryService = require(Services:WaitForChild("DiscoveryService") :: ModuleScript)
 local ResetService = require(Services:WaitForChild("ResetService") :: ModuleScript)
 local RespawnService = require(Services:WaitForChild("RespawnService") :: ModuleScript)
 
-LifeService.Init() -- first: later milestones subscribe other services to its events
-PlayerDataService.Init()
-FoodService.Init(PlayerDataService)
-EvolutionService.Init(PlayerDataService)
--- Tank/Glider abilities are retired from the active player experience; keep the module
--- available to ResetService as a compatibility no-op while old state is phased out.
-DiscoveryService.Init(LifeService, PlayerDataService) -- before ResetService, which resets its per-life log
-ResetService.Init(LifeService, PlayerDataService, EvolutionService, AbilityService, DiscoveryService) -- last: resets a life's state when LifeService reports its end
--- Do not initialise CreatureAppearanceService: standard Roblox avatars remain visible.
--- The old BabyBugVisual replacement is intentionally inactive.
-RespawnService.Init(LifeService, EvolutionService, ResetService, DiscoveryService) -- very last: spawns characters, so every service above must already listen
+LifeService.Init() -- first: the only authority on life state; the others subscribe to its events
+ResetService.Init(LifeService) -- before RespawnService: a new life must not begin before the previous reset is recorded
+RespawnService.Init(LifeService, ResetService) -- very last: spawns characters, so every service above must already listen
