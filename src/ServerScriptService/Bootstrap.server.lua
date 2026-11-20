@@ -8,9 +8,8 @@
 --   ResetService    exactly-once per-life reset orchestration; gates the next life (IsResetDone)
 --   RespawnService  controlled first spawn and player-driven respawn; life recap delivery
 --
--- M1 batch 1: the retired creature prototype (Biomass/Food/Growth, Evolution forms, form
--- abilities, per-life Biomass discoveries, Baby Bug appearance) is no longer wired into runtime.
--- Those modules still exist on disk and are removed in a later, dependency-verified cleanup.
+-- M1: only the life, reset and controlled-respawn foundation is wired here. Add adventure
+-- gameplay services alongside their first concrete vertical-slice use case, not as placeholders.
 
 local RunService = game:GetService("RunService")
 assert(RunService:IsServer(), "Bootstrap.server.lua must run on the server.")

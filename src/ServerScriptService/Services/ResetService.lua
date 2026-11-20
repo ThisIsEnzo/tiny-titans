@@ -8,9 +8,8 @@
 --   * a player who has left is ignored and their tracker removed
 -- The tracker is marked BEFORE the reset is applied, so re-entrant events cannot double-reset.
 --
--- M1: the legacy per-life state owners (Biomass, form, abilities, discovery log) are no longer
--- part of runtime, so no active system currently owns per-life state and the reset payload below
--- is intentionally empty. The exactly-once GATE is still load-bearing: RespawnService calls
+-- No active gameplay system currently owns per-life state, so the reset payload below is
+-- intentionally empty. The exactly-once gate remains load-bearing: RespawnService calls
 -- IsResetDone and must not begin a new life before the previous life's reset has been recorded.
 -- Future adventure systems add their own small reset API here, one call per owning service.
 --

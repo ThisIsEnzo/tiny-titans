@@ -2,12 +2,13 @@
 """Validates the committed habitat (src/Workspace/Habitat/*.model.json) for TT-P3-01.
 
 Reads the shipped JSON, rasterises every collidable part into 1-stud cells and builds a walking graph
-for a baseline creature: it can step or jump UP at most 3 studs, can drop down any distance, needs 6
-studs of headroom, and a body footprint of a given radius. It then checks the acceptance criteria that
-can be checked offline (reachability, return paths, route widths, pickups, landmarks).
+for a simplified baseline traversal profile: it can step or jump UP at most 3 studs, can drop down any
+distance, needs 6 studs of headroom, and uses a fixed body footprint. It checks offline geometry
+criteria such as reachability, return paths, route widths and landmarks.
 
-It is NOT proof that the habitat is fun or playable: real collision, camera, jump height at every growth
-stage and feel need Roblox Studio. Usage: python3 tools/habitat/validate_habitat.py [--map]
+It is NOT a simulation of the standard Roblox avatar and does not prove playability or fun. Real
+collision, camera, avatar proportions, jump behaviour and traversal feel need Roblox Studio.
+Usage: python3 tools/habitat/validate_habitat.py [--map]
 """
 import json
 import math
@@ -22,7 +23,6 @@ STEP = 3.0          # max step / jump up (the old arena used 3-stud steps)
 HEAD = 6.0          # headroom needed to stand under something
 BODY = 5.5          # body height that must be free
 R_WIDE, R_NARROW = 3.0, 1.5
-PICKUP_REACH = 3.0  # horizontal studs from a standing spot to a pickup marker we accept as collectable
 MAX_PARTS = 260
 MAX_OPEN_RADIUS = 13.0  # studs: only the Nest (rim radius 14) is meant to be this open
 
@@ -269,8 +269,6 @@ def main():
     check("at least 3 spawn pads (multiplayer)", len(spawns) >= 3, str(len(spawns)))
     check("spawn pads are neutral, enabled and without a forcefield timer", all(
         s.props["Neutral"] and s.props["Enabled"] and s.props["Duration"] == 0 for s in spawns))
-    foods = [p for p in parts if "FoodSpawn" in p.tags]
-    check("pickups use the existing FoodSpawn tag, 14-26 of them", 14 <= len(foods) <= 26, str(len(foods)))
     landmarks = [p for p in parts if "Landmark" in p.tags]
     check("at least 3 landmarks", len(landmarks) >= 3, str(len(landmarks)))
     check("boundary walls tagged", sum("HabitatBoundary" in p.tags for p in parts) == 4)
@@ -306,18 +304,6 @@ def main():
     rev_w = reverse(adj_w)
     home_n = bfs(spawn_nodes, rev_n)  # nodes that can walk back to a spawn
     home_w = bfs([n for n in spawn_nodes if n in ok_wide_set], rev_w)
-
-    # pickups: reachable, and able to return (never a trap), on foot with 3-stud steps only
-    bad_reach, bad_home = [], []
-    for f in foods:
-        h = f.pos[1] - 0.15 - 0.5
-        nd = nearest(ok_n, nodes, f.pos[0], f.pos[2], h=h, tol=PICKUP_REACH, htol=1.8)
-        if nd is None or nd not in reach_n:
-            bad_reach.append(f.name)
-        elif nd not in home_n:
-            bad_home.append(f.name)
-    check("every pickup can be reached on foot from the Nest (no ability needed)", not bad_reach, ", ".join(bad_reach))
-    check("every pickup can walk back to the Nest (safe recovery)", not bad_home, ", ".join(bad_home))
 
     trapped = [nd for nd in reach_n if nd not in home_n]
     check("no reachable standing spot is a trap (all can return to the Nest)", not trapped, f"{len(trapped)} cells")
@@ -375,37 +361,9 @@ def main():
         walk = dist.get(lp2)
         check("walking from leaf platform 1 to 2 needs a detour of 35+ steps (a 10-stud glide would save it)", walk is not None and walk >= 35, str(walk))
 
-    # discovery sites (TT-P3-02): one volume per catalog id, reachable on foot and back, away from the Nest
-    sites = [p for p in parts if "DiscoverySite" in p.tags]
-    defs_path = os.path.join(ROOT, "src", "ReplicatedStorage", "Shared", "DiscoveryDefinitions.lua")
-    import re
-    defined = re.findall(r'^\s+id = "([A-Z_]+)",', open(defs_path).read(), re.M)
-    site_ids = sorted(p.name for p in sites)
-    check("discovery sites match the catalog ids exactly (one volume per discovery)", sorted(defined) == site_ids and len(set(site_ids)) == len(site_ids), f"catalog {sorted(defined)} sites {site_ids}")
-    check("at least 5 discoveries", len(sites) >= 5, str(len(sites)))
-    check("discovery volumes are invisible, not solid, not queryable", all(p.props["Transparency"] == 1.0 and not p.collide and p.props["CanQuery"] is False for p in sites))
-    check("discovery volumes are at most 32 studs per side", all(max(p.size) <= 32 for p in sites))
-    spawn_pos = [(s.pos[0], s.pos[2]) for s in spawns]
-    def box_xz(p):
-        return (p.pos[0] - p.size[0] / 2, p.pos[0] + p.size[0] / 2, p.pos[2] - p.size[2] / 2, p.pos[2] + p.size[2] / 2)
-    far = all(math.hypot(p.pos[0] - sx, p.pos[2] - sz) > 40 for p in sites for sx, sz in spawn_pos)
-    check("no discovery volume is at the Nest (leaving the Nest is required; every one is 40+ studs from the pads)", far)
-    check("no discovery volume contains a spawn pad", all(not (box_xz(p)[0] <= sx <= box_xz(p)[1] and box_xz(p)[2] <= sz <= box_xz(p)[3]) for p in sites for sx, sz in spawn_pos))
-    for p in sorted(sites, key=lambda q: q.name):
-        x0, x1, z0, z1 = box_xz(p)
-        ylo, yhi = p.pos[1] - p.size[1] / 2, p.pos[1] + p.size[1] / 2
-        inside = [nd for nd in reach_n if x0 <= nd[0] - HALF + 0.5 <= x1 and z0 <= nd[1] - HALF + 0.5 <= z1
-                  and nodes[nd] + 1.8 >= ylo and nodes[nd] + 3.0 <= yhi]
-        back = [nd for nd in inside if nd in home_n]
-        check(f"discovery {p.name}: {len(inside)} standing spots inside its volume, reachable on foot and able to return", len(inside) >= 4 and len(back) == len(inside))
-    overlap = [(a.name, b.name) for i, a in enumerate(sites) for b in sites[i + 1:]
-               if box_xz(a)[0] < box_xz(b)[1] and box_xz(b)[0] < box_xz(a)[1] and box_xz(a)[2] < box_xz(b)[3] and box_xz(b)[2] < box_xz(a)[3]
-               and abs(a.pos[1] - b.pos[1]) < (a.size[1] + b.size[1]) / 2]
-    check("discovery volumes do not overlap each other", not overlap, str(overlap))
-
     # tank nook: front door blocked by the static boulder, side door open
     nook_in = node_at(-31, 14, None, tol=1.5)
-    check("Tank nook interior reachable by the baseline form through its side door", nook_in is not None and nook_in in reach_n)
+    check("Tank nook interior remains reachable through its side door", nook_in is not None and nook_in in reach_n)
 
     # multiplayer: open spaces around the pads and trail mouths
     wide_near_nest = sum(1 for nd in ok_wide_set if abs(nd[0] - HALF + 48) < 16 and abs(nd[1] - HALF - 46) < 16)
@@ -461,18 +419,16 @@ def main():
                         row += "." if gw else ("," if gn else " ")
                 print(row)
     if show_map:
-        print_map(cells, parts, nodes, reach_n, reach_w, foods, spawns)
+        print_map(cells, parts, nodes, reach_n, reach_w, spawns)
     print("\nRESULT:", "FAILED " + str(len(failures)) if failures else "all checks passed")
     return 1 if failures else 0
 
 
-def print_map(cells, parts, nodes, reach_n, reach_w, foods, spawns):
+def print_map(cells, parts, nodes, reach_n, reach_w, spawns):
     n = 2 * HALF
     reach_cells_n = {(nd[0], nd[1]) for nd in reach_n}
     reach_cells_w = {(nd[0], nd[1]) for nd in reach_w}
     marks = {}
-    for f in foods:
-        marks[(int(f.pos[0] + HALF) // 2, int(f.pos[2] + HALF) // 2)] = "F"
     for s in spawns:
         marks.setdefault((int(s.pos[0] + HALF) // 2, int(s.pos[2] + HALF) // 2), "S")
     print("\nmap (2 studs per char; +X east, -Z north at top). Digits = top height class, '.' reachable wide, ',' narrow only")

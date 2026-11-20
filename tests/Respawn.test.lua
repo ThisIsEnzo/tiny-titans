@@ -6,7 +6,6 @@
 -- These tests do NOT prove Roblox behaviour (CharacterAutoLoads, LoadCharacter, remotes,
 -- event delivery, UI); that needs Studio (README checklists).
 
-local Config = require("../src/ReplicatedStorage/Shared/Config")
 local Respawn = require("../src/ReplicatedStorage/Shared/Respawn")
 
 local failures = 0
@@ -119,14 +118,8 @@ do
     check("client ignores malformed recap ids", allIgnored and not Respawn.ShouldShowRecap(nil, -1, -1))
 end
 
--- Recap helpers.
+-- Duration and recap eligibility.
 do
-    local base = Config.BaseForm
-    check("highest form stays base without evolving", Respawn.UpdateHighestForm(base, base, base) == base)
-    check("the evolved form becomes the highest", Respawn.UpdateHighestForm(base, "TANK", base) == "TANK")
-    check("the first evolved form sticks", Respawn.UpdateHighestForm("TANK", "GLIDER", base) == "TANK")
-    check("dropping back to base keeps the highest", Respawn.UpdateHighestForm("GLIDER", base, base) == "GLIDER")
-    check("malformed form is ignored", Respawn.UpdateHighestForm(base, nil, base) == base and Respawn.UpdateHighestForm(base, 5, base) == base)
     check("duration is end minus start", Respawn.Duration(10, 75.5) == 65.5)
     check("duration is never negative", Respawn.Duration(10, 5) == 0)
     check("invalid duration inputs give 0", Respawn.Duration(nil, 5) == 0 and Respawn.Duration(1, "2") == 0 and Respawn.Duration(0 / 0, 1) == 0)

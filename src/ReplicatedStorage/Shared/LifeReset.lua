@@ -20,9 +20,6 @@ local LifeReset = {}
 
 export type Tracker = { lastResetLifeId: number }
 
--- Biomass a new life starts with. The form a new life starts with is Config.BaseForm.
-LifeReset.StartingBiomass = 0
-
 LifeReset.Outcome = table.freeze({
     Reset = "Reset",
     Duplicate = "Duplicate",
