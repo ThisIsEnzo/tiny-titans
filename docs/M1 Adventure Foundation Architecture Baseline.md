@@ -1,57 +1,67 @@
 # M1 — Adventure Foundation Architecture Baseline
 
-**Status:** In progress  
-**Baseline:** `master` at `f89b9a9f90313dd3e023178b78f998bca29bf309`  
-**Scope of this checkpoint:** retire runtime avatar scaling without disturbing the existing life/respawn guarantees.
+**Status:** Batch 2 implementation on `feature/m1-batch-2-legacy-removal`; Lune tests, Habitat validation and Rojo build passed in CI; PR review and Studio checks pending.  
+**Baseline:** `master` at `18274699e97040d1f1c06ccbd66c6b27506882b5` (Batch 1 merged).  
+**Scope:** retire the superseded creature/Biomass prototype while preserving the life, controlled-respawn and Habitat geometry contracts.
 
 ## Product constraints
 
 - The standard Roblox avatar is the only player character.
-- Solo and co-op are first-class; essential progression must remain solo-completable.
-- Tiny Titans is an original Zelda-style action-adventure. Existing creature/evolution systems are prototype history, not product requirements.
-- Do not build empty service placeholders. A service boundary is introduced when a concrete vertical-slice use case needs it.
+- Tiny Titans is an original Zelda-style action-adventure; the old small-creature prototype is historical, not a product requirement.
+- Solo and co-op are first-class. Essential progression must remain solo-completable.
+- Do not add empty service placeholders. Introduce a service boundary only with a concrete vertical-slice use case.
 
-## Dependency and lifecycle rules
+## Active runtime ownership
 
-1. `Bootstrap.server.lua` is the composition root. It is the only place that wires server services together.
-2. Shared modules contain pure rules/data where practical; Roblox services own engine interaction and authoritative state.
-3. A server service must not top-level-require another server service. Cross-service collaboration is passed through explicit `Init` dependencies from Bootstrap. This prevents service dependency cycles and makes initialization order reviewable.
-4. `Players.CharacterAutoLoads = false` remains set before any service initialization can yield.
-5. `LifeService` owns character-life transitions. `ResetService` owns exactly-once per-life reset orchestration. Owning services reset only their own state.
-6. `RespawnService` retains its single-in-flight character-load sequencing, spawn confirmation, client-ready recap handshake and player-driven new-life request. Do not replace it with a timed automatic respawn.
-7. Client attributes and RemoteEvents are presentation/intent channels, never authority for consequential game state.
-
-## Current service ownership after this checkpoint
-
-| Area | Current owner | M1 disposition |
+| Area | Owner | Contract |
 |---|---|---|
-| Character-life state | `LifeService` | Preserve |
-| Per-life reset orchestration | `ResetService` | Preserve; remove obsolete avatar-scaling dependency |
-| Character spawn/respawn | `RespawnService` | Preserve unchanged |
-| Session Biomass prototype | `PlayerDataService` | Transitional; retire with dependent Food/Discovery prototype as a coordinated step |
-| Food pickups | `FoodService` | Transitional legacy; not a target adventure reward system |
-| Per-life location discoveries | `DiscoveryService` | Transitional exploration prototype; not permanent adventure progression |
-| Evolution compatibility record | `EvolutionService` | Transitional adapter; remove after recap/reset consumers are migrated |
-| Avatar scale presentation | `GrowthService` | Retired from runtime; source retained temporarily for dependency-safe cleanup |
+| Character-life state | `LifeService` | Sole authority for Alive/Ended state, life IDs and lifecycle events |
+| Per-life reset orchestration | `ResetService` | Exactly-once reset tracking; handles duplicate and stale event ordering; gates the next life |
+| Character spawn/respawn | `RespawnService` | Controlled first spawn, player-driven respawn, one in-flight spawn operation, spawn confirmation and recap handshake |
+| Character presentation | Roblox standard avatar | Default avatar and built-in animation; no custom creature replacement |
+| Life recap | `LifeRecapController` | Display-only title and server-derived life duration; sends no state with the new-life request |
 
-## Checkpoint M1-A — retire miniature avatar scaling
+`Bootstrap.server.lua` is the composition root. It sets `Players.CharacterAutoLoads = false`, initializes `LifeService`, then `ResetService`, then `RespawnService`. The latter is initialized last because it can spawn a character and trigger a new life.
 
-- Removed `GrowthService` from server bootstrap.
-- Removed `GrowthService.ResetLife` from `ResetService`.
-- Kept the pure `Shared/Growth.lua` module and its tests because the existing session Biomass prototype still uses its pure progression helpers. Removing those helpers before migrating PlayerData/Discovery would break the current prototype.
-- Kept the `GrowthService.lua` source temporarily as unreferenced legacy code; deleting it is a later cleanup after a full dependency scan.
-- Did not change `LifeService`, `RespawnService`, the controlled respawn handshake, or any existing tests.
+## Lifecycle and respawn invariants
+
+1. `LifeService` is the only authority on whether a life is Alive or Ended.
+2. `ResetService` tracks the highest life ID whose reset has been recorded for each player.
+3. A current `LifeEnded` is reset at most once. Duplicate or stale events cannot erase state belonging to a newer life.
+4. If `LifeEnded` is delivered after a newer `LifeBegan`, the `LifeBegan` handler records the missed previous-life reset before new-life state is created.
+5. `RespawnService` does not begin a new life until `IsResetDone` confirms the previous life has been recorded.
+6. A spawn operation remains in flight until its own `LoadCharacter` call returns and the new life is observed. A stale completion cannot unlock a newer operation.
+7. Recap delivery is retained until the client-ready handshake. The recap contract contains only `lifeId` and `durationSeconds`.
+
+The reset payload is intentionally empty at this stage: no active gameplay system currently owns per-life state. Future systems add their own reset API only when that system is implemented.
+
+## Batch 2 — legacy prototype retirement
+
+The old Biomass/Food/Growth, Evolution, form ability, per-life discovery and Baby Bug presentation prototype is removed from active source:
+
+- Retired server services and client controllers are deleted.
+- Retired shared rules/catalogs and their prototype-only tests are deleted.
+- `LifeReset.lua` no longer carries a starting Biomass value.
+- `Respawn.lua` no longer tracks or ranks a highest form; the recap remains duration-only.
+- The obsolete shared `Config.lua` is removed because it contained only prototype tuning and has no remaining active consumers.
+- The Habitat generator no longer creates the 24 pickup markers or 6 discovery trigger volumes. The validator no longer depends on the deleted discovery catalog or checks retired pickup/discovery behavior.
+- Exactly 30 legacy marker parts are removed. The other 199 Habitat parts retain their original names, sizes, CFrames, tags and properties.
+
+No new gameplay system is introduced by this cleanup.
+
+## Tests and validation
+
+CI must run:
+
+- All remaining Lune tests, including the focused `LifeReset` decision/effect suite and the unchanged lifecycle timeline suite.
+- The offline Habitat validator.
+- The Rojo place build.
+
+A green run proves only these automated checks. It does not prove Roblox engine behavior.
 
 ## Remaining M1 work
 
-1. Run and record the existing 13 Lune tests and Rojo build on the branch.
-2. Migrate recap/reset contracts away from the retired Evolution/Form model.
-3. Retire the Food/Biomass/Discovery per-life prototype as one dependency-aware change; do not leave dangling calls or delete tests without replacement.
-4. Establish concrete Adventure service contracts only alongside the first implemented interaction/combat/tool use case.
-5. Audit and either redesign or retire First Habitat after standard-avatar traversal validation in Roblox Studio.
-6. Remove dead creature presentation/evolution/ability modules and their obsolete tests only after references and CI are updated.
-7. Keep Studio-only checks explicit: avatar proportions, camera, collision, animation, input, replication and multiplayer.
-
-## Validation policy
-
-CI is configured to run every `tests/*.test.lua` file with pinned Lune, run the offline Habitat validator and build the place with pinned Rojo. This GitHub edit session can read and write repository content but cannot execute those local tools or Roblox Studio. A successful PR CI run is required before merge; Studio checks remain pending until actually performed.
+1. Perform the standard-avatar Studio traversal audit: proportions, camera, collision, jump/step limits, routes, nook, elevated route and secret path.
+2. Verify first spawn, death, recap, player-driven respawn and repeated lifecycle cycles in Studio.
+3. Verify multiplayer joins, independent spawn/respawn, death and leave behavior with multiple clients.
+4. Begin the first concrete adventure vertical slice only after its gameplay contract and architecture are agreed.

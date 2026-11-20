@@ -1,7 +1,7 @@
 --!strict
 -- Server-owned life tracking. Detects when each player's life begins and ends and tells
--- other server code through two server-only events. It resets NOTHING: Biomass, form,
--- abilities and growth keep their current behavior (resetting is a later milestone).
+-- other server code through two server-only events. It does not own or reset gameplay state;
+-- ResetService coordinates per-life resets for concrete gameplay systems.
 --
 -- One life = one character. A life begins on CharacterAdded and ends on the first of
 -- Humanoid.Died, CharacterRemoving, a replacement character, or the player leaving.

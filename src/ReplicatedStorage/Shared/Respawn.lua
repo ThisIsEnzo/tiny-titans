@@ -143,18 +143,6 @@ function Respawn.ShouldShowRecap(recapLifeId: any, dismissedLifeId: number, show
     return recapLifeId > dismissedLifeId and recapLifeId >= shownLifeId
 end
 
--- Highest form reached in a life. One evolution is allowed per life, so the first evolved
--- form reached sticks and the base form is only the fallback (no ranking between forms).
-function Respawn.UpdateHighestForm(highestForm: string, currentForm: any, baseForm: string): string
-    if type(currentForm) ~= "string" or currentForm == baseForm then
-        return highestForm
-    end
-    if highestForm ~= baseForm then
-        return highestForm
-    end
-    return currentForm
-end
-
 -- Whole seconds are not required; negative or invalid spans become 0.
 function Respawn.Duration(startedAt: any, endedAt: any): number
     if type(startedAt) ~= "number" or type(endedAt) ~= "number" or startedAt ~= startedAt or endedAt ~= endedAt then

@@ -1,21 +1,11 @@
 --!strict
--- Optional unit tests for the pure reset rules in Shared/LifeReset.lua (P1-03).
--- Run with Lune from the repository root:  lune run tests/LifeReset.test.lua
--- Lune is NOT part of rokit.toml; this file is outside the Rojo project tree.
---
--- "Players" here are plain tables. Section 2 replays LifeService event orderings through the
--- pure rules exactly the way ResetService uses them, with the real Growth, Evolution and
--- Ability rules providing the gameplay side. This proves the decisions (exactly once per
--- lifeId, duplicates, stale events, removed players, clean next life). It does NOT prove the
--- Roblox wiring: BindableEvent delivery, the service reset APIs, attributes, tweens, instance
--- cleanup, or that the reset really happens on Humanoid death. That needs Studio (README).
+-- Focused tests for the pure exactly-once reset rules in Shared/LifeReset.lua.
+-- Run from the repository root: lune run tests/LifeReset.test.lua
+-- These tests verify decision rules and observable reset effects using generic per-life
+-- progress, without depending on retired gameplay systems or Roblox services.
 
-local Config = require("../src/ReplicatedStorage/Shared/Config")
-local Growth = require("../src/ReplicatedStorage/Shared/Growth")
-local Evolution = require("../src/ReplicatedStorage/Shared/Evolution")
-local CreatureDefinitions = require("../src/ReplicatedStorage/Shared/CreatureDefinitions")
-local Ability = require("../src/ReplicatedStorage/Shared/Ability")
 local LifeReset = require("../src/ReplicatedStorage/Shared/LifeReset")
+local Outcome = LifeReset.Outcome
 
 local failures = 0
 local function check(name: string, condition: boolean)
@@ -27,291 +17,177 @@ local function check(name: string, condition: boolean)
     end
 end
 
-local cap = Config.EvolutionBiomassRequired
-local stages = Config.GrowthStages
-local Outcome = LifeReset.Outcome
-
--- ---------------------------------------------------------------------------
--- 1. The decision rules on their own.
--- ---------------------------------------------------------------------------
-do
-    local t = LifeReset.NewTracker()
-    check("1: a new tracker has reset nothing", t.lastResetLifeId == 0)
-    check("1: trackers are independent tables", LifeReset.NewTracker() ~= t)
-    check("1: first ended life is reset", LifeReset.DecideEnded(t, 1, 1) == Outcome.Reset)
-    check("1: ended life that is no longer current is stale", LifeReset.DecideEnded(t, 1, 2) == Outcome.Stale)
-    check("1: a removed player (no current life) is NoPlayer", LifeReset.DecideEnded(t, 1, nil) == Outcome.NoPlayer)
-    LifeReset.Commit(t, 1)
-    check("1: after commit the same life is a duplicate", LifeReset.DecideEnded(t, 1, 1) == Outcome.Duplicate)
-    check("1: after commit an older life is a duplicate", LifeReset.DecideEnded(t, 1, 3) == Outcome.Duplicate)
-    check("1: the next life is not a duplicate", LifeReset.DecideEnded(t, 2, 2) == Outcome.Reset)
-    LifeReset.Commit(t, 0)
-    check("1: commit never moves backwards", t.lastResetLifeId == 1)
-    local bad: { any } = { 0, -1, 1.5, 0 / 0, math.huge, "1", true, {}, false }
-    local allInvalid = true
-    for _, value in bad do
-        if LifeReset.DecideEnded(LifeReset.NewTracker(), value, 1) ~= Outcome.Invalid then
-            allInvalid = false
-        end
-        if LifeReset.DecideEnded(LifeReset.NewTracker(), 1, value) ~= Outcome.Invalid then
-            allInvalid = false
-        end
-    end
-    check("1: malformed ids are Invalid", allInvalid)
-    check("1: nil ended id is Invalid", LifeReset.DecideEnded(LifeReset.NewTracker(), nil, 1) == Outcome.Invalid)
-    local began = LifeReset.NewTracker()
-    local firstOutcome = LifeReset.DecideBegan(began, 1)
-    check("1: the first life needs no reset", firstOutcome == Outcome.None)
-    local missedOutcome, missedId = LifeReset.DecideBegan(began, 2)
-    check("1: a new life reports a missed reset of the previous life", missedOutcome == Outcome.Reset and missedId == 1)
-    LifeReset.Commit(began, 1)
-    check("1: no missed reset once the previous life was reset", LifeReset.DecideBegan(began, 2) == Outcome.None)
-    check("1: malformed new life id is Invalid", LifeReset.DecideBegan(began, 0) == Outcome.Invalid)
-    check("1: outcomes table is frozen", table.isfrozen(Outcome))
-    check("1: starting biomass is 0 and below every stage threshold", LifeReset.StartingBiomass == 0 and LifeReset.StartingBiomass < stages[2].MinBiomass)
-end
-
--- ---------------------------------------------------------------------------
--- 2. Event orderings replayed through the rules, with real Growth/Evolution/Ability rules.
--- ---------------------------------------------------------------------------
 type Sim = {
-    name: string,
-    currentLifeId: number?, -- nil once the player has left
+    currentLifeId: number?,
     tracker: LifeReset.Tracker,
-    biomass: number,
-    form: string,
-    shellReadyAt: number,
+    progress: number,
     resets: number,
 }
 
-local function newPlayer(name: string): Sim
-    return {
-        name = name,
-        currentLifeId = 0,
-        tracker = LifeReset.NewTracker(),
-        biomass = 0,
-        form = Config.BaseForm,
-        shellReadyAt = 0,
-        resets = 0,
-    }
+local function newPlayer(): Sim
+    return { currentLifeId = nil, tracker = LifeReset.NewTracker(), progress = 0, resets = 0 }
 end
 
--- What ResetService's resetCurrentLife does, expressed with the same constants.
-local function applyReset(p: Sim)
-    p.biomass = LifeReset.StartingBiomass
-    p.form = Config.BaseForm
-    p.shellReadyAt = 0
-    p.resets += 1
+local function applyReset(player: Sim)
+    player.progress = 0
+    player.resets += 1
 end
 
--- LifeService begins a life (LifeBegan), then the handler runs.
-local function beginLife(p: Sim): string
-    local id = (p.currentLifeId or 0) + 1
-    p.currentLifeId = id
-    return LifeReset.OnBegan(p.tracker, id, function()
-        applyReset(p)
+local function beginLife(player: Sim, lifeId: number): string
+    player.currentLifeId = lifeId
+    return LifeReset.OnBegan(player.tracker, lifeId, function()
+        applyReset(player)
     end)
 end
 
--- LifeService reports the end of life `id`; `deliver` runs the handler for that event.
-local function deliverEnded(p: Sim, id: number): string
-    return LifeReset.OnEnded(p.tracker, id, p.currentLifeId, function()
-        applyReset(p)
+local function endLife(player: Sim, lifeId: any): string
+    return LifeReset.OnEnded(player.tracker, lifeId, player.currentLifeId, function()
+        applyReset(player)
     end)
 end
 
-local function eat(p: Sim)
-    local updated = Growth.AddBiomass(p.biomass, Config.FoodBiomass, cap)
-    p.biomass = updated
-end
+-- 1. Decision rules and tracker invariants.
+do
+    local tracker = LifeReset.NewTracker()
+    check("1: a new tracker has reset no lives", tracker.lastResetLifeId == 0)
+    check("1: trackers are independent", LifeReset.NewTracker() ~= tracker)
+    check("1: ending the current first life requests a reset", LifeReset.DecideEnded(tracker, 1, 1) == Outcome.Reset)
+    check("1: ending an older life is stale", LifeReset.DecideEnded(tracker, 1, 2) == Outcome.Stale)
+    check("1: an absent player is not reset", LifeReset.DecideEnded(tracker, 1, nil) == Outcome.NoPlayer)
 
-local function tryEvolve(p: Sim, form: string): string
-    local newForm, reason = Evolution.Select(form, p.biomass, p.form, CreatureDefinitions)
-    p.form = newForm
-    return reason
-end
+    LifeReset.Commit(tracker, 1)
+    check("1: the committed life is a duplicate", LifeReset.DecideEnded(tracker, 1, 1) == Outcome.Duplicate)
+    check("1: older life ids remain duplicates", LifeReset.DecideEnded(tracker, 1, 3) == Outcome.Duplicate)
+    check("1: the next current life can be reset", LifeReset.DecideEnded(tracker, 2, 2) == Outcome.Reset)
+    LifeReset.Commit(tracker, 0)
+    check("1: commit never moves the tracker backwards", tracker.lastResetLifeId == 1)
 
-local function fillAndEvolve(p: Sim, form: string)
-    for _ = 1, 10 do
-        eat(p)
+    local bad: { any } = { 0, -1, 1.5, 0 / 0, math.huge, "1", true, {}, false }
+    local allInvalid = true
+    for _, value in bad do
+        if LifeReset.DecideEnded(LifeReset.NewTracker(), value, 1) ~= Outcome.Invalid
+            or LifeReset.DecideEnded(LifeReset.NewTracker(), 1, value) ~= Outcome.Invalid
+            or LifeReset.DecideBegan(LifeReset.NewTracker(), value) ~= Outcome.Invalid then
+            allInvalid = false
+        end
     end
-    tryEvolve(p, form)
+    check("1: malformed life ids are rejected", allInvalid)
+    check("1: nil ended id is invalid for a present player", LifeReset.DecideEnded(LifeReset.NewTracker(), nil, 1) == Outcome.Invalid)
+    check("1: the first LifeBegan needs no reset", LifeReset.DecideBegan(LifeReset.NewTracker(), 1) == Outcome.None)
+
+    local missed = LifeReset.NewTracker()
+    local outcome, missedLifeId = LifeReset.DecideBegan(missed, 2)
+    check("1: LifeBegan detects a missed reset of the previous life", outcome == Outcome.Reset and missedLifeId == 1)
+    LifeReset.Commit(missed, 1)
+    check("1: LifeBegan does not repeat an already completed reset", LifeReset.DecideBegan(missed, 2) == Outcome.None)
+    check("1: the outcome table is frozen", table.isfrozen(Outcome))
 end
 
--- 2.1 Existing progression before death is unchanged and nothing is reset.
+-- 2. A current LifeEnded applies its reset exactly once; later progress is not erased by duplicates.
 do
-    local p = newPlayer("A")
-    beginLife(p)
-    for _ = 1, 3 do
-        eat(p)
-    end
-    check("2.1: three foods reach stage 2", p.biomass == 30 and Growth.GetStageIndex(p.biomass, stages) == 2)
-    for _ = 1, 3 do
-        eat(p)
-    end
-    check("2.1: six foods reach stage 3", p.biomass == 60 and Growth.GetStageIndex(p.biomass, stages) == 3)
-    for _ = 1, 10 do
-        eat(p)
-    end
-    check("2.1: biomass stops at the cap", p.biomass == cap)
-    check("2.1: evolution is available at the cap", Evolution.IsAvailable(p.biomass, p.form, CreatureDefinitions))
-    check("2.1: evolving works", tryEvolve(p, "TANK") == "Ok" and p.form == "TANK")
-    check("2.1: nothing was reset during the life", p.resets == 0)
-    check("2.1: thresholds, cap and reward are unchanged", stages[1].MinBiomass == 0 and stages[2].MinBiomass == 30 and stages[3].MinBiomass == 60 and cap == 100 and Config.FoodBiomass == 10)
+    local player = newPlayer()
+    check("2: first life begins without a reset", beginLife(player, 1) == Outcome.None)
+    player.progress = 42
+
+    check("2: current life end applies the reset", endLife(player, 1) == Outcome.Reset)
+    check("2: reset clears per-life progress", player.progress == 0)
+    check("2: reset count increments once", player.resets == 1)
+    check("2: tracker records the ended life", player.tracker.lastResetLifeId == 1)
+
+    player.progress = 7
+    check("2: duplicate LifeEnded is ignored", endLife(player, 1) == Outcome.Duplicate)
+    check("2: repeated duplicate is also ignored", endLife(player, 1) == Outcome.Duplicate)
+    check("2: duplicate events preserve progress gained after reset", player.progress == 7)
+    check("2: duplicate events do not reapply reset", player.resets == 1)
 end
 
--- 2.2 Ending a life resets biomass, form, growth state and ability cooldown.
+-- 3. One player's reset cannot affect another player's state or tracker.
 do
-    local p = newPlayer("A")
-    beginLife(p)
-    fillAndEvolve(p, "GLIDER")
-    p.shellReadyAt = 12345
-    check("2.2: setup: evolved Glider at the cap", p.form == "GLIDER" and p.biomass == cap)
-    check("2.2: the ended life is reset", deliverEnded(p, 1) == Outcome.Reset)
-    check("2.2: biomass is 0", p.biomass == 0)
-    check("2.2: form is BABY_BUG", p.form == Config.BaseForm)
-    check("2.2: growth stage is the initial stage 1", Growth.GetStageIndex(p.biomass, stages) == 1)
-    check("2.2: growth scale is the stage 1 scale and must be applied afresh", Growth.GetScale(1, stages) == stages[1].Scale and Growth.ShouldUpdateScale(nil, stages[1].Scale))
-    check("2.2: evolution is not available after the reset", not Evolution.IsAvailable(p.biomass, p.form, CreatureDefinitions))
-    check("2.2: the cooldown is cleared", Ability.GetCooldownRemaining(1, p.shellReadyAt) == 0)
-    check("2.2: reset ran once", p.resets == 1)
+    local a = newPlayer()
+    local b = newPlayer()
+    beginLife(a, 1)
+    beginLife(b, 1)
+    a.progress = 80
+    b.progress = 25
+
+    check("3: A's life ends and resets", endLife(a, 1) == Outcome.Reset)
+    check("3: A's progress is cleared", a.progress == 0 and a.resets == 1)
+    check("3: B's progress and reset count are untouched", b.progress == 25 and b.resets == 0)
+    check("3: trackers remain independent", a.tracker.lastResetLifeId == 1 and b.tracker.lastResetLifeId == 0)
+    check("3: B can reset its own life", endLife(b, 1) == Outcome.Reset and b.resets == 1 and b.progress == 0)
 end
 
--- 2.3 Exactly once per lifeId, duplicates ignored.
+-- 4. If LifeBegan arrives before the previous LifeEnded handler, the safety net resets first.
 do
-    local p = newPlayer("A")
-    beginLife(p)
-    fillAndEvolve(p, "TANK")
-    local first = deliverEnded(p, 1)
-    eat(p) -- state changes after the reset; a duplicate must not wipe it
-    local second = deliverEnded(p, 1)
-    local third = deliverEnded(p, 1)
-    check("2.3: first delivery resets", first == Outcome.Reset)
-    check("2.3: duplicates are ignored", second == Outcome.Duplicate and third == Outcome.Duplicate)
-    check("2.3: only one reset happened", p.resets == 1)
-    check("2.3: a duplicate does not wipe state gained after the reset", p.biomass == Config.FoodBiomass)
+    local player = newPlayer()
+    beginLife(player, 1)
+    player.progress = 90
+
+    -- LifeService has advanced to life 2, but the deferred LifeEnded(1) handler has not run yet.
+    player.currentLifeId = 2
+    check("4: the late LifeEnded(1) is stale", endLife(player, 1) == Outcome.Stale)
+    check("4: stale LifeEnded does not erase old state early", player.progress == 90 and player.resets == 0)
+
+    check("4: LifeBegan(2) applies the missed reset", LifeReset.OnBegan(player.tracker, 2, function()
+        applyReset(player)
+    end) == Outcome.Reset)
+    check("4: the new life starts with clean state", player.progress == 0 and player.resets == 1)
+    player.progress = 12
+    check("4: repeated old LifeEnded is now a duplicate", endLife(player, 1) == Outcome.Duplicate)
+    check("4: late duplicate preserves new-life progress", player.progress == 12 and player.resets == 1)
 end
 
--- 2.4 Two independent players.
+-- 5. Several consecutive lives each receive exactly one reset.
 do
-    local a = newPlayer("A")
-    local b = newPlayer("B")
-    beginLife(a)
-    beginLife(b)
-    fillAndEvolve(a, "TANK")
-    fillAndEvolve(b, "GLIDER")
-    deliverEnded(a, 1)
-    check("2.4: A was reset", a.biomass == 0 and a.form == Config.BaseForm and a.resets == 1)
-    check("2.4: B is untouched", b.biomass == cap and b.form == "GLIDER" and b.resets == 0)
-    check("2.4: A's tracker does not affect B's", b.tracker.lastResetLifeId == 0 and a.tracker.lastResetLifeId == 1)
-    deliverEnded(b, 1)
-    check("2.4: B resets once on its own life end", b.resets == 1 and b.biomass == 0 and a.resets == 1)
+    local player = newPlayer()
+    beginLife(player, 1)
+    player.progress = 10
+    check("5: life 1 resets", endLife(player, 1) == Outcome.Reset)
+    beginLife(player, 2)
+    player.progress = 20
+    check("5: life 2 resets", endLife(player, 2) == Outcome.Reset)
+    beginLife(player, 3)
+    player.progress = 30
+
+    check("5: late events from lives 1 and 2 are duplicates", endLife(player, 1) == Outcome.Duplicate and endLife(player, 2) == Outcome.Duplicate)
+    check("5: life 3 progress remains intact", player.progress == 30)
+    check("5: reset count equals the number of ended lives", player.resets == 2 and player.tracker.lastResetLifeId == 2)
+    check("5: an event for a future life is stale", endLife(player, 4) == Outcome.Stale)
 end
 
--- 2.5 A late LifeEnded from an old life cannot reset a newer life (the usual order).
+-- 6. Player removal and malformed signals never apply a reset.
 do
-    local p = newPlayer("A")
-    beginLife(p)
-    fillAndEvolve(p, "TANK")
-    check("2.5: life 1 ends and is reset", deliverEnded(p, 1) == Outcome.Reset)
-    check("2.5: life 2 begins without a second reset", beginLife(p) == Outcome.None)
-    eat(p)
-    eat(p)
-    check("2.5: the new life gains biomass", p.biomass == 2 * Config.FoodBiomass)
-    check("2.5: a late LifeEnded(1) is a duplicate", deliverEnded(p, 1) == Outcome.Duplicate)
-    check("2.5: the new life is untouched", p.biomass == 2 * Config.FoodBiomass and p.resets == 1)
+    local player = newPlayer()
+    beginLife(player, 1)
+    player.progress = 55
+    player.currentLifeId = nil
+
+    check("6: LifeEnded for a removed player is ignored", endLife(player, 1) == Outcome.NoPlayer)
+    check("6: removed-player state is not reset", player.progress == 55 and player.resets == 0)
+    check("6: removed-player tracker is not advanced", player.tracker.lastResetLifeId == 0)
+
+    player.currentLifeId = 1
+    check("6: string life id is invalid", endLife(player, "1") == Outcome.Invalid)
+    check("6: nil life id is invalid", endLife(player, nil) == Outcome.Invalid)
+    check("6: malformed signals leave state untouched", player.progress == 55 and player.resets == 0)
 end
 
--- 2.6 Stale event: the next life began BEFORE the LifeEnded handler ran (for example a
--- replaced character). The late event must not reset the new life; the reset happens when
--- the new life begins, before it has any state.
+-- 7. The tracker is committed before invoking the reset callback (re-entrancy protection).
 do
-    local p = newPlayer("A")
-    beginLife(p)
-    fillAndEvolve(p, "GLIDER")
-    -- LifeService fired LifeEnded(1) then LifeBegan(2) back to back; deferred handlers run now.
-    p.currentLifeId = 2
-    check("2.6: the late LifeEnded(1) is stale and resets nothing", deliverEnded(p, 1) == Outcome.Stale)
-    check("2.6: so far nothing was reset", p.resets == 0 and p.biomass == cap)
-    local beganOutcome = LifeReset.OnBegan(p.tracker, 2, function()
-        applyReset(p)
+    local player = newPlayer()
+    beginLife(player, 1)
+    local nestedOutcome: string? = nil
+
+    local outcome = LifeReset.OnEnded(player.tracker, 1, 1, function()
+        player.resets += 1
+        nestedOutcome = LifeReset.OnEnded(player.tracker, 1, 1, function()
+            player.resets += 1
+        end)
     end)
-    check("2.6: the LifeBegan handler performs the missed reset", beganOutcome == Outcome.Reset and p.resets == 1)
-    check("2.6: the new life starts clean", p.biomass == 0 and p.form == Config.BaseForm)
-    eat(p)
-    check("2.6: a repeat of the stale event is now a duplicate and keeps new-life state", deliverEnded(p, 1) == Outcome.Duplicate and p.biomass == Config.FoodBiomass)
-end
 
--- 2.7 A callback from an old life cannot modify the new life, several lives deep.
-do
-    local p = newPlayer("A")
-    beginLife(p)
-    deliverEnded(p, 1)
-    beginLife(p)
-    fillAndEvolve(p, "TANK")
-    deliverEnded(p, 2)
-    beginLife(p) -- life 3
-    eat(p)
-    eat(p)
-    eat(p)
-    local lateOld = deliverEnded(p, 2)
-    local lateOlder = deliverEnded(p, 1)
-    check("2.7: late events from lives 1 and 2 do nothing", lateOld == Outcome.Duplicate and lateOlder == Outcome.Duplicate)
-    check("2.7: life 3 keeps its progress", p.biomass == 3 * Config.FoodBiomass and p.form == Config.BaseForm)
-    check("2.7: exactly one reset per ended life", p.resets == 2)
-    check("2.7: an event for a life that has not ended yet is not accepted as old", deliverEnded(p, 4) == Outcome.Stale)
-end
-
--- 2.8 Player removal.
-do
-    local a = newPlayer("A")
-    local b = newPlayer("B")
-    beginLife(a)
-    beginLife(b)
-    fillAndEvolve(a, "TANK")
-    fillAndEvolve(b, "TANK")
-    a.currentLifeId = nil -- A left: LifeService has no record any more
-    check("2.8: LifeEnded for a removed player does nothing", deliverEnded(a, 1) == Outcome.NoPlayer)
-    check("2.8: no reset was applied to the removed player", a.resets == 0)
-    check("2.8: another player is unaffected", b.biomass == cap and b.form == "TANK" and b.resets == 0)
-    check("2.8: the removed player's tracker was not marked", a.tracker.lastResetLifeId == 0)
-end
-
--- 2.9 A new life collects food and evolves normally after a reset.
-do
-    local p = newPlayer("A")
-    beginLife(p)
-    fillAndEvolve(p, "TANK")
-    deliverEnded(p, 1)
-    beginLife(p)
-    check("2.9: the new life starts at 0 as BABY_BUG", p.biomass == 0 and p.form == Config.BaseForm)
-    check("2.9: it cannot evolve before the threshold", tryEvolve(p, "GLIDER") == "ThresholdNotReached")
-    for _ = 1, 3 do
-        eat(p)
-    end
-    check("2.9: it grows through the same thresholds (stage 2 at 30)", Growth.GetStageIndex(p.biomass, stages) == 2)
-    for _ = 1, 7 do
-        eat(p)
-    end
-    check("2.9: it reaches the cap again", p.biomass == cap)
-    check("2.9: it can evolve again, to the other form", tryEvolve(p, "GLIDER") == "Ok" and p.form == "GLIDER")
-    check("2.9: a second death resets the second life once", deliverEnded(p, 2) == Outcome.Reset and p.biomass == 0 and p.form == Config.BaseForm and p.resets == 2)
-end
-
--- 2.10 Reset eligibility never depends on a client value: the rules take only server ids.
-do
-    local p = newPlayer("A")
-    beginLife(p)
-    fillAndEvolve(p, "TANK")
-    local outcome = LifeReset.OnEnded(p.tracker, "1", p.currentLifeId, function()
-        applyReset(p)
-    end)
-    check("2.10: a string lifeId is rejected and resets nothing", outcome == Outcome.Invalid and p.resets == 0)
-    outcome = LifeReset.OnEnded(p.tracker, nil, p.currentLifeId, function()
-        applyReset(p)
-    end)
-    check("2.10: a nil lifeId is rejected and resets nothing", outcome == Outcome.Invalid and p.resets == 0)
-    check("2.10: state is untouched by rejected events", p.biomass == cap and p.form == "TANK")
+    check("7: outer event applies reset", outcome == Outcome.Reset)
+    check("7: re-entrant duplicate sees the committed tracker", nestedOutcome == Outcome.Duplicate)
+    check("7: reset callback runs exactly once", player.resets == 1 and player.tracker.lastResetLifeId == 1)
 end
 
 if failures > 0 then

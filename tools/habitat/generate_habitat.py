@@ -131,16 +131,6 @@ class Area:
         return self._add(Part(name, shape="Cylinder", size=(0.1, diameter, diameter), pos=(x, FLOOR_TOP + y, z),
                               cols=vertical_cylinder_columns(), material=material, color=color, collide=False, **kw))
 
-    def food(self, name, x, z, h=0.0):
-        """Existing FoodSpawn marker (FoodService spawns the pickup 2 studs above it)."""
-        return self._add(Part(name, size=(3, 0.3, 3), pos=(x, FLOOR_TOP + h + 0.15, z), material="Neon",
-                              color=[0.3, 1.0, 0.4], collide=False, tags=["FoodSpawn"]))
-
-    def volume(self, name, x, z, sx, sz, h0, h1):
-        """Invisible trigger volume (TT-P3-02): spans heights h0..h1 above the floor top. Not solid, no queries."""
-        return self._add(Part(name, size=(sx, h1 - h0, sz), pos=(x, FLOOR_TOP + (h0 + h1) / 2, z), material="SmoothPlastic",
-                              color=[1.0, 1.0, 1.0], collide=False, transparency=1.0, tags=["DiscoverySite"]))
-
     def to_json(self):
         return {"className": "Folder", "children": [p.to_json() for p in self.parts]}
 
@@ -206,8 +196,6 @@ def build_nest():
     # Landmark: the Lone Dandelion, tall and pale so it is visible from the whole habitat (the way home).
     a.pillar("DandelionStem", -63, 36, 1.6, 22, material="Grass", color=C["leaf_light"], tags=["Landmark"])
     a.ball("DandelionPuff", -63, 36, 10, 24.5, material="Fabric", color=C["white"], transparency=0.12, collide=False)
-    # First food, just outside the east opening and visible from the pads.
-    a.food("NestFood", -30, 43)
     return a
 
 
@@ -281,16 +269,6 @@ def build_meadow():
     a.block("CloverHill1", 38, 16, 14, 10, 3.0, yaw=10, material="Grass", color=C["grass_dark"])
     a.block("CloverHill2", 40, 15, 7, 6, 6.0, yaw=10, material="Grass", color=C["grass_dark"])
     a.block("MeadowBoulder1", -20, 51, 7, 6, 5.0, yaw=30, material="Rock", color=C["rock_warm"])
-
-    # Pickups: scattered along the trails and optional detours, not on a grid.
-    a.food("MeadowFood1", -14, 41)       # on the trail, first reward
-    a.food("MeadowFood2", 3, 50, 3.7)    # on the fallen leaf
-    a.food("MeadowFood3", 8, 26, 9.0)    # stump top (lookout)
-    a.food("MeadowFood4", 34, 47)        # beside the acorn
-    a.food("MeadowFood5", 28, 20)        # off the trail toward the Roots
-    a.food("MeadowFood6", -10, 20)       # puddle edge, between the trails
-    a.food("MeadowFood8", 40, 15, 6.0)   # clover hill top
-    a.food("MeadowFood7", 52, 44)        # inside the Mushroom Grove, a detour from the east trail
     return a
 
 
@@ -334,11 +312,6 @@ def build_rock_garden():
     rock(a, "WestRock1", -60, 22, 7, 6, 5, 25)
     rock(a, "WestRock2", -56, 11, 6, 6, 3.5, -10, color=C["rock_warm"])
     rock(a, "WestRock3", -64, 6, 6, 7, 6, 40)
-    # Pickups
-    a.food("RockFood1", -47, 6)           # near the gate: invites the player in
-    a.food("RockFood2", -54, -16, 6.0)    # terrace lookout
-    a.food("RockFood3", -53, -26)         # inside the den
-    a.food("RockFood4", -30, 14)          # inside the Tank nook (side door)
     return a
 
 
@@ -379,12 +352,6 @@ def build_giant_roots():
         a.ball(f"SeedPod{i + 1}", x, z, 8, 3.2, material="Fabric", color=rgb(150, 160, 84))
     for i, (x, z, sx, sz, h, yaw) in enumerate([(22, -56, 6, 5, 3.0, 20), (34, -56, 5, 5, 2.4, -30)]):
         a.block(f"BrambleStone{i + 1}", x, z, sx, sz, h, yaw=yaw, material="Rock", color=C["rock_warm"])
-    a.food("RootFood6", 63, -53, 9.0)      # fungus-step vantage
-    a.food("RootFood1", 36, 1)             # just before the arch
-    a.food("RootFood2", 31, -4, 10.0)      # arch top
-    a.food("RootFood3", 32, -24, 10.0)     # first leaf platform
-    a.food("RootFood4", 60, -18, 10.0)     # second leaf platform (walkable via RootRampEast)
-    a.food("RootFood5", 30, -42)           # ground, at the foot of the trunk
     return a
 
 
@@ -412,8 +379,6 @@ def build_secret():
         a.pillar(f"GladeStem{i + 1}", px, pz, 1.0, 2.5, material="Fabric", color=C["stem"], collide=False)
         a.ball(f"GladeCap{i + 1}", px, pz, 3.0, 2.9, material="Neon", color=C["glow"], collide=False)
     a.pillar("DewBeam", -44, -62, 3, 44, material="Neon", color=C["glow_soft"], transparency=0.72, collide=False)
-    a.food("SecretFood1", -44, -46)
-    a.food("SecretFood2", -44, -57)
     return a
 
 
@@ -432,32 +397,10 @@ def build_north_clearing(a):
         a.ball(f"CairnTop{i + 1}", x, z, 3.2, h + 1.2, material="Rock", color=C["rock"])
     for i, (x, z, sx, sz, h, yaw) in enumerate([(4, -60, 8, 6, 6.0, 15), (-8, -63, 6, 6, 4.0, -25), (14, -64, 7, 5, 5.0, 40)]):
         a.block(f"NorthBoulder{i + 1}", x, z, sx, sz, h, yaw=yaw, material="Rock", color=C["rock_warm"])
-    a.food("NorthFood3", 4, -66)   # tucked behind the boulders: a short detour off the lane
-    a.food("NorthFood1", -6, -46)
-    a.food("NorthFood2", 12, -38)
-
-
-# ============================================================================================
-# Discovery sites (TT-P3-02): one invisible volume per discovery in Shared/DiscoveryDefinitions.
-# The part Name is the discovery id. A character's HumanoidRootPart must be INSIDE the volume (server
-# polls, see DiscoveryService), so it cannot fire through walls or from far away. A grounded root sits
-# about 1.8 (scale 0.6) to 3 (scale 1.0) studs above the feet; elevated volumes start just under that.
-# ============================================================================================
-def build_discovery_sites():
-    a = Area("DiscoverySites")
-    a.volume("GREAT_STUMP", 8, 26, 14, 14, 10.2, 16.0)        # on top of the stump (top at 9)
-    a.volume("MUSHROOM_GROVE", 53, 43, 30, 32, 0.5, 12.0)     # under and between the grove's caps
-    a.volume("ROCK_TERRACE", -54, -16, 5, 6, 7.2, 13.0)       # exactly the lookout top (TerraceStep2, top at 6)
-    a.volume("OLD_TREE", 37, -44, 14, 14, 0.5, 12.0)          # ground at the trunk's foot
-    a.volume("ROOT_ARCH", 35, -4, 18, 8, 11.2, 17.0)          # on top of the arch (top at 10)
-    a.volume("DEWDROP_GLADE", -44, -60, 20, 16, 0.5, 12.0)    # inside the secret glade
-    return a
-
-
 def build_all():
     meadow = build_meadow()
     build_north_clearing(meadow)
-    return [build_terrain(), build_nest(), meadow, build_rock_garden(), build_giant_roots(), build_secret(), build_discovery_sites()]
+    return [build_terrain(), build_nest(), meadow, build_rock_garden(), build_giant_roots(), build_secret()]
 
 
 def main():
