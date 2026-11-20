@@ -202,7 +202,7 @@ function RespawnService.Init(lifeService: any, resetService: any)
     if remotes == nil then
         remotes = Instance.new("Folder")
         remotes.Name = "Remotes"
-        remotes.Parent = remotes
+        remotes.Parent = ReplicatedStorage
     end
     local recap = Instance.new("RemoteEvent")
     recap.Name = "LifeRecap"
