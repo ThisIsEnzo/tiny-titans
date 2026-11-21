@@ -169,6 +169,13 @@ Solo and co-op are first-class.
 - Disconnects, party splits, death and rejoin must not permanently block or corrupt essential progress.
 - No griefable permanent switches, resource theft or intentional party lockouts.
 
+**Party-size target and scale gate**
+- The first vertical slice targets solo play and co-op parties of up to 4 players.
+- The longer-term product may support parties of up to 8, but this is not yet a committed launch requirement.
+- Keep party/activity contracts configurable where practical; do not build an eight-player encounter model before there is a concrete authored use case.
+- Validate 5–8 player support separately for encounter readability, puzzle participation, camera/UI clarity, server replication, physics load and representative-device performance.
+- Never let larger-party support remove the solo path or make a fixed party size mandatory.
+
 **Progress ownership is an open design gate:** decide which story flags belong to the party/session, which belong to each player, how guests retain rewards, and what happens when party members leave. Do not silently choose a persistence model in code.
 
 ## 12. Replayability and endgame
