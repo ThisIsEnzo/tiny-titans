@@ -19,16 +19,17 @@ This is not a small-creature simulator or ecological restoration game. No miniat
 
 ## 2. Current verified implementation baseline
 
-The following are historical repository facts, not evidence that the new adventure is already playable:
-- First Habitat greybox exists (PR #36): Nest, Meadow, Rock Garden, Giant Roots and Secret route; generated Rojo model data and offline validator.
-- Existing prototype systems include lifecycle/reset, controlled respawn and life recap, Biomass/growth, discoveries, food pickups, evolution/form code, Baby Bug appearance and Glider ability code.
-- The approved player direction is the standard Roblox avatar. PR #41 is the separate runtime restoration change; until merged and Studio-validated, README/source and live PR state must be checked before claiming avatar restoration is complete.
-- TT-P3-02 Exploration Gameplay Loop was previously merged as a per-life location discovery prototype. It is not the new adventure progression system and should not be expanded automatically.
-- Current First Habitat, Biomass, GrowthService, life recap and discovery features are prototype implementation. They may be reused, replaced or retired only after dependency and product review.
-- There is no verified full combat system, enemy roster, dungeon framework, boss framework, adventure inventory, equipment progression, quest system or replayable co-op activity in the described baseline.
-- No claim is made that the existing greybox or new avatar direction has passed Roblox Studio validation. Check the live repository and PR state before execution.
+**Repository snapshot checked:** `master` at `59db0e4eca571e55a1730a33236c5b26de8739d5` (PR #45, 2026-11-20).
 
-Refresh this baseline from master and current PRs before starting each new task. Never treat this roadmap as proof of implementation.
+The following are verified repository facts, not evidence that the adventure is already playable:
+- PR #40 (product direction), #41 (standard Roblox avatar restoration), #43 (retire legacy avatar scaling), #44 (legacy runtime retirement) and #45 (legacy prototype cleanup) are merged into `master`.
+- The active runtime retains the lifecycle/reset, controlled respawn and life recap foundation. The old Biomass/growth, food pickup, discovery, evolution/form and Baby Bug presentation prototype has been retired from active source.
+- The standard Roblox avatar is the canonical player character in product direction and active runtime source. This is a source-level statement, not a claim of Studio validation.
+- First Habitat remains a legacy greybox with 199 retained parts and an offline geometry validator. It is not an approved first adventure region.
+- No complete adventure combat loop, authored enemy roster, dungeon, boss, adventure tool progression, quest chain or replayable co-op activity is established by the current implementation baseline.
+- Roblox Studio checks for avatar presentation, camera, collision, traversal, respawn and multiplayer remain pending unless separately evidenced.
+
+Refresh this baseline from `master` and current PRs before starting each new task. Never treat this roadmap as proof of implementation.
 
 ## 3. Delivery rules
 
@@ -44,16 +45,17 @@ Refresh this baseline from master and current PRs before starting each new task.
 
 ## 4. Phase 0 — Stabilize the Roblox foundation
 
-**Outcome:** a reliable Roblox-avatar foundation and an honest understanding of the current prototype.
+**Outcome:** a reliable Roblox-avatar foundation and an honest understanding of the retained runtime and greybox.
 
-Tasks:
-1. Resolve PR #40 documentation direction and PR #41 avatar runtime restoration in the correct order; verify current live state first.
-2. Studio-test standard Roblox avatar visibility, animation, clothing/accessories, spawn/respawn, camera, collision and multiplayer visibility.
-3. Review GrowthService scale stages and legacy Biomass/life systems against the new adventure direction. Retain, redesign or retire them deliberately; do not assume they belong in the final game.
-4. Audit First Habitat geometry and routes with standard Roblox avatar dimensions and target devices. The old habitat was built for a different product premise; do not preserve it merely because it exists.
-5. Identify reusable interaction, lifecycle, networking and UI infrastructure. Mark creature/evolution/legacy systems as prototype until approved.
+**Completed in source/history:** PR #40 product direction, #41 standard-avatar restoration, #43 avatar-scaling retirement, #44 legacy runtime retirement and #45 legacy prototype cleanup are merged. The active code no longer depends on the retired creature/Biomass prototype.
 
-**Exit gate:** the standard avatar is reliable in Studio; current prototype dependencies and reusable systems are documented; a player can enter and control the experience on target devices. No claim of fun or product validation yet.
+**Remaining validation tasks:**
+1. In Roblox Studio, verify standard avatar appearance, animation, clothing/accessories, spawn/respawn, camera, collision and multiplayer visibility.
+2. Audit First Habitat geometry and routes with standard Roblox avatar dimensions and target devices. Treat it as a legacy greybox; retain or replace it based on the audit, not sunk cost.
+3. Identify reusable interaction, lifecycle, networking and UI infrastructure from current source. Do not recreate systems that already exist.
+4. Record Studio findings and any required corrections before treating the foundation as validated.
+
+**Exit gate:** standard avatar and lifecycle behavior are verified in Studio on representative devices; the retained foundation and greybox decisions are documented. This gate is not complete merely because PRs are merged or CI is green.
 
 ## 5. Phase 1 — Adventure foundation
 
@@ -83,7 +85,8 @@ Target slice:
 - one compact dungeon/challenge with a coherent mechanical language;
 - one mini-boss or boss with readable phases and solo/co-op behavior;
 - one useful reward/tool that changes how the player traverses, fights or solves;
-- solo completion and meaningful co-op coordination;
+- solo completion and meaningful co-op coordination for a target party of 1–4 players;
+- party architecture that avoids hard-coded assumptions where practical, with 5–8 player support treated as a later scale-up target requiring dedicated encounter, UI, replication and performance validation;
 - one repeatable challenge, boss rematch or optional activity;
 - cross-platform input, UI and multiplayer validation.
 
@@ -132,13 +135,13 @@ Define persistence ownership, party progress, inventory, guest rewards, death/lo
 
 ## 10. Immediate next actions
 
-Do not continue TT-P3-03 or the old ecological interaction chain automatically. That task was designed for the superseded creature/ecosystem product premise.
+Do not continue TT-P3-03 or the old ecological interaction chain; that work belongs to the superseded creature/ecosystem premise.
 
 Immediate sequence:
-1. Complete/review the documentation direction update and ensure PR #40 no longer describes a miniature ecosystem as the core product.
-2. Resolve PR #41 and perform the standard-avatar Studio validation; do not claim it is complete until evidence exists.
-3. Audit current source and First Habitat against the new Zelda-style adventure contract.
-4. Produce a concrete vertical-slice design: region, player verbs, first enemies, combat loop, puzzle, dungeon, boss, reward/tool and co-op behavior.
+1. Complete the standard-avatar and lifecycle Studio validation; do not claim it is complete until evidence exists.
+2. Audit current source and First Habitat against the Zelda-style adventure contract and decide whether the greybox is reusable.
+3. Produce/review the first vertical-slice design: region, player verbs, enemies, combat loop, puzzle, dungeon, boss, reward/tool and solo/co-op behavior.
+4. Keep the first slice focused on solo plus 1–4 player co-op. Evaluate 5–8 player support as a separate scalability decision after encounter and performance evidence.
 5. Break the approved slice into small dependency-ordered implementation PRs.
 
 ## 11. Scope and quality rules
