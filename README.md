@@ -12,8 +12,8 @@ Solo and co-op are first-class. Every essential progression step must have a sol
 
 ## Product and design documents
 
-- [Product Vision](docs/Product%20Vision%20v2.0%20%E2%80%94%20Hybrid%20Creature%20Exploration%20RPG.md)
-- [GDD](docs/GDD%20v2.2%20%E2%80%94%20The%20Living%20World%20Adventure.md)
+- [Product Vision](docs/Product%20Vision%20v4.0%20%E2%80%94%20Zelda-style%20Adventure%20for%20Roblox.md)
+- [GDD](docs/GDD%20v4.0%20%E2%80%94%20Zelda-style%20Adventure.md)
 - [Zelda Mechanics Adaptation Matrix](docs/Zelda%20Mechanics%20Adaptation%20Matrix.md)
 - [Gameplay Blueprint & MVP Contract](docs/Gameplay%20Blueprint%20%26%20MVP%20Contract.md)
 - [Tiny Titans Master Roadmap](docs/Tiny%20Titans%20Master%20Roadmap.md)
