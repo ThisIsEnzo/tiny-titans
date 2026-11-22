@@ -8,5 +8,7 @@ assert(RunService:IsClient(), "ClientBootstrap.client.lua must run on the client
 
 local Controllers = (script.Parent :: Instance):WaitForChild("Controllers")
 local LifeRecapController = require(Controllers:WaitForChild("LifeRecapController") :: ModuleScript)
+local YankController = require(Controllers:WaitForChild("YankController") :: ModuleScript)
 
 LifeRecapController.Init()
+YankController.Init()
