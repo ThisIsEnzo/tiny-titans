@@ -22,4 +22,8 @@ local RespawnService = require(Services:WaitForChild("RespawnService") :: Module
 LifeService.Init()
 ResetService.Init(LifeService)
 YankService.Init(LifeService) -- listens before RespawnService can spawn the first character
+local AncientWeightFixture = require(Services:WaitForChild("AncientWeightFixture") :: ModuleScript)
+local AncientWeightService = require(Services:WaitForChild("AncientWeightService") :: ModuleScript)
+AncientWeightFixture.Build()
+AncientWeightService.Init()
 RespawnService.Init(LifeService, ResetService)
