@@ -118,10 +118,13 @@ end
 do
 	local s = setup()
 	start(s,0,true,0)
-	Yank.cancel(s,"1",0.1,Yank.CancelReason.Released)
-	local c2 = { ["2"] = { alive=true, position={x=2,y=0,z=0} } }
+	Yank.step(s,0.5,0.5,context(true,0)) -- target is now at x=2.5
+	Yank.cancel(s,"1",0.6,Yank.CancelReason.Released)
+	-- x=20 is outside the original start range (20 > 18), but within range of
+	-- the persisted current position (20 - 2.5 = 17.5).
+	local c2 = { ["2"] = { alive=true, position={x=20,y=0,z=0} } }
 	local ok = Yank.tryStart(s,{playerId="2",targetId="crate",now=0.2},c2)
-	check("target can be reacquired from its current position", ok)
+	check("target can be reacquired from its persisted current position", ok)
 end
 do
 	local rec = Yank.newMovementRecord("character-A",{walkSpeed=16,useJumpPower=false,jumpPower=50,jumpHeight=7.2})
