@@ -87,6 +87,8 @@ Do not build a full inventory, crafting economy, procedural world, generic quest
 - Disconnects, party splits, death and rejoin do not permanently block progression.
 - No forced PvP, griefable permanent switches or spawn camping.
 - Co-op difficulty should add decisions and behaviors, not only inflated enemy health.
+- First vertical-slice target: solo plus parties of up to 4 players. Design party/activity boundaries to avoid unnecessary hard-coded assumptions, but do not promise 5–8 player support until larger-party encounter design, UI readability, replication and representative-device performance are validated.
+- Treat 5–8 players as a later scale-up decision, not a requirement that expands the first slice.
 
 ## 8. Replayability contract
 
@@ -121,7 +123,8 @@ The vertical slice is not accepted until:
 - puzzles communicate rules and produce clear feedback;
 - the dungeon has coherent escalation and a satisfying payoff;
 - solo completion is verified;
-- two or more players can cooperate without state conflicts;
+- two, three and four players can cooperate without state conflicts, with encounters and puzzles remaining readable and fair;
+- any later 5–8 player target has a separate scale/performance test plan and is not implied by passing the 1–4 player slice;
 - late join, disconnect, death and rejoin are tested;
 - mobile, keyboard/mouse and gamepad are tested;
 - performance remains acceptable on representative Roblox devices;
