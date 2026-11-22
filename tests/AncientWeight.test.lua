@@ -24,7 +24,7 @@ do
 	check("inside tolerance accepted",ok)
 	ok=Rules.evaluate(p,observation(128,3,0))
 	check("outside tolerance rejected",not ok)
-	ok=Rules.evaluate(p,observation(126,3,0,nil))
+	ok=Rules.evaluate(p,{blockId="b",position={x=126,y=3,z=0}})
 	check("missing speed rejected",not ok)
 	-- Solving is idempotent under repeated/concurrent callers.
 	local granted=0
