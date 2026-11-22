@@ -2,7 +2,7 @@
 
 **Task:** Phase 0 foundation validation preparation (documentation only)
 **Target baseline:** master @ `896ffe036a077b91acbd50a08a525fb3b4474fe8` — **owner-reported, not verified**
-**Document status:** CORRECTED DRAFT. Not saved to the repository. Not committed.
+**Document status:** CORRECTED DRAFT. Added in PR #47; not yet merged.
 **Studio validation:** NOT PERFORMED. No checklist item is marked passed.
 
 ---
@@ -26,7 +26,7 @@ Repository access was unavailable in the authoring environment. Therefore:
 
 - Working directory, `git status`, `git rev-parse HEAD`, ancestry of `896ffe0`, and file existence were **not** checked.
 - No source or documentation at `896ffe0` was read.
-- No file was written, no branch created, no commit made, no PR opened.
+- During the original audit, no report file was written, no branch created, no commit made, and no PR opened. The report was subsequently added in this documentation-only PR.
 - Roblox Studio was not launched. No Play Solo / Start Server / Clients-and-Servers session was run.
 - No Lune test, Habitat validator, or Rojo build was executed by this audit.
 
@@ -372,6 +372,14 @@ Run these first. All PENDING.
 | B5 | Walk every ramp: stump log, fallen leaf, root ramps, leaf ramp. Ascend and descend. | Walkable without sliding back or being launched. | Clip |
 | B6 | After a normal jump, stand still on flat floor. Select the foot part **for the configured rig**: R15 → `LeftFoot` (or another valid foot part); R6 → `Left Leg`. If no expected foot part exists, record **BLOCKED** and do **not** compute a measurement. Otherwise measure the foot bottom with the guarded probe below. | For the measured part, foot bottom ≈ **0.5** (floor top). Record values well below 0.5 and their frequency. A missing expected part yields **BLOCKED**, not a number. | 20 landing samples with rig type and part name, **or** a BLOCKED note naming the missing part |
 
+| B7 | Traverse the **5-stud secret crack** with a heavily-accessorised avatar. | Passes without snagging. **If it fails, measure the narrowest passable width.** | Clip + measured width |
+| B8 | Traverse every elevated route: arch top, root bridge, Leaf Platform 1, ramp down north, Leaf Platform 2 via east ramp, fungus vantage. | All reachable **on foot**; no ability required. | Clip |
+| B9 | **If** a ~10-stud horizontal gap between elevated platforms exists in current geometry, attempt to cross it with an ordinary jump. Gap existence and dimensions are **PENDING VERIFICATION**; the previously observed LeafPlatform1 / LeafPlatform2 pair at Y ≈ 10.5 is **[V-4ab5ce4]**. | Record whether the gap is crossable by ordinary jump, and whether an on-foot alternative route exists. **No ability is required or implied.** If the gap is not present in current geometry, record "not present — not tested". | Clip + measured gap + result, **or** a not-present note. **Status: PENDING VERIFICATION** |
+| B10 | Jump off the Great Stump, arch, both Leaf Platforms, fungus vantage. | Lands on solid floor; no void, fall-through or death from a normal fall. | Clip |
+| B11 | Walk into every boundary wall; try to leave the play area. | Cannot escape; no invisible-wall surprises; no void. | Clip |
+| B12 | Device Emulator (phone) + gamepad: repeat B2 and B4. | Equivalent traversal; jump button not obscured. | Clip per device |
+| B13 | Studio **Stats** panel during B2. | Record FPS, memory, instance count on a low-end profile. | Stats screenshot |
+
 **B6 guarded, rig-aware probe:**
 
 ```lua
@@ -402,13 +410,6 @@ end
 print("rig", h.RigType, "part", foot.Name,
       "foot bottom Y", foot.Position.Y - foot.Size.Y / 2)
 ```
-| B7 | Traverse the **5-stud secret crack** with a heavily-accessorised avatar. | Passes without snagging. **If it fails, measure the narrowest passable width.** | Clip + measured width |
-| B8 | Traverse every elevated route: arch top, root bridge, Leaf Platform 1, ramp down north, Leaf Platform 2 via east ramp, fungus vantage. | All reachable **on foot**; no ability required. | Clip |
-| B9 | **If** a ~10-stud horizontal gap between elevated platforms exists in current geometry, attempt to cross it with an ordinary jump. Gap existence and dimensions are **PENDING VERIFICATION**; the previously observed LeafPlatform1 / LeafPlatform2 pair at Y ≈ 10.5 is **[V-4ab5ce4]**. | Record whether the gap is crossable by ordinary jump, and whether an on-foot alternative route exists. **No ability is required or implied.** If the gap is not present in current geometry, record "not present — not tested". | Clip + measured gap + result, **or** a not-present note. **Status: PENDING VERIFICATION** |
-| B10 | Jump off the Great Stump, arch, both Leaf Platforms, fungus vantage. | Lands on solid floor; no void, fall-through or death from a normal fall. | Clip |
-| B11 | Walk into every boundary wall; try to leave the play area. | Cannot escape; no invisible-wall surprises; no void. | Clip |
-| B12 | Device Emulator (phone) + gamepad: repeat B2 and B4. | Equivalent traversal; jump button not obscured. | Clip per device |
-| B13 | Studio **Stats** panel during B2. | Record FPS, memory, instance count on a low-end profile. | Stats screenshot |
 
 ### 4.4 Lifecycle — 15 items (C1–C15) [A]
 
