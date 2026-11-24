@@ -48,7 +48,7 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Validate First Habitat layout (pure Python, standard library only)
+      - name: Validate committed Habitat assets (pure Python, standard library only)
         run: python3 tools/habitat/validate_habitat.py
 
       - name: Build Roblox place with Rojo
