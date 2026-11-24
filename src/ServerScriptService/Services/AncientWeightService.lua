@@ -46,6 +46,7 @@ local function solve(e: Entry)
 	if e.plate and e.plate.Parent then
 		e.plate.Color=Color3.fromRGB(96,200,120)
 		e.plate.Material=Enum.Material.Neon
+		e.plate:SetAttribute("PlateState","Active")
 	end
 	if e.door and e.door.Parent then
 		e.door.Color=Color3.fromRGB(86,150,104)
@@ -74,10 +75,15 @@ local function register(root: Instance)
 	if not finish or not finish:IsA("Attachment") then
 		warn("[AncientWeight] missing YankEnd:", id); return
 	end
+	-- Yank snapshots the authored start-to-end attachment delta at registration.
+	-- Its destination is the block pivot translated by that delta, not YankEnd.WorldPosition.
+	local start=block:FindFirstChild("YankStart")
+	local startWorld=if start and start:IsA("Attachment") then start.WorldPosition else block.Position
+	local destination=block.Position+(finish.WorldPosition-startWorld)
 	local tolerance=root:GetAttribute("Tolerance")
 	local settle=root:GetAttribute("SettleSpeed")
 	local rules=AncientWeight.newPuzzle({
-		puzzleId=id, blockId=blockId, destination=xyz(finish.WorldPosition),
+		puzzleId=id, blockId=blockId, destination=xyz(destination),
 		tolerance=if type(tolerance)=="number" then tolerance else nil,
 		settleSpeed=if type(settle)=="number" then settle else nil,
 	})
